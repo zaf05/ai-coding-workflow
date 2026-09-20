@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+# aiworflow-pre-commit v3
+# 作用：把 scripts/selftest.sh（50+ 项确定性自检 + author-time 硬护栏断言）
+#       变成提交的物理闸门——改坏工作流就提交不上去，而不是"请不要改坏"。
+# 安装：python3 scripts/install_hooks.py --apply   （hook 本体版本化在本文件，
+#       .git/hooks/ 不入库，所以必须由脚本安装并可 --check 复核）
+# 绕过：git commit --no-verify 仍可绕过——这是 Git 的既有边界，也是为什么
+#       docs/13-roadmap 把"CI 侧再挂一次"列为下一层，而不是认为本 hook 已足够。
+# v3（2026-09-20）：.ai_worflow 自身成为独立本地 git 仓库（docs/31 P3）后，
+#       仓库根即工作流包根——补该布局分支，否则 hook 会在嵌套仓库里恒定跳过，
+#       「已安装」变成假象。
+set -uo pipefail
+
+repo="$(git rev-parse --show-toplevel)" || exit 1
+cd "$repo" || exit 1
+
+if [[ -f "$repo/.ai_worflow/scripts/selftest.sh" ]]; then
+  # 布局 A：主仓根提交（.ai_worflow 作为主仓的子目录被闸门覆盖）
+  cd "$repo/.ai_worflow" || exit 1
+elif [[ -f "$repo/scripts/selftest.sh" && -f "$repo/scripts/install_hooks.py" && -f "$repo/VERSION" ]]; then
+  # 布局 B：仓库根即工作流包根（.ai_worflow 独立 git 仓库）。三个特征文件
+  # 同时命中才认，避免误吞恰好有 scripts/selftest.sh 的无关业务仓库。
+  :
+else
+  # Hook 安装在 common git dir 后，会在缺少 .ai_worflow 的生产 worktree 中被复用。
+  # 该场景与本工作流无关，必须安全跳过，不能阻断业务分支提交。
+  echo "[aiworflow pre-commit] skip: no .ai_worflow in this repo root"
+  exit 0
+fi
+
+log="${TMPDIR:-/tmp}/aiworflow-precommit.log"
+
+echo "[aiworflow pre-commit] selftest（阻断级）…"
+if ! bash scripts/selftest.sh >"$log" 2>&1; then
+  echo "[aiworflow pre-commit] 拒绝提交：工作流自检未通过。" >&2
+  echo "---- 失败项 ----" >&2
+  grep -E '^(FAIL|ERROR)' "$log" >&2 || true
+  # 只给 FAIL 行等于不给原因：护栏 ID 与可动作修复建议在缩进的明细行里。
+  echo "---- 护栏/原因明细（[护栏ID] 位置: 具体问题 + 怎么改）----" >&2
+  grep -E '^[[:space:]]*-[[:space:]]*\[[a-z_]+\]' "$log" | sort -u | head -20 >&2 || true
+  echo "----------------" >&2
+  [ -s "$log" ] || tail -20 "$log" >&2
+  echo "完整日志: $log" >&2
+  echo "修复后重试；确认与本改动无关时可用 git commit --no-verify 绕过（需自负其责）。" >&2
+  exit 1
+fi
+# 项数取 selftest 自己的权威汇总行，不在这里重新数：
+# 闸门给出的数字必须与被闸门的东西一致，否则信任崩塌。
+summary="$(grep -E '^结果: ' "$log" | tail -1)"
+echo "[aiworflow pre-commit] selftest 通过（${summary:-未见汇总行}）"
+
+# 收据漂移：symlink 模式下已装副本内容始终与仓库同步，漂移只是"版本台账滞后"，
+# 因此是警告级而非阻断级；发布/交付前必须 --apply 刷新。
+if ! python3 scripts/install_skills.py --check >/dev/null 2>&1; then
+  echo "[aiworflow pre-commit] 警告：安装收据与当前来源不一致（VERSION 或 skill 文件已改）。" >&2
+  echo "                       交付前执行：python3 scripts/install_skills.py --apply" >&2
+fi
+
+exit 0

@@ -1,0 +1,72 @@
+schema_version: 1
+name: "重构/迁移"
+workflow_id: "refactor-migration"
+description: "换实现不换行为，或依赖/架构迁移。"
+max_elapsed_time_minutes: 240
+error_code_mapping:
+  AIW_SCOPE_OVERFLOW: "变更超出预算"
+  AIW_BASELINE_MISMATCH: "基线不一致"
+finally_block_label: close
+blocks:
+  - label: intake
+    block_type: intake
+    next_block_label: "recon"
+    role: planner
+    gate: G0
+    goal: "固定重构/迁移边界与非目标"
+    complete_criterion: "行为不变边界明确"
+    evidence: ["current.md#Intake"]
+
+  - label: recon
+    block_type: recon
+    next_block_label: "spec"
+    role: planner
+    gate: G1
+    goal: "基线画像与接管评估"
+    complete_criterion: "base_commit 完整 SHA 已记录"
+    evidence: ["current.md#Recon"]
+
+  - label: spec
+    block_type: spec
+    next_block_label: "approve"
+    role: planner
+    gate: G2
+    goal: "等价行为规格 + 迁移步骤"
+    complete_criterion: "SPEC_REVIEW APPROVE"
+    evidence: ["current.md#Spec"]
+
+  - label: approve
+    block_type: approve
+    next_block_label: "implement"
+    role: user
+    gate: G3
+    star: true
+    goal: "批准迁移策略与取舍"
+    complete_criterion: "用户批准绑定 Spec 修订"
+    evidence: ["evidence.md#APPROVAL-001"]
+
+  - label: implement
+    block_type: implement
+    next_block_label: "test"
+    role: implementer
+    goal: "按等价行为规格实现"
+    complete_criterion: "行为不变量测试通过"
+    evidence: ["evidence.md#IMPL-001"]
+
+  - label: test
+    block_type: test
+    next_block_label: "close"
+    role: tester
+    gate: G7
+    goal: "等价性 + 回归验证"
+    complete_criterion: "完整测试 PASS"
+    evidence: ["evidence.md#TEST-001"]
+
+  - label: close
+    block_type: close
+    next_block_label: null
+    role: planner
+    gate: G10
+    goal: "关闭与复盘"
+    complete_criterion: "DONE"
+    evidence: ["state.yaml"]

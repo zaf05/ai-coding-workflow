@@ -1,0 +1,27 @@
+# AIWorflow 长周期任务状态（跨天持久化）
+# 此文件由每个 Session 的 G10 自动更新
+
+task:
+  id: TASK-YYYYMMDD-NNN
+  title: "任务标题"
+  created: "ISO8601"
+  deadline: "ISO8601"
+  total_sessions: 5
+  completed_sessions: 0
+
+progress:
+  phase: "spec"            # spec/implement/verify/deliver
+  percentage: 0
+  completed_blocks: []
+  current_block: "intake"
+  next_action: "开始 G0 需求接收"
+
+handoff:
+  last_session: ""
+  last_session_end: ""
+  context_files_written: []
+  key_decisions: []
+  blockers: []
+  notes: ""
+
+timeline: []

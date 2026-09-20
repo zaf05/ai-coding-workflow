@@ -1,0 +1,95 @@
+schema_version: 1
+name: "功能交付（含条件分支示例）"
+workflow_id: "feature-delivery-conditional"
+description: "演示 conditional 块根据 review verdict 决定走修复还是走集成"
+max_elapsed_time_minutes: 180
+error_code_mapping:
+  AIW_SCOPE_OVERFLOW: "变更超出工作包预算"
+  AIW_EVIDENCE_MISSING: "结论缺少绑定证据"
+  AIW_REVIEW_REJECTED: "审核未通过"
+finally_block_label: close
+blocks:
+  - label: intake
+    block_type: intake
+    next_block_label: spec
+    role: planner
+    gate: G0
+    goal: "接收需求"
+    complete_criterion: "Intake 五要素齐全"
+    evidence: ["current.md#Intake"]
+
+  - label: spec
+    block_type: spec
+    next_block_label: approve
+    role: planner
+    gate: G2
+    goal: "写出行为规格"
+    complete_criterion: "SPEC_REVIEW APPROVE"
+    evidence: ["current.md#Spec"]
+
+  - label: approve
+    block_type: approve
+    next_block_label: implement
+    role: user
+    gate: G3
+    star: true
+    goal: "用户批准"
+    complete_criterion: "用户批准"
+    evidence: ["evidence.md#APPROVAL-001"]
+
+  - label: implement
+    block_type: implement
+    next_block_label: review
+    role: implementer
+    goal: "实现功能"
+    complete_criterion: "块级测试通过"
+    max_attempts: 2
+    retry_backoff_seconds: 60
+
+  - label: review
+    block_type: review
+    next_block_label: route_by_verdict
+    role: reviewer
+    gate: G5
+    goal: "代码审核"
+    complete_criterion: "CODE_REVIEW 产出 verdict"
+    evidence: ["evidence.md#REVIEW-001"]
+
+  - label: route_by_verdict
+    block_type: conditional
+    next_block_label: integrate
+    role: planner
+    goal: "根据审核结果决定走集成还是修复"
+    complete_criterion: "条件已评估"
+    branch_conditions:
+      - condition_key: review_verdict
+        equals: "REQUEST_CHANGES"
+        next_block_label: fix_and_re_review
+        is_default: false
+      - is_default: true
+        next_block_label: integrate
+
+  - label: fix_and_re_review
+    block_type: implement
+    next_block_label: review
+    role: implementer
+    goal: "修复 review Finding 并重新提交审核"
+    complete_criterion: "所有 blocking Finding 已修复"
+
+  - label: integrate
+    block_type: integrate
+    next_block_label: close
+    role: planner
+    gate: G6
+    goal: "合入集成分支"
+    complete_criterion: "集成测试 PASS"
+    evidence: ["state.yaml"]
+
+  - label: close
+    block_type: close
+    next_block_label: null
+    role: planner
+    gate: G10
+    goal: "关闭"
+    complete_criterion: "DONE"
+    evidence: ["state.yaml"]

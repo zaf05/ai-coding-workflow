@@ -1,0 +1,87 @@
+schema_version: 1
+name: "缺陷归因"
+workflow_id: "bugfix-triage"
+description: "用户报障时先归因再动手，不猜。"
+max_elapsed_time_minutes: 120
+error_code_mapping:
+  AIW_EVIDENCE_MISSING: "结论缺少绑定证据"
+  AIW_ENV_STALE: "环境陈旧"
+finally_block_label: close
+blocks:
+  - label: intake
+    block_type: intake
+    next_block_label: "recon"
+    role: planner
+    gate: G0
+    goal: "接收用户报告的事实：404/页面异常/curl 失败/截图/手测"
+    complete_criterion: "事实与复现命令已记录"
+    evidence: ["current.md#Intake"]
+
+  - label: recon
+    block_type: recon
+    next_block_label: "classify"
+    role: planner
+    gate: G1
+    goal: "核对当前事实：分支、构建、数据库、缓存、破坏提交"
+    complete_criterion: "base_commit 与脏工作区状态已记录"
+    evidence: ["current.md#Recon"]
+
+  - label: classify
+    block_type: conditional
+    role: planner
+    goal: "把报障归类到六分类之一"
+    complete_criterion: "命中唯一默认分支"
+    branch_conditions:
+      - criteria: {criteria_type: expression, expression: "category == 'environment_stale_state'"}
+        next_block_label: env_note
+        description: "环境陈旧，只核对不写代码"
+      - criteria: {criteria_type: expression, expression: "category == 'operator_usage_gap'"}
+        next_block_label: doc_fix
+        description: "使用方式偏差，补文档不改行为"
+      - criteria: {criteria_type: expression, expression: "true"}
+        next_block_label: implement
+        description: "默认走实现返修"
+        is_default: true
+
+  - label: env_note
+    block_type: notify
+    next_block_label: "close"
+    role: planner
+    goal: "记录复现命令与陈旧环境事实"
+    complete_criterion: "记录完成且未写生产代码"
+    evidence: ["evidence.md"]
+
+  - label: doc_fix
+    block_type: implement
+    next_block_label: "test"
+    role: implementer
+    goal: "只补文档与页面文案，不改行为"
+    complete_criterion: "diff 仅限文档/文案"
+    evidence: ["evidence.md#IMPL-001"]
+
+  - label: implement
+    block_type: implement
+    next_block_label: "test"
+    role: implementer
+    goal: "归因为 IMPLEMENTATION 的缺陷返修"
+    complete_criterion: "块级测试通过并绑定 head_sha"
+    evidence: ["evidence.md#IMPL-002"]
+    max_attempts: 2
+
+  - label: test
+    block_type: test
+    next_block_label: "close"
+    role: tester
+    gate: G6
+    goal: "对返修 SHA 做增量验证"
+    complete_criterion: "增量测试 PASS"
+    evidence: ["evidence.md#TEST-001"]
+
+  - label: close
+    block_type: close
+    next_block_label: null
+    role: planner
+    gate: G10
+    goal: "关闭并记录归因"
+    complete_criterion: "completion_contract 逐条通过"
+    evidence: ["state.yaml"]

@@ -1,0 +1,13 @@
+schema_version: 1
+name: "反例：人工边界被代签"
+workflow_id: "star-bypass-invalid"
+error_code_mapping: {}
+blocks:
+  - label: approve
+    block_type: approve
+    role: user
+    gate: G3
+    star: true
+    continue_on_failure: true
+    goal: "这个反例必须被校验器拒绝"
+    complete_criterion: "star 块禁止 continue_on_failure"

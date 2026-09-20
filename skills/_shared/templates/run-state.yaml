@@ -1,0 +1,50 @@
+schema_version: 1
+run:
+  id: "RUN-YYYYMMDD-NNN"
+  workflow: ""
+  workflow_path: ""
+  status: "created"          # created|queued|running|paused|completed|failed|canceled|terminated|timed_out
+  delivery_depth: "STANDARD" # FAST|STANDARD|HIGH_RISK
+  planner_owner: ""
+  max_elapsed_time_minutes: 240
+  current_block_label: null
+  finally_block_label: null
+repository:
+  root: ""
+  current_branch: ""
+  current_sha: null        # 完整 40 位 SHA；未绑定时写 null，不写 ""（校验器只接受合法 SHA 或 null）
+  target_branch: ""
+  target_base_sha: null
+  integration_branch: ""
+  integration_sha: null
+  dirty_worktree_detected: false
+  dirty_worktree_overlap: false
+blocks: []            # {label, status, role, gate, base_sha, head_sha, tested_sha, attempts, error_codes}
+                      # label 必须与 run.workflow_path 指向的 DAG 定义逐块一致（validate_run.py 强制）；
+                      # base_sha/head_sha/tested_sha 未绑定时写 null，不写 ""。
+gates: {}             # G0..G10 -> {passed, evidence_ref, owner, verified_at}
+versions:
+  spec: 0
+  test_plan: 0
+  change_budget: 1
+approvals:
+  spec: null
+  user: null
+  test_plan: null
+open_findings: []
+open_defects: []
+open_blockers: []
+completion_contract: []   # {id, text, evidence_requirement, owner, result}
+# 历史 transitions 只追加到 evidence.md，不在这里保存。
+ledger: []                # 自动化推进轮次日志：每轮自动追加 {round, timestamp, block, action, signal, ...}
+                          # 由 run_flow.py --advance 自动写入；也支持 --append-ledger <json> 手工追加
+                          # 格式：{round: int|"final", timestamp, block, action, signal, model?, tokens_used?, host?, session_id?}
+                          # v1.8.7 起 advance 调用应传 --session-meta；model 必填，tokens 查不到为 null
+
+
+# 效率度量（个人用，每个门禁通过时记录）
+# timestamps:
+#   g0_intake: "2026-09-17T10:00:00+08:00"
+#   g1_recon: "2026-09-17T10:05:00+08:00"
+#   g2_spec: "2026-09-17T10:20:00+08:00"
+#   g10_close: "2026-09-17T11:45:00+08:00"

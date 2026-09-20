@@ -1,0 +1,23 @@
+schema_version: 1
+test_report_id: "TEST-NNN"
+supersedes: null
+mode: "INCREMENTAL"             # INCREMENTAL|FULL|SMOKE|REGRESSION|CONTRACT|PERMISSION|STATE_TRANSITION
+tester: ""
+created_at: ""
+human_summary:
+  verdict: ""
+  blocking_count: 0
+  next_step: ""
+session:
+  model: ""
+  tokens_used: null
+target:
+  tested_sha: ""
+  spec_version: null
+  test_plan_version: null
+environment: ""                 # 数据库/服务/浏览器版本，不含凭据
+result: "BLOCKED"               # PASS|FAIL|BLOCKED|NOT_RUN
+summary: ""
+cases: []                       # {case_id, status, evidence, duration}
+defects: []                     # {defect_id, attribution, severity, evidence}
+coverage: {}                    # 契约/权限/状态转换/视口等覆盖项

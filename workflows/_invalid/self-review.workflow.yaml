@@ -1,0 +1,17 @@
+schema_version: 1
+name: "反例：自审"
+workflow_id: "self-review-invalid"
+error_code_mapping: {}
+blocks:
+  - label: implement
+    block_type: implement
+    role: implementer
+    goal: "实现"
+    complete_criterion: "无"
+  - label: review
+    block_type: review
+    role: implementer
+    gate: G5
+    goal: "自己审自己"
+    complete_criterion: "review 块 role 必须是 reviewer"
+    next_block_label: null

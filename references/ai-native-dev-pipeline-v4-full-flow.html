@@ -1,0 +1,1345 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI Native Dev Pipeline V4.0 全流程</title>
+  <style>
+    :root {
+      --bg: #eef3f6;
+      --panel: #ffffff;
+      --panel-soft: #f7fafb;
+      --ink: #16222d;
+      --muted: #63717e;
+      --line: #d6e0e7;
+      --accent: #006d77;
+      --accent-2: #c56b16;
+      --external: #6851a8;
+      --ok: #147a55;
+      --warn: #a05a12;
+      --danger: #a13d3d;
+      --shadow: 0 18px 45px rgba(22, 34, 45, 0.09);
+      --radius: 8px;
+      --node-w: 218px;
+      --node-h: 118px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { color-scheme: light; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        linear-gradient(135deg, rgba(0, 109, 119, 0.10), transparent 34%),
+        linear-gradient(225deg, rgba(197, 107, 22, 0.10), transparent 32%),
+        var(--bg);
+      color: var(--ink);
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+
+    button, select { font: inherit; }
+
+    .app {
+      display: grid;
+      grid-template-columns: 292px minmax(0, 1fr) 352px;
+      gap: 18px;
+      width: min(1720px, calc(100vw - 32px));
+      height: calc(100dvh - 32px);
+      min-height: 640px;
+      margin: 16px auto;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    .sidebar, .canvas-wrap, .inspector {
+      border: 1px solid rgba(214, 224, 231, 0.96);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.92);
+      box-shadow: var(--shadow);
+      min-width: 0;
+    }
+
+    .sidebar, .inspector {
+      padding: 18px;
+      max-height: 100%;
+      overflow: auto;
+    }
+
+    .brand {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .mark {
+      display: grid;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      color: #fff;
+      background:
+        linear-gradient(145deg, rgba(255,255,255,.18), transparent),
+        var(--accent);
+      font-weight: 820;
+      letter-spacing: 0;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 17px;
+      line-height: 1.18;
+      letter-spacing: 0;
+    }
+
+    .version {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .section-title {
+      margin: 18px 0 8px;
+      color: #334453;
+      font-size: 12px;
+      font-weight: 760;
+      letter-spacing: 0;
+    }
+
+    .segmented {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+      padding: 4px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #f5f8fa;
+    }
+
+    .segmented button,
+    .choice,
+    .tab {
+      border: 1px solid transparent;
+      border-radius: 8px;
+      background: transparent;
+      color: #2a3a47;
+      cursor: pointer;
+      transition: transform 160ms ease, border-color 160ms ease, background 160ms ease, color 160ms ease;
+    }
+
+    .segmented button {
+      min-height: 34px;
+      padding: 7px 6px;
+      font-size: 12px;
+    }
+
+    .segmented button.active,
+    .choice.active,
+    .tab.active {
+      border-color: rgba(0, 109, 119, 0.38);
+      background: #e7f3f4;
+      color: #0f545c;
+    }
+
+    .choice-group, .tabs {
+      display: grid;
+      gap: 8px;
+    }
+
+    .choice, .tab {
+      display: grid;
+      grid-template-columns: minmax(112px, 1fr) minmax(0, auto);
+      align-items: center;
+      justify-content: stretch;
+      gap: 10px;
+      width: 100%;
+      min-width: 0;
+      min-height: 38px;
+      padding: 9px 10px;
+      border-color: var(--line);
+      background: var(--panel);
+    }
+
+    .choice {
+      grid-template-columns: minmax(0, 1fr);
+      align-items: start;
+      gap: 3px;
+    }
+
+    .choice:hover, .tab:hover, .segmented button:hover {
+      border-color: rgba(0, 109, 119, 0.45);
+      transform: translateY(-1px);
+    }
+
+    .choice span, .tab span {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      white-space: nowrap;
+    }
+
+    .choice small, .tab small {
+      color: var(--muted);
+      text-align: right;
+      line-height: 1.25;
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .choice small {
+      padding-left: 28px;
+      text-align: left;
+    }
+
+    .glyph {
+      display: inline-grid;
+      place-items: center;
+      width: 19px;
+      height: 19px;
+      border-radius: 6px;
+      background: #eef5f6;
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 820;
+    }
+
+    .legend {
+      display: grid;
+      gap: 8px;
+      margin-top: 16px;
+      padding: 12px;
+      border-radius: 8px;
+      background: #f7f9fb;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .legend-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      flex: 0 0 auto;
+      border-radius: 999px;
+      background: var(--accent);
+    }
+
+    .dot.star { background: var(--accent-2); }
+    .dot.external { background: var(--external); }
+    .dot.block { background: var(--danger); }
+
+    .note {
+      margin-top: 14px;
+      padding: 12px;
+      border: 1px solid #dfe7ed;
+      border-radius: 8px;
+      background: #fff;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .canvas-wrap {
+      position: relative;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .toolbar {
+      z-index: 8;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 66px;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(12px);
+    }
+
+    .toolbar-title {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      min-width: 0;
+    }
+
+    .toolbar-title strong {
+      font-size: 16px;
+    }
+
+    .toolbar-title small {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .source-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .pill-btn {
+      min-height: 36px;
+      padding: 8px 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff;
+      color: #263746;
+      cursor: pointer;
+    }
+
+    .pill-btn.primary {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .flow {
+      position: relative;
+      min-height: 0;
+      padding: 28px 28px 46px;
+      overflow: auto;
+    }
+
+    .brief-panel {
+      display: grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap: 12px;
+      margin: 4px 0 20px;
+      padding: 14px;
+      border: 1px solid #cfd9e2;
+      border-radius: 8px;
+      background: rgba(248, 251, 252, 0.95);
+      backdrop-filter: blur(12px);
+    }
+
+    .brief-card {
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .brief-card h2, .brief-card h3 {
+      margin: 0 0 8px;
+      font-size: 13px;
+    }
+
+    .brief-card p, .brief-card li {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.52;
+    }
+
+    .brief-card ul {
+      margin: 8px 0 0;
+      padding-left: 18px;
+    }
+
+    .flow-map {
+      position: relative;
+      width: 1060px;
+      height: 3160px;
+      margin-top: 18px;
+      border: 1px solid #d4dfe8;
+      border-radius: 8px;
+      background:
+        linear-gradient(rgba(214, 224, 231, 0.38) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(214, 224, 231, 0.38) 1px, transparent 1px),
+        linear-gradient(135deg, rgba(0, 109, 119, 0.06), rgba(197, 107, 22, 0.06));
+      background-size: 54px 54px, 54px 54px, auto;
+      overflow: hidden;
+    }
+
+    .flow-map::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background:
+        linear-gradient(90deg, transparent 0 34%, rgba(0, 109, 119, 0.07) 34% 66%, transparent 66%),
+        radial-gradient(circle at 20% 12%, rgba(0, 109, 119, 0.10), transparent 17%),
+        radial-gradient(circle at 82% 76%, rgba(197, 107, 22, 0.10), transparent 20%);
+      pointer-events: none;
+    }
+
+    .flow-lines {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .flow-edge {
+      fill: none;
+      stroke: #aebbc6;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      opacity: 0.40;
+    }
+
+    .flow-edge.active {
+      stroke: var(--accent);
+      stroke-width: 4;
+      opacity: .98;
+      stroke-dasharray: 14 10;
+      animation: stream 1100ms linear infinite;
+    }
+
+    .flow-edge.branch {
+      stroke: var(--external);
+      stroke-dasharray: 5 8;
+    }
+
+    .flow-edge.star {
+      stroke: var(--accent-2);
+      stroke-dasharray: 4 9;
+    }
+
+    .flow-edge.dim {
+      opacity: .15;
+      stroke-dasharray: 3 9;
+    }
+
+    .node {
+      position: absolute;
+      z-index: 2;
+      width: var(--node-w);
+      min-height: var(--node-h);
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: rgba(255,255,255,.97);
+      cursor: pointer;
+      transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease, opacity 180ms ease, filter 180ms ease;
+      animation: rise 460ms ease both;
+    }
+
+    .node:hover {
+      transform: translateY(-3px);
+      border-color: rgba(0, 109, 119, 0.52);
+      box-shadow: 0 14px 30px rgba(22, 34, 45, 0.08);
+    }
+
+    .node.active {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(0, 109, 119, 0.15), 0 18px 36px rgba(0, 109, 119, 0.14);
+    }
+
+    .node.current {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 5px rgba(0, 109, 119, 0.18), 0 20px 44px rgba(0, 109, 119, 0.18);
+      transform: translateY(-2px);
+    }
+
+    .node.current::after {
+      content: "当前";
+      position: absolute;
+      right: 10px;
+      bottom: 10px;
+      padding: 3px 7px;
+      border-radius: 999px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 760;
+    }
+
+    .node.dim {
+      opacity: .32;
+      filter: grayscale(.8);
+      background: #eef2f5;
+    }
+
+    .node-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .node-icon {
+      display: inline-grid;
+      place-items: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      color: #0d4d55;
+      background: #e8f4f5;
+      font-size: 12px;
+      font-weight: 820;
+    }
+
+    .badge {
+      padding: 3px 7px;
+      border-radius: 999px;
+      background: #eef2f5;
+      color: #526071;
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .badge.star {
+      background: #fff3de;
+      color: #95560a;
+    }
+
+    .badge.external {
+      background: #f0edff;
+      color: #59428f;
+    }
+
+    .node h2 {
+      margin: 0 0 7px;
+      font-size: 15px;
+      letter-spacing: 0;
+    }
+
+    .node p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12.5px;
+      line-height: 1.45;
+    }
+
+    .lane-label {
+      position: absolute;
+      z-index: 1;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border: 1px solid #d7e0e8;
+      border-radius: 999px;
+      background: rgba(255,255,255,.93);
+      color: #526071;
+      font-size: 11px;
+      box-shadow: 0 8px 18px rgba(22, 34, 45, 0.06);
+      pointer-events: none;
+    }
+
+    .lane-label strong { color: var(--accent); }
+
+    .pulse-token {
+      position: absolute;
+      z-index: 4;
+      width: 12px;
+      height: 12px;
+      border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 0 6px rgba(0,109,119,.13), 0 0 18px rgba(0,109,119,.36);
+      offset-rotate: 0deg;
+      animation: token-travel 9s cubic-bezier(.65,0,.35,1) infinite;
+      pointer-events: none;
+    }
+
+    .inspector h2 {
+      margin: 0 0 8px;
+      font-size: 18px;
+    }
+
+    .inspector .type {
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 760;
+    }
+
+    .inspector p {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .status-strip {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin: 14px 0;
+    }
+
+    .metric {
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .metric strong {
+      display: block;
+      font-size: 18px;
+    }
+
+    .metric span {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .checklist {
+      display: grid;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .check {
+      display: grid;
+      grid-template-columns: 22px minmax(0, 1fr);
+      gap: 8px;
+      align-items: start;
+      padding: 9px;
+      border-radius: 8px;
+      background: #f7f9fb;
+      color: #354353;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .check i {
+      display: grid;
+      place-items: center;
+      width: 18px;
+      height: 18px;
+      border-radius: 6px;
+      background: #e8f4f5;
+      color: var(--accent);
+      font-style: normal;
+      font-size: 10px;
+      font-weight: 820;
+    }
+
+    .path {
+      display: grid;
+      gap: 7px;
+      margin-top: 12px;
+    }
+
+    .path-step {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #354353;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .path-step::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      flex: 0 0 auto;
+      border-radius: 999px;
+      background: var(--accent);
+    }
+
+    .actions {
+      position: fixed;
+      right: max(394px, calc((100vw - 1720px) / 2 + 378px));
+      top: 50%;
+      z-index: 20;
+      display: grid;
+      gap: 8px;
+      padding: 8px;
+      border: 1px solid rgba(214,224,231,.95);
+      border-radius: 12px;
+      background: rgba(255,255,255,.92);
+      box-shadow: 0 18px 45px rgba(22,34,45,.12);
+      backdrop-filter: blur(12px);
+      transform: translateY(-50%);
+    }
+
+    .icon-btn {
+      display: inline-grid;
+      place-items: center;
+      width: 38px;
+      height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      color: #314151;
+      cursor: pointer;
+      font-weight: 820;
+    }
+
+    .icon-btn:hover {
+      color: var(--accent);
+      border-color: rgba(0, 109, 119, .45);
+    }
+
+    .dialog-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 40;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: rgba(10, 18, 24, .44);
+    }
+
+    .dialog-backdrop[hidden] { display: none; }
+
+    .dialog {
+      width: min(980px, 100%);
+      max-height: min(760px, calc(100vh - 48px));
+      display: grid;
+      grid-template-rows: auto 1fr;
+      border: 1px solid #ccd9e2;
+      border-radius: 10px;
+      background: #fff;
+      box-shadow: 0 28px 80px rgba(10,18,24,.28);
+      overflow: hidden;
+    }
+
+    .dialog-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .dialog-head h2 {
+      margin: 0;
+      font-size: 16px;
+    }
+
+    .dialog-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    pre {
+      margin: 0;
+      padding: 16px;
+      overflow: auto;
+      background: #f7f9fb;
+      color: #1b2a36;
+      font-size: 12px;
+      line-height: 1.55;
+      white-space: pre-wrap;
+    }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes stream {
+      to { stroke-dashoffset: -22; }
+    }
+
+    @keyframes token-travel {
+      0% { offset-distance: 0%; opacity: 0; transform: scale(.8); }
+      5% { opacity: 1; transform: scale(1); }
+      92% { opacity: 1; transform: scale(1); }
+      100% { offset-distance: 100%; opacity: 0; transform: scale(.8); }
+    }
+
+    @media (max-width: 1220px) {
+      .app {
+        grid-template-columns: 1fr;
+        height: auto;
+        min-height: calc(100dvh - 18px);
+        overflow: visible;
+      }
+      .sidebar, .inspector { max-height: none; }
+      .canvas-wrap {
+        min-height: calc(100dvh - 18px);
+      }
+      .actions {
+        top: auto;
+        right: 14px;
+        bottom: 14px;
+        grid-template-columns: repeat(4, 38px);
+        transform: none;
+      }
+    }
+
+    @media (max-width: 720px) {
+      body {
+        overflow-x: hidden;
+      }
+
+      .app {
+        width: calc(100vw - 18px);
+        margin: 9px auto;
+        gap: 10px;
+      }
+
+      .toolbar, .dialog-head {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .brief-panel, .status-strip {
+        grid-template-columns: 1fr;
+      }
+
+      .tab {
+        grid-template-columns: minmax(0, 1fr);
+        align-items: start;
+        gap: 3px;
+      }
+
+      .choice span, .tab span {
+        white-space: normal;
+      }
+
+      .tab small {
+        padding-left: 28px;
+        text-align: left;
+      }
+
+      .segmented {
+        grid-template-columns: 1fr;
+      }
+
+      .flow { padding: 16px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .node, .flow-edge.active, .pulse-token {
+        animation: none;
+      }
+      .pulse-token { display: none; }
+      .choice, .tab, .segmented button { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="mark">AI</div>
+        <div>
+          <h1>AI Native Dev Pipeline</h1>
+          <div class="version">V4.0 · schema 18 · 全流程讲解</div>
+        </div>
+      </div>
+
+      <div class="section-title">流程页签</div>
+      <div class="tabs" id="tabChoices"></div>
+
+      <div class="section-title">讲解场景</div>
+      <div class="choice-group" id="scenarioChoices"></div>
+
+      <div class="section-title">术语显示</div>
+      <div class="segmented" aria-label="术语显示">
+        <button type="button" data-term-mode="zh" class="active">中文</button>
+        <button type="button" data-term-mode="bi">中英</button>
+        <button type="button" data-term-mode="en">English</button>
+      </div>
+
+      <div class="legend">
+        <div class="legend-row"><span class="dot" aria-hidden="true">&nbsp;</span><span>已实现或当前主线能力</span></div>
+        <div class="legend-row"><span class="dot star" aria-hidden="true">&nbsp;</span><span>* 表示人工判断、外部平台、凭据、授权、平台集成或自动化边界</span></div>
+        <div class="legend-row"><span class="dot external" aria-hidden="true">&nbsp;</span><span>可开启 worker、reviewer、verifier 或并行 child run</span></div>
+        <div class="legend-row"><span class="dot block" aria-hidden="true">&nbsp;</span><span>失败后进入 bug intake、remediation 或 blocked</span></div>
+      </div>
+
+      <div class="note">
+        这份页面按当前 AI Native V4.0/schema 18 编写。它用于讲清楚本地开发流程如何运转，CI/CD 和部署平台以 * 标记边界。
+      </div>
+    </aside>
+
+    <section class="canvas-wrap">
+      <div class="toolbar">
+        <div class="toolbar-title">
+          <strong id="scenarioTitle">从需求澄清到本地验收</strong>
+          <small id="scenarioSubtitle">选择左侧页签和场景，流程图会收缩到对应路径。</small>
+        </div>
+        <div class="source-actions">
+          <button class="pill-btn" type="button" id="sourceOpen">原文</button>
+          <button class="pill-btn primary" type="button" id="fitBtn">聚焦当前</button>
+        </div>
+      </div>
+
+      <div class="flow" id="flow">
+        <div class="brief-panel" id="briefPanel"></div>
+        <div class="flow-map" id="flowMap">
+          <svg class="flow-lines" id="flowLines" viewBox="0 0 1060 3160" aria-hidden="true">
+            <defs>
+              <marker id="arrowMain" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="#006d77"></path>
+              </marker>
+              <marker id="arrowDim" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="#aebbc6"></path>
+              </marker>
+              <marker id="arrowBranch" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="#6851a8"></path>
+              </marker>
+              <marker id="arrowStar" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="#c56b16"></path>
+              </marker>
+            </defs>
+          </svg>
+          <div id="flowNodes"></div>
+          <div id="flowLabels"></div>
+          <span class="pulse-token" id="pulseToken"></span>
+        </div>
+      </div>
+    </section>
+
+    <aside class="inspector">
+      <div class="type" id="nodeType">当前节点</div>
+      <h2 id="nodeTitle">需求澄清</h2>
+      <p id="nodeDesc">把真实用户场景、目标、非目标、验收证据和授权边界先写清楚。</p>
+
+      <div class="status-strip">
+        <div class="metric"><strong id="nodeCount">0</strong><span>当前节点</span></div>
+        <div class="metric"><strong id="starCount">0</strong><span>* 项</span></div>
+        <div class="metric"><strong id="agentCount">0</strong><span>可用角色</span></div>
+      </div>
+
+      <div class="section-title">该节点留下什么证据</div>
+      <div class="checklist" id="nodeChecks"></div>
+
+      <div class="section-title">当前讲解路径</div>
+      <div class="path" id="pathList"></div>
+    </aside>
+
+    <div class="actions" aria-label="流程操作">
+      <button class="icon-btn" type="button" id="prevBtn" title="上一步">↑</button>
+      <button class="icon-btn" type="button" id="nextBtn" title="下一步">↓</button>
+      <button class="icon-btn" type="button" id="resetBtn" title="重置">R</button>
+      <button class="icon-btn" type="button" id="sourceOpenFloat" title="原文">S</button>
+    </div>
+  </main>
+
+  <div class="dialog-backdrop" id="sourceDialog" role="dialog" aria-labelledby="sourceTitle" hidden>
+    <section class="dialog">
+      <div class="dialog-head">
+        <h2 id="sourceTitle">内嵌 Markdown 原文</h2>
+        <div class="dialog-actions">
+          <button class="pill-btn primary" type="button" id="sourceDownload">下载 Markdown</button>
+          <button class="pill-btn" type="button" id="sourceClose">关闭</button>
+        </div>
+      </div>
+      <pre id="sourceMarkdownView"></pre>
+    </section>
+  </div>
+
+  <script type="application/octet-stream" id="sourceMarkdownBase64">IyBBSSBOYXRpdmUgRGV2IFBpcGVsaW5lIFY0LjAgRnVsbCBGbG93Cgrmm7TmlrDml7bpl7TvvJoyMDI2LTA2LTI3Cgrov5nku73orrLop6PnqL/mj4/ov7DnmoTmmK/mnKzlnLAgQUkgTmF0aXZlIOW8gOWPkea1geeoi+eahOWujOaVtOi3r+W+hO+8muS7jumcgOaxgua+hOa4heOAgeiuoeWIkueUn+aIkOOAgeiuoeWIkuaJp+ihjO+8jOWIsOmqjOivgeOAgeWkjeebmOWSjOWQjue7rSBidWcgaW50YWtl44CC6aG16Z2i5Lit55qE5pif5Y+36KGo56S65Lq65bel5Yik5pat44CB5aSW6YOo5bmz5Y+w44CB5Yet5o2u44CB5o6I5p2D44CB5bmz5Y+w6ZuG5oiQ5oiW6Ieq5Yqo5YyW6L6555WM44CCCgojIyDkuIDlj6Xor50KCkFJIE5hdGl2ZSBEZXYgUGlwZWxpbmUg5piv5LiA5Liq5pys5Zyw5byA5Y+R5o6n5Yi25bGC44CC5Lq66LSf6LSj5oSP5Zu+44CB5o6I5p2D5ZKM5Lqn5ZOB5Yik5pat77ybQUkg6LSf6LSj5omn6KGM44CB6aqM6K+B44CB6K6w5b2V5ZKM5aSN5p+l44CC5rWB56iL55qE5qC45b+D5LiN5piv6K6p5qih5Z6L5pu05b+r5YaZ5Luj56CB77yM6ICM5piv6K6p5q+P5LiA5qyh5byA5Y+R6YO95pyJ5Y+v6L+95rqv55qEIHNjb3Bl44CBZXZpZGVuY2XjgIFyZXZpZXfjgIFjbGFpbSDlkowgYmxvY2tlcuOAggoKIyMg5YWo5rWB56iLCgoxLiDpnIDmsYLmvoTmuIUKICAgLSDlm7rlrprnlKjmiLfjgIHlnLrmma/jgIHnm67moIfjgIHpnZ7nm67moIfjgIHpqozmlLbmlrnlvI/jgIIKICAgLSDlr7nmlY/mhJ/ln5/jgIHnnJ/lrp4gbXV0YXRpb27jgIHotKblj7cvc2Vzc2lvbuOAgeWklumDqOezu+e7n+i/m+ihjOaOiOadg+WIpOaWreOAggogICAtIFByb2R1Y3QgQnJpZWYgR2F0ZSDnlKggYCpgIOagh+iusO+8jOihqOekuuWFpeWPo+S6p+WTgeWIpOaWreS4juiHquWKqOWMlui+ueeVjOOAggoKMi4gUGxhbiDnlJ/miJAKICAgLSBQbGFubmVyIGFnZW50IOWwhuWkp+mcgOaxguaLhuaIkCBtYXN0ZXIgcGxhbuOAgXdhdmUgcGxhbuOAgWNoaWxkIHJ1buOAggogICAtIOavj+S4qiBwbGFuIOmcgOimgSBleGVjdXRpb25fY29udHJhY3TjgIFkZXBlbmRlbmN5X2NvbnRyYWN044CBc2NvcGVfY29udHJhY3TjgIFjaGVja2VyX2NvbnRyYWN044CBcmVsZWFzZV92YWxpZGF0aW9uX2NvbnRyYWN044CCCiAgIC0gUGxhbiDnlJ/miJDnlLEgcGxhbm5lciBhZ2VudCDlkozkurrlt6UgcmV2aWV3IOmFjeWQiO+8jEFJIE5hdGl2ZSDpgJrov4cgcGxhbiB2YWxpZGF0aW9uIOWbuuWMluWPr+aJp+ihjOWFpeWPo+OAggoKMy4gUGxhbiByZWFkaW5lc3MKICAgLSDpgJrov4cgdmFsaWRhdGVfcGxhbi5weSDmo4Dmn6UgcGxhbiDmmK/lkKYgcmVhZHnjgIFyZWFkeV93aXRoX2RlY2lzaW9uX2dhdGVzIOaIliBub3RfcmVhZHnjgIIKICAgLSBQMCBwcmVmbGlnaHQg5aaC5p6cIG9uX3Bhc3M9Y29udGludWVfc2FtZV9ydW7vvIzlupTkvZzkuLrnu6fnu63miafooYzkv6Hlj7fjgIIKICAgLSB3aG9sZV9wbGFuIOivt+axguS/neaMgeWOn+Wni+ebruagh++8jOe8qeWwj+iMg+WbtOW/hemhu+WGmeWFpSBkZWNpc2lvbiBnYXRl44CCCgo0LiBSdW4g5Yib5bu6CiAgIC0g5q+P5Liq6Z2e5bmz5Yeh5byA5Y+R5Lu75Yqh5Yib5bu6IC5haS1uYXRpdmUvcnVucy88cnVuLWlkPuOAggogICAtIHN0YXRlLmpzb24g6K6w5b2VIHNjaGVtYV92ZXJzaW9u44CBc3RhdHVz44CBcGhhc2XjgIFyaXNr44CBZ2F0ZXPjgIFjb250cmFjdHPjgIFmaWxlcyDlkowgbm90ZXPjgIIKCjUuIEFsaWdubWVudCBnYXRlCiAgIC0g6K6w5b2VIGludGVudOOAgXJpc2vjgIFzY29wZeOAgW5vbi1zY29wZeOAgWFjY2VwdGFuY2UgY3JpdGVyaWHjgIFhcHByb3ZhbOOAgXN0cmF0ZWd5IOWSjCByZXF1aXJlZCBjaGVja2Vyc+OAggogICAtIOe8uuWwkemqjOaUtuagh+WHhuaXtuW6lOWBnOS4i+ivoumXru+8jOmZpOmdnueUqOaIt+aYjuehruWFgeiuuOaOoue0ouaooeW8j+OAggoKNi4gV29ya3NwYWNlIGFuZCB0ZWFtIHRvcG9sb2d5CiAgIC0g6auY6aOO6Zmp44CB6Leo5qih5Z2X44CB5pWP5oSf5Z+f44CB5aSaIGFnZW50IOS7u+WKoemcgOimgSB3b3Jrc3BhY2VfY29udHJhY3TjgIIKICAgLSBjb250cm9sbGVyLWxlZCDmqKHlvI/kuIvvvIxjb250cm9sbGVyIOi0n+i0oyBydW4gc3RhdGUg5ZKM6ZuG5oiQ77yMaW1wbGVtZW50YXRpb24gd29ya2VyIOi0n+i0o+S4u+WunueOsO+8jHJldmlld2VyIOWPquivu+Wuoeafpe+8jHJlbWVkaWF0aW9uIHdvcmtlciDkv67lpI3pmLvloZ7miJbph43opoHpl67popjjgIIKICAgLSDlpJogYWdlbnQg6LCD5bqm55SoIGAqYCDmoIforrDvvIzlvZPliY3pgJrov4fkvJror53jgIFjaGlsZCBydW4g5ZKMIHdvcmtlciBhcnRpZmFjdHMg5Y2P5L2c44CCCgo3LiBJbXBsZW1lbnRhdGlvbgogICAtIOWPquWcqCBnYXRlIOmAmui/h+WQjuaJp+ihjOOAggogICAtIOWvuSB3aG9sZV9wbGFu77yM5omn6KGM5Yiw5a6M5oiQ5oiW5piO56GuIGJsb2NrZWTjgIIKICAgLSDnpoHmraLmt7flhaUgdW5yZWxhdGVkIGRpcnR5IGNoYW5nZXPjgIIKCjguIFJldmlldyBhbmQgcmVtZWRpYXRpb24KICAgLSDnlJ/miJAgcmV2aWV3LWlucHV0IHBhY2tldO+8mmFjY2VwdGFuY2UgY3JpdGVyaWHjgIFjaGFuZ2VkIGZpbGVz44CBZGlmZuOAgWltcGxlbWVudGF0aW9uIHN1bW1hcnnjgIF2ZXJpZmljYXRpb24gZXZpZGVuY2XjgIIKICAgLSBjb2RlIHJldmlld+OAgWFyY2hpdGVjdHVyZSByZXZpZXfjgIFzZWN1cml0eSByZXZpZXcg5oyJ6aOO6Zmp6Kem5Y+R44CCCiAgIC0gZ3N0YWNrLXJldmlldyDlkowgZ3N0YWNrLWNzbyDlj6/nlKjml7blv4XpobvlsJ3or5XmiJborrDlvZUgY29uc3RyYWluZWQvdW5hdmFpbGFibGXjgIIKICAgLSBibG9ja2luZyDmiJYgaW1wb3J0YW50IGZpbmRpbmcg5b+F6aG75pyJIHN0YWJsZSBmaW5kaW5nIElE44CBZml4IHJlc3BvbnNlIOWSjCByZS1yZXZpZXfjgIIKCjkuIFZlcmlmaWNhdGlvbiBhbmQgbG9jYWwgcnVubmluZyBhcHAgZ2F0ZQogICAtIOa1i+ivleOAgeaehOW7uuOAgWN1cmzjgIHml6Xlv5fjgIHmtY/op4jlmaggc21va2Ug5YWx5ZCM5b2i5oiQIGV2aWRlbmNlIHBhY2thZ2XjgIIKICAgLSDliY3nq6/pobXpnaLjgIHlkI7nq6/ot6/nlLHjgIFhdXRoL3Nlc3Npb27jgIFydW50aW1lL2NvbnRyb2wtcGxhbmUg5Y+Y5YyW6ZyA6KaBIGxvY2FsX3J1bm5pbmdfYXBwX2NvbnRyYWN044CCCiAgIC0g5pyq55m75b2V6Lez5YiwIEtleWNsb2FrIOiuoeWFpSByb3V0ZS9hdXRoIHNtb2tl77yM55m75b2V5ZCO5Lqn5ZOB6aqM5pS25L2/55SoIGF1dGhlbnRpY2F0ZWQgYnJvd3NlciBldmlkZW5jZSrjgIIKICAgLSBBdXRoZW50aWNhdGVkIGJyb3dzZXIgdmFsaWRhdGlvbiog5L2/55So5rWL6K+V6LSm5Y+35oiWIHNlc3Npb24g5L2c5Li65o6I5p2D6L6555WM44CCCgoxMC4gTGl2ZSBtdXRhdGlvbiBnYXRlCiAgICAtIOWGmeWFpeOAgeWIoOmZpOOAgeenu+WKqOOAgeaBouWkjeOAgeWuieijheOAgemHjeWQr+OAgWpvYiB0cmlnZ2Vy44CBY29udHJvbC1wbGFuZSBtdXRhdGlvbiDpg73pnIDopoEgbGl2ZV9tdXRhdGlvbl9jb250cmFjdOOAggogICAgLSDlv4XpobvmnInmjojmnYPjgIFkaXNwb3NhYmxlIHRhcmdldOOAgW9ic2VydmVkIGVmZmVjdOOAgXJvbGxiYWNrL2NsZWFudXAgZXZpZGVuY2XjgIIKCjExLiBSZWxlYXNlIHZhbGlkYXRpb24gYW5kIGNvbXBsZXRpb24gY2xhaW0KICAgIC0gcmVsZWFzZV92YWxpZGF0aW9uX2NvbnRyYWN0IOWMuuWIhiByZWxlYXNlIGdhdGVz44CBb3B0aW9uYWwgY2hlY2tz44CBZGVzY29wZWQgY2hlY2tz44CCCiAgICAtIHNjaGVtYS1sZXZlbCBjb21wbGV0aW9uX2NsYWltIOS9v+eUqCB3aG9sZV9wbGFuX2NvbXBsZXRl44CBc2VsZWN0ZWRfdGFyZ2V0X2NvbXBsZXRl44CBYmxvY2tlZCDnrYkgc2NoZW1hIOaemuS4vuOAggogICAgLSDkuqflk4Hln58gY2xhaW0g5pS+5ZyoIGRvbWFpbl9jb21wbGV0aW9uX2NsYWltIOaIliByZWxlYXNlX3ZhbGlkYXRpb25fY29udHJhY3QuY29tcGxldGlvbl9jbGFpbeOAggogICAgLSDmnKzlnLAv5qih5ouf6K+B5o2u5a+55bqUIGxvY2FsIGNsYWlt77yM55yf5a6e5aSW6YOo6aqM5pS25L2/55SoIGxpdmUgZXZpZGVuY2Uq44CCCgoxMi4gQnVnIGludGFrZQogICAgLSDnlKjmiLfmiqXlkYogNDA044CB6aG16Z2i5byC5bi444CBY3VybOOAgeaIquWbvuOAgeaJi+a1i+Wksei0peaXtu+8jOWFiOaMiSBidWdfaW50YWtlIOWIhuexu+OAggogICAgLSDliIbnsbvljIXmi6wgYWN0aXZlX3J1bl9kZWZlY3TjgIFwb3N0X3J1bl9yZWdyZXNzaW9u44CBZW52aXJvbm1lbnRfc3RhbGVfc3RhdGXjgIFhY2NlcHRhbmNlX2dhcOOAgW9wZXJhdG9yX3VzYWdlX2dhcOOAgW5lZWRzX21vcmVfZXZpZGVuY2XjgIIKICAgIC0g55So5oi35LiN6ZyA6KaB5Yik5patIGJ1ZyDlsZ7kuo7lk6rkuKrpmLbmrrXvvIxhZ2VudCDotJ/otKPlvZLlm6DlkozorrDlvZUgQUkgTmF0aXZlIFRyYWNl44CCCgoxMy4gQ2xvc3VyZQogICAgLSDlrozmiJDliY3ov5DooYwgdmFsaWRhdGVfcnVuLnB544CCCiAgICAtIOabtOaWsCBkb2NzLm1k44CBY2hhbmdlLXN1bW1hcnkubWTjgIFsZXNzb25zLm1k44CCCiAgICAtIHZhbGlkYXRvciDpgJrov4flkI7ku43mjIkgZXZpZGVuY2Ugc2NvcGUg5YaZIGNsYWlt44CCCgojIyDmmJ/lj7fog73lipvovrnnlYwKCi0g5Li757q/6IO95Yqb77yacGxhbiB2YWxpZGF0aW9u44CBcnVuIHN0YXRl44CBZXhlY3V0aW9uIGNvbnRyYWN044CBZGVjaXNpb24gZ2F0ZeOAgXdvcmtlciBjb250cmFjdOOAgXRlYW0gY29udHJhY3TjgIFyZW1lZGlhdGlvbiBjb250cmFjdOOAgXJlbGVhc2UgdmFsaWRhdGlvbuOAgWxvY2FsIHJ1bm5pbmcgYXBwIGdhdGXjgIFsaXZlIG11dGF0aW9uIGdhdGXjgIFzY29wZSBjb250cmFjdOOAgXJldmlldyBwYWNrZXTjgIFkb2NzIGRyaWZ044CBY2hhbmdlIHN1bW1hcnnjgIFidWcgaW50YWtl44CBdmFsaWRhdGVfcnVuLnB544CCCi0g5pif5Y+36L6555WM77yaUHJvZHVjdCBCcmllZiBHYXRlKuOAgVBsYW4gR2VuZXJhdGlvbirjgIFkZXBlbmRlbmN5IGF1dG8gcmVmcmVzaCrjgIFtdWx0aS1hZ2VudCBzY2hlZHVsaW5nKuOAgWF1dGhlbnRpY2F0ZWQgYnJvd3NlciB2YWxpZGF0aW9uKuOAgXdvcmt0cmVlIGRlZmF1bHQgaXNvbGF0aW9uKuOAgXJ1biBsZWFzZS9mcmVzaG5lc3Mq44CCCi0g5aSW6YOo5bmz5Y+w77yaZ3N0YWNrIHJldmlldy9jc28vcWEq44CBQ0kq44CBUFIq44CBZGVwbG95bWVudCrjgIFtb25pdG9yaW5nKuOAgVJ1c3RGUy9HaXRMYWIvSGVybWVzIGxpdmUgdGFyZ2V0cyrjgIIKLSDoh6rliqjljJbovrnnlYzvvJpDSS9DRCBnYXRlKuOAgVBSIHdvcmtmbG93KuOAgWRlcGxveW1lbnQgbW9uaXRvcmluZyrjgIFob29rIGVuZm9yY2VtZW50KuOAgW11bHRpLWFnZW50IHNjaGVkdWxlcirjgIIKCiMjIOiusuino+i3r+W+hAoK5YWI6K6y6ZyA5rGC5YWl5Y+j5Li65LuA5LmI6KaB5pS25pWb77yM5YaN6K6yIHBsYW4g5aaC5L2V5oqK5aSn6ZyA5rGC5ouG5oiQIHdhdmUg5ZKMIGNoaWxkIHJ1bu+8jOeEtuWQjuiusiBBSSBOYXRpdmUgcnVuIOWmguS9lemAmui/hyBjb250cmFjdHMg5o6n5Yi25omn6KGM44CC5pyA5ZCO55SoIHZhbGlkYXRpb24g5ZKMIGJ1ZyBpbnRha2Ug6K+05piO5rWB56iL5aaC5L2V5oqK5YWc5bqV6LSj5Lu75LuO55So5oi36L2s5Zue5bel56iL57O757uf44CCCg==</script>
+
+  <script>
+    const state = {
+      tab: "overview",
+      scenario: "feature",
+      termMode: "zh",
+      currentNodeId: null
+    };
+
+    const termMap = {
+      req: ["需求澄清", "Requirement Clarification"],
+      productBrief: ["产品简报", "Product Brief Gate"],
+      plan: ["计划生成", "Plan Generation"],
+      readiness: ["计划就绪", "Plan Readiness"],
+      run: ["运行记录", "Run Record"],
+      alignment: ["对齐门", "Alignment Gate"],
+      contract: ["执行契约", "Execution Contract"],
+      workspace: ["工作区契约", "Workspace Contract"],
+      topology: ["多 Agent 拓扑", "Agent Topology"],
+      implementation: ["实现", "Implementation"],
+      review: ["独立审查", "Independent Review"],
+      remediation: ["修复闭环", "Remediation Loop"],
+      verification: ["验证证据", "Verification Evidence"],
+      localApp: ["本地运行验证", "Local Running App Gate"],
+      authBrowser: ["登录态浏览器验证", "Authenticated Browser Validation"],
+      liveMutation: ["真实变更门", "Live Mutation Gate"],
+      release: ["发布验收", "Release Validation"],
+      claim: ["完成声明", "Completion Claim"],
+      bug: ["问题接入", "Bug Intake"],
+      closure: ["收口", "Run Closure"],
+      lessons: ["知识沉淀", "Lessons"],
+      ci: ["CI/CD", "CI/CD"],
+      scheduler: ["自动多 Agent 调度", "Automated Agent Scheduling"]
+    };
+
+    const tabs = [
+      ["overview", "总览", "全链路主线", "O"],
+      ["planning", "Plan 生成", "需求到可执行计划", "P"],
+      ["execution", "开发执行", "run 内实施和审查", "D"],
+      ["validation", "验收收口", "本地、真实变更和 claim", "V"],
+      ["intake", "Bug Intake", "连续追问和手测问题", "B"],
+      ["status", "能力边界", "主线能力和 * 边界", "S"]
+    ];
+
+    const scenarios = [
+      ["feature", "大功能 / 多 Wave", "cross-module, sensitive", "F"],
+      ["bug", "用户手测发现问题", "bug_intake first", "B"],
+      ["release", "最终验收", "release_validation", "R"],
+      ["simple", "小修小补", "single_agent", "S"]
+    ];
+
+    const nodes = [
+      { id: "req", tab: ["overview","planning"], term: "req", type: "Input", icon: "01", x: 420, y: 70, desc: "先确认用户、场景、目标、非目标、验收证据和授权边界。", checks: ["用户和场景", "目标和非目标", "验收证据", "授权边界"], paths: ["feature","release","simple"] },
+      { id: "brief", tab: ["overview","planning"], term: "productBrief", type: "Gate*", icon: "02", x: 420, y: 250, star: true, desc: "入口产品判断 gate。把 Product Brief 固化为 planner 的输入，避免只按模块拆任务。", checks: ["用户工作流", "第一版必须完成", "非目标清单", "产品验收方式"], paths: ["feature","release"] },
+      { id: "planGen", tab: ["overview","planning"], term: "plan", type: "Work*", icon: "03", x: 420, y: 430, star: true, agent: "planner", desc: "Planner agent 产出 master plan、wave plan 和 child run 提示词。AI Native 通过 plan validation 固化执行入口。", checks: ["master plan", "wave plans", "child run scope", "执行提示词"], paths: ["feature"] },
+      { id: "planReview", tab: ["planning"], term: "review", type: "Review*", icon: "04", x: 735, y: 430, star: true, agent: "reviewer", desc: "Plan review 按产品、工程、测试三类拆分，提前暴露 acceptance gap。", checks: ["Product review", "Engineering review", "QA review", "依赖债务表"], paths: ["feature","release"] },
+      { id: "readiness", tab: ["overview","planning","execution"], term: "readiness", type: "Gate", icon: "05", x: 420, y: 610, desc: "validate_plan.py 判断 ready、ready_with_decision_gates 或 not_ready。", checks: ["validate_plan.py", "P0 on_pass", "stop conditions", "plan_readiness"], paths: ["feature","release","simple"] },
+      { id: "run", tab: ["overview","execution"], term: "run", type: "State", icon: "06", x: 420, y: 790, desc: "创建 .ai-native/runs/<run-id>，state.json 成为机器可验证的事实源。", checks: ["state.json", "alignment.md", "plan.md", "evidence.md"], paths: ["feature","bug","release","simple"] },
+      { id: "alignment", tab: ["overview","execution"], term: "alignment", type: "Gate", icon: "07", x: 420, y: 970, desc: "确认 intent、risk、scope、acceptance criteria、approval 和 checkers。", checks: ["intent", "risk", "scope / non-scope", "acceptance criteria"], paths: ["feature","bug","release","simple"] },
+      { id: "contract", tab: ["overview","execution"], term: "contract", type: "Contract", icon: "08", x: 420, y: 1150, desc: "记录 user_requested_target、selected_target、narrowing、completion_claim 和 blocked_reason。", checks: ["whole_plan 不缩小", "decision_gate_contract", "completion_claim", "blocked_reason"], paths: ["feature","release"] },
+      { id: "workspace", tab: ["execution"], term: "workspace", type: "Contract", icon: "09", x: 110, y: 1150, desc: "高风险、多 worker 或共享脏工作区时记录隔离策略、allowed paths 和 fallback acceptance。", checks: ["dirty status", "allowed paths", "forbidden paths", "shared workspace risk"], paths: ["feature","release"] },
+      { id: "topology", tab: ["overview","execution"], term: "topology", type: "Agents", icon: "10", x: 735, y: 1150, agent: "multi", desc: "选择 single_agent、controller_led 或 parallel_agents。跨模块或敏感域默认 controller_led。", checks: ["controller", "implementation worker", "reviewer", "remediation worker"], paths: ["feature"] },
+      { id: "implementation", tab: ["overview","execution"], term: "implementation", type: "Work", icon: "11", x: 420, y: 1330, agent: "worker", desc: "gate 通过后实现。controller-led run 中主实现应由 implementation worker 负责。", checks: ["worker artifact", "focused tests", "不越界", "不 revert unrelated changes"], paths: ["feature","simple"] },
+      { id: "review", tab: ["overview","execution"], term: "review", type: "Quality", icon: "12", x: 420, y: 1510, agent: "reviewer", desc: "生成 review-input packet，独立 code/architecture/security review 根据风险触发。", checks: ["changed-files.txt", "diff.patch", "gstack attempt", "review artifacts"], paths: ["feature","bug","release","simple"] },
+      { id: "remediation", tab: ["overview","execution"], term: "remediation", type: "Loop", icon: "13", x: 735, y: 1510, agent: "remediation", desc: "blocking 或 important finding 进入 remediation worker，写 fix response 后 re-review。", checks: ["stable finding ID", "fix response", "worker fix artifact", "re-review"], paths: ["feature","bug"] },
+      { id: "verification", tab: ["overview","validation"], term: "verification", type: "Evidence", icon: "14", x: 420, y: 1690, desc: "测试、构建、curl、日志、截图构成 evidence package。", checks: ["命令和结果", "coverage note", "fresh evidence", "evidence.md"], paths: ["feature","bug","release","simple"] },
+      { id: "localApp", tab: ["overview","validation"], term: "localApp", type: "Gate", icon: "15", x: 420, y: 1870, desc: "触及前端、后端路由、auth/session 或本地可用性声明时必须跑本地服务/API/浏览器验证。", checks: ["service URLs", "health check", "browser checks", "log checks"], paths: ["feature","release"] },
+      { id: "authBrowser", tab: ["validation"], term: "authBrowser", type: "Gate*", icon: "16", x: 735, y: 1870, star: true, desc: "有测试账号或 session 时运行登录态浏览器验收，账号和 session 属于授权边界。", checks: ["test account or session", "redacted network logs", "authenticated screenshots", "user workflow assertions"], paths: ["feature","release"] },
+      { id: "liveMutation", tab: ["overview","validation"], term: "liveMutation", type: "Gate", icon: "17", x: 110, y: 1870, desc: "真实写、删、安装、重启、job trigger 等需要授权、disposable target 和 cleanup evidence。", checks: ["authorization", "disposable target", "observed effect", "rollback / cleanup"], paths: ["feature","release"] },
+      { id: "release", tab: ["overview","validation"], term: "release", type: "Gate", icon: "18", x: 420, y: 2050, desc: "先做 coverage matrix，再区分 release gates、optional checks 和 descoped checks。", checks: ["coverage matrix", "fresh release evidence", "environment_results", "descoped checks"], paths: ["release","feature"] },
+      { id: "claim", tab: ["overview","validation"], term: "claim", type: "Close", icon: "19", x: 420, y: 2230, desc: "schema claim 和 domain claim 分开。本地/模拟证据对应 local claim，真实外部验收使用 live evidence*。", checks: ["execution completion_claim", "domain_completion_claim", "release result", "scope notes"], paths: ["feature","release","simple"] },
+      { id: "bug", tab: ["overview","intake"], term: "bug", type: "Intake", icon: "20", x: 420, y: 2410, desc: "用户报告 curl、截图、页面异常或手测失败时，先分类再决定复用 run、新建 bugfix run 或 follow-up plan。", checks: ["observed symptom", "classification", "related run", "AI Native Trace"], paths: ["bug","feature","release"] },
+      { id: "closure", tab: ["overview","execution","validation","intake"], term: "closure", type: "Close", icon: "21", x: 420, y: 2590, desc: "validate_run.py 通过后仍要核对 claim 是否被证据支持。validator 不是扩大 claim 的理由。", checks: ["validate_run.py", "docs.md", "change-summary.md", "state transition"], paths: ["feature","bug","release","simple"] },
+      { id: "lessons", tab: ["overview","intake","status"], term: "lessons", type: "Memory", icon: "22", x: 420, y: 2770, desc: "把重复出现的经验写入 lessons，再按证据决定是否提升为流程规则。", checks: ["lessons.md", "change-summary.md", "promote_lessons.py", "process cleanup"], paths: ["feature","bug","release"] },
+      { id: "ci", tab: ["status","validation"], term: "ci", type: "External*", icon: "23", x: 735, y: 2590, star: true, external: true, desc: "CI、PR、部署和监控属于外部平台能力，AI Native 记录 adapter 或 evidence。", checks: ["CI result", "PR review", "deploy evidence", "monitoring"], paths: ["release"] },
+      { id: "scheduler", tab: ["status","execution"], term: "scheduler", type: "Future*", icon: "24", x: 110, y: 2590, star: true, external: true, desc: "多 agent 调度用 * 标记，当前通过多个会话、child run 和 worker artifacts 协作。", checks: ["child runs", "role artifacts", "worktree isolation", "manual orchestration"], paths: ["feature"] }
+    ];
+
+    const edges = [
+      ["req","brief"], ["brief","planGen"], ["planGen","planReview","branch"], ["planGen","readiness"], ["planReview","readiness","branch"],
+      ["readiness","run"], ["run","alignment"], ["alignment","contract"], ["contract","workspace","branch"], ["contract","topology","branch"],
+      ["workspace","implementation","branch"], ["topology","implementation","branch"], ["implementation","review"], ["review","remediation","branch"],
+      ["remediation","review","branch"], ["review","verification"], ["verification","localApp"], ["localApp","authBrowser","star"],
+      ["localApp","liveMutation","branch"], ["liveMutation","release","branch"], ["authBrowser","release","star"], ["release","claim"],
+      ["claim","bug"], ["bug","closure"], ["closure","lessons"], ["closure","ci","star"], ["closure","scheduler","star"]
+    ];
+
+    const labels = [
+      { x: 744, y: 1108, text: "worker / reviewer", visible: () => ["overview","execution"].includes(state.tab) },
+      { x: 124, y: 1108, text: "workspace", visible: () => state.tab === "execution" },
+      { x: 748, y: 1830, text: "auth*", visible: () => state.tab === "validation" || state.tab === "overview" },
+      { x: 126, y: 1830, text: "mutation", visible: () => state.tab === "validation" || state.tab === "overview" },
+      { x: 748, y: 2550, text: "external*", visible: () => state.tab === "status" || state.tab === "validation" },
+      { x: 124, y: 2550, text: "scheduler*", visible: () => state.tab === "status" || state.tab === "execution" }
+    ];
+
+    const tabBrief = {
+      overview: ["全链路视图", "从需求澄清到 run closure，再到用户追加 bug 的完整闭环。", ["主线靠 contracts 控制", "星号表示授权、外部平台或自动化边界", "多 agent 在拓扑、review 和 remediation 节点出现"]],
+      planning: ["Plan 生成视图", "大需求先转成 master plan、wave plan 和 child run，再进入 AI Native 执行。", ["Product Brief Gate*", "Plan 带 acceptance matrix 和 dependency debt ledger", "validate_plan.py 是执行入口检查"]],
+      execution: ["开发执行视图", "run 内通过 contracts、worker、review packet 和 re-review 控制实现质量。", ["controller 负责状态和集成", "worker 负责主实现", "reviewer 只读，remediation worker 修复"]],
+      validation: ["验收收口视图", "区分测试通过、本地可用、登录态可用、真实外部系统可用。", ["本地运行 app gate 已实现", "登录态浏览器验证需要账号或 session", "真实 mutation 需要授权和 cleanup"]],
+      intake: ["Bug Intake 视图", "用户只需要贴现象，agent 负责归类、复现、记录和修复路径。", ["不用让用户判断阶段", "每次回复带 AI Native Trace", "acceptance gap 需要更新 plan 或新 follow-up"]],
+      status: ["能力边界视图", "用 * 标记人工判断、外部工具、平台集成和自动化边界。", ["CI/CD、PR、部署监控*", "multi-agent scheduler*", "dependency auto refresh*"]]
+    };
+
+    function term(key) {
+      const pair = termMap[key] || [key, key];
+      if (state.termMode === "zh") return pair[0];
+      if (state.termMode === "en") return pair[1];
+      return pair[0] + " / " + pair[1];
+    }
+
+    function nodeTitle(node) {
+      return term(node.term) + (node.star ? " *" : "");
+    }
+
+    function visibleNodes() {
+      return nodes.filter((node) => node.tab.includes(state.tab) && node.paths.includes(state.scenario));
+    }
+
+    function visibleNodeIds() {
+      return new Set(visibleNodes().map((node) => node.id));
+    }
+
+    function pathIds() {
+      const ids = visibleNodes().map((node) => node.id);
+      if (state.scenario === "bug" && state.tab === "intake") return ["run","bug","verification","review","remediation","closure","lessons"].filter((id) => ids.includes(id));
+      if (state.scenario === "release" && state.tab === "validation") return ["readiness","run","alignment","verification","localApp","authBrowser","liveMutation","release","claim","closure"].filter((id) => ids.includes(id));
+      return ids.sort((a, b) => nodes.find((n) => n.id === a).y - nodes.find((n) => n.id === b).y);
+    }
+
+    function currentNodeId() {
+      const ids = pathIds();
+      if (!ids.includes(state.currentNodeId)) state.currentNodeId = ids[0] || null;
+      return state.currentNodeId;
+    }
+
+    function completedNodeIds() {
+      const ids = pathIds();
+      const current = currentNodeId();
+      const index = ids.indexOf(current);
+      return new Set(index < 0 ? ids : ids.slice(0, index + 1));
+    }
+
+    function nodeById(id) {
+      return nodes.find((node) => node.id === id);
+    }
+
+    function center(id) {
+      const node = nodeById(id);
+      return [node.x + 109, node.y + 59];
+    }
+
+    function connectorPath(from, to) {
+      const [x1, y1] = center(from);
+      const [x2, y2] = center(to);
+      if (Math.abs(x2 - x1) < 24) return "M " + x1 + " " + y1 + " L " + x2 + " " + y2;
+      const midY = y1 + (y2 - y1) * 0.5;
+      return "M " + x1 + " " + y1 + " C " + x1 + " " + midY + ", " + x2 + " " + midY + ", " + x2 + " " + y2;
+    }
+
+    function activeEdgeIds() {
+      const ids = pathIds();
+      const set = new Set();
+      for (let i = 0; i < ids.length - 1; i += 1) set.add(ids[i] + "->" + ids[i + 1]);
+      return set;
+    }
+
+    function renderChoices() {
+      const tabMount = document.getElementById("tabChoices");
+      tabMount.innerHTML = "";
+      tabs.forEach(([value, label, sub, glyph]) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "tab" + (state.tab === value ? " active" : "");
+        btn.innerHTML = "<span><b class=\"glyph\">" + glyph + "</b>" + label + "</span><small>" + sub + "</small>";
+        btn.addEventListener("click", () => {
+          state.tab = value;
+          state.currentNodeId = null;
+          render();
+        });
+        tabMount.appendChild(btn);
+      });
+
+      const scenarioMount = document.getElementById("scenarioChoices");
+      scenarioMount.innerHTML = "";
+      scenarios.forEach(([value, label, sub, glyph]) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "choice" + (state.scenario === value ? " active" : "");
+        btn.innerHTML = "<span><b class=\"glyph\">" + glyph + "</b>" + label + "</span><small>" + sub + "</small>";
+        btn.addEventListener("click", () => {
+          state.scenario = value;
+          state.currentNodeId = null;
+          render();
+        });
+        scenarioMount.appendChild(btn);
+      });
+    }
+
+    function renderBrief() {
+      const [title, body, points] = tabBrief[state.tab];
+      document.getElementById("scenarioTitle").textContent = title;
+      document.getElementById("scenarioSubtitle").textContent = body;
+      const scenario = scenarios.find((item) => item[0] === state.scenario);
+      document.getElementById("briefPanel").innerHTML =
+        "<article class=\"brief-card\"><h2>" + title + "</h2><p>" + body + "</p><ul>" + points.map((p) => "<li>" + p + "</li>").join("") + "</ul></article>" +
+        "<article class=\"brief-card\"><h3>当前场景</h3><p>" + scenario[1] + "。路径会保留和这个场景相关的节点。</p><ul><li>流程版本：V4.0 / schema 18</li><li>讲解重点：证据、契约、边界和 claim</li><li>* 表示人工判断、外部平台、凭据、授权、平台集成或自动化边界</li></ul></article>";
+    }
+
+    function renderEdges() {
+      const svg = document.getElementById("flowLines");
+      Array.from(svg.querySelectorAll(".flow-edge")).forEach((node) => node.remove());
+      const visible = visibleNodeIds();
+      const active = activeEdgeIds();
+      const completed = completedNodeIds();
+      edges.forEach(([from, to, kind]) => {
+        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        const edgeId = from + "->" + to;
+        const isVisible = visible.has(from) && visible.has(to);
+        path.setAttribute("d", connectorPath(from, to));
+        path.setAttribute("marker-end", kind === "star" ? "url(#arrowStar)" : kind === "branch" ? "url(#arrowBranch)" : isVisible ? "url(#arrowMain)" : "url(#arrowDim)");
+        path.setAttribute("class", "flow-edge " + (kind || "main") + " " + (!isVisible ? "dim" : "") + " " + (active.has(edgeId) && completed.has(from) ? "active" : ""));
+        svg.appendChild(path);
+      });
+    }
+
+    function renderNodes() {
+      const mount = document.getElementById("flowNodes");
+      mount.innerHTML = "";
+      const visible = visibleNodeIds();
+      const completed = completedNodeIds();
+      const current = currentNodeId();
+      nodes.forEach((node) => {
+        const card = document.createElement("article");
+        const isVisible = visible.has(node.id);
+        card.className = "node " + (!isVisible ? "dim" : "") + (completed.has(node.id) ? " active" : "") + (current === node.id ? " current" : "");
+        card.style.left = node.x + "px";
+        card.style.top = node.y + "px";
+        card.innerHTML =
+          "<div class=\"node-head\"><span class=\"node-icon\">" + node.icon + "</span><span class=\"badge " + (node.star ? "star" : node.external ? "external" : "") + "\">" + node.type + "</span></div>" +
+          "<h2>" + nodeTitle(node) + "</h2><p>" + node.desc + "</p>";
+        card.addEventListener("click", () => {
+          if (isVisible) {
+            state.currentNodeId = node.id;
+            render();
+          }
+        });
+        mount.appendChild(card);
+      });
+    }
+
+    function renderLabels() {
+      const mount = document.getElementById("flowLabels");
+      mount.innerHTML = "";
+      labels.filter((label) => label.visible()).forEach((label) => {
+        const el = document.createElement("span");
+        el.className = "lane-label";
+        el.style.left = label.x + "px";
+        el.style.top = label.y + "px";
+        el.innerHTML = "<strong>" + label.text + "</strong>";
+        mount.appendChild(el);
+      });
+    }
+
+    function renderPulse() {
+      const ids = pathIds();
+      const parts = [];
+      for (let i = 0; i < ids.length - 1; i += 1) parts.push(connectorPath(ids[i], ids[i + 1]));
+      const token = document.getElementById("pulseToken");
+      if (!parts.length) {
+        token.style.display = "none";
+        return;
+      }
+      token.style.display = "";
+      token.style.offsetPath = "path('" + parts.join(" ") + "')";
+    }
+
+    function renderInspector() {
+      const node = nodeById(currentNodeId()) || visibleNodes()[0] || nodes[0];
+      document.getElementById("nodeType").textContent = node.type;
+      document.getElementById("nodeTitle").textContent = nodeTitle(node);
+      document.getElementById("nodeDesc").textContent = node.desc;
+      const currentNodes = visibleNodes();
+      document.getElementById("nodeCount").textContent = currentNodes.length;
+      document.getElementById("starCount").textContent = currentNodes.filter((item) => item.star).length;
+      document.getElementById("agentCount").textContent = currentNodes.filter((item) => item.agent).length;
+
+      const checks = document.getElementById("nodeChecks");
+      checks.innerHTML = "";
+      node.checks.forEach((text) => {
+        const item = document.createElement("div");
+        item.className = "check";
+        item.innerHTML = "<i>✓</i><span>" + text + "</span>";
+        checks.appendChild(item);
+      });
+
+      const path = document.getElementById("pathList");
+      path.innerHTML = "";
+      pathIds().forEach((id) => {
+        const item = document.createElement("div");
+        item.className = "path-step";
+        item.textContent = nodeTitle(nodeById(id));
+        item.addEventListener("click", () => {
+          state.currentNodeId = id;
+          render();
+        });
+        path.appendChild(item);
+      });
+    }
+
+    function renderTermModeButtons() {
+      document.querySelectorAll("[data-term-mode]").forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.termMode === state.termMode);
+      });
+    }
+
+    function render() {
+      renderChoices();
+      renderTermModeButtons();
+      renderBrief();
+      renderEdges();
+      renderNodes();
+      renderLabels();
+      renderPulse();
+      renderInspector();
+    }
+
+    document.querySelectorAll("[data-term-mode]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        state.termMode = btn.dataset.termMode;
+        render();
+      });
+    });
+
+    function moveStep(delta) {
+      const ids = pathIds();
+      const current = currentNodeId();
+      const index = ids.indexOf(current);
+      const next = ids[Math.min(ids.length - 1, Math.max(0, index + delta))];
+      if (next) {
+        state.currentNodeId = next;
+        render();
+        focusCurrent();
+      }
+    }
+
+    function focusCurrent() {
+      const node = nodeById(currentNodeId());
+      if (!node) return;
+      document.getElementById("flow").scrollTo({ top: Math.max(0, node.y - 120), behavior: "smooth" });
+    }
+
+    document.getElementById("prevBtn").addEventListener("click", () => moveStep(-1));
+    document.getElementById("nextBtn").addEventListener("click", () => moveStep(1));
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      state.currentNodeId = null;
+      render();
+      document.getElementById("flow").scrollTo({ top: 0, behavior: "smooth" });
+    });
+    document.getElementById("fitBtn").addEventListener("click", focusCurrent);
+
+    let cachedSourceMarkdown = "";
+    const decodeSourceMarkdown = () => {
+      if (cachedSourceMarkdown) return cachedSourceMarkdown;
+      const encoded = document.getElementById("sourceMarkdownBase64").textContent.trim();
+      const binary = atob(encoded);
+      const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+      cachedSourceMarkdown = new TextDecoder("utf-8").decode(bytes);
+      return cachedSourceMarkdown;
+    };
+
+    const openSource = () => {
+      document.getElementById("sourceMarkdownView").textContent = decodeSourceMarkdown();
+      document.getElementById("sourceDialog").hidden = false;
+    };
+
+    const closeSource = () => {
+      document.getElementById("sourceDialog").hidden = true;
+    };
+
+    const downloadSourceMarkdown = () => {
+      const blob = new Blob([decodeSourceMarkdown()], { type: "text/markdown;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "ai-native-dev-pipeline-v4-full-flow.md";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    };
+
+    document.getElementById("sourceOpen").addEventListener("click", openSource);
+    document.getElementById("sourceOpenFloat").addEventListener("click", openSource);
+    document.getElementById("sourceClose").addEventListener("click", closeSource);
+    document.getElementById("sourceDownload").addEventListener("click", downloadSourceMarkdown);
+    document.getElementById("sourceDialog").addEventListener("click", (event) => {
+      if (event.target.id === "sourceDialog") closeSource();
+    });
+
+    render();
+  </script>
+</body>
+</html>

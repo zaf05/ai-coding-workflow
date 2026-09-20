@@ -1,0 +1,12 @@
+schema_version: 1
+name: "反例：重试无上限"
+workflow_id: "unbounded-retry-invalid"
+error_code_mapping: {}
+blocks:
+  - label: impl
+    block_type: implement
+    role: implementer
+    goal: "返修"
+    complete_criterion: "必须被拒绝：max_attempts 越界"
+    max_attempts: 99
+    next_block_label: null

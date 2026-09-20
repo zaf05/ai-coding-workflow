@@ -1,0 +1,670 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AIWorflow 全流程（v1.8.9）· 我的 AI 工作流</title>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --surface: #ffffff;
+      --surface-2: #f0f2f5;
+      --ink: #171e28;
+      --ink-2: #44505e;
+      --ink-3: #64748b;
+      --line: #dce1e8;
+      --line-2: #e8ecf0;
+      --accent: #0d6e6e;
+      --accent-bg: #e6f2f2;
+      --cat-blue: #2563eb;   --cat-blue-bg: #eaf1fd;
+      --cat-indigo: #4f46e5; --cat-indigo-bg: #eef0fd;
+      --cat-green: #16a34a;  --cat-green-bg: #eaf6ee;
+      --cat-orange: #d97706; --cat-orange-bg: #fef5e6;
+      --cat-purple: #9333ea; --cat-purple-bg: #f5edfc;
+      --cat-red: #dc2626;    --cat-red-bg: #fdeaea;
+      --cat-brown: #92400e;  --cat-brown-bg: #f5eee6;
+      --cat-gold: #a16207;   --cat-gold-bg: #fdf5d8;
+      --cat-teal: #0d9488;   --cat-teal-bg: #e6f5f3;
+      --cat-slate: #475569;  --cat-slate-bg: #eef1f4;
+      --ok: #15803d;        --ok-bg: #eaf6ee;
+      --warn: #a16207;      --warn-bg: #fdf5d8;
+      --shadow: 0 1px 3px rgba(20,30,45,0.06), 0 1px 2px rgba(20,30,45,0.04);
+      --radius: 6px;
+      --measure: 76ch;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    h2[id], h3[id], div[id] { scroll-margin-top: 64px; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", sans-serif;
+      background: var(--bg); color: var(--ink); line-height: 1.6;
+      padding: 0 24px 64px;
+    }
+    ::selection { background: var(--accent-bg); color: var(--ink); }
+    a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+
+    h1 { font-size: 1.75em; font-weight: 700; letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 4px; }
+    h2 { font-size: 1.2em; font-weight: 650; letter-spacing: -0.01em; line-height: 1.2;
+         margin: 40px 0 14px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+    h3 { font-size: 0.8em; font-weight: 650; letter-spacing: 0.04em; margin: 18px 0 8px;
+         color: var(--ink-2); text-transform: uppercase; }
+    .container { max-width: 1080px; margin: 0 auto; }
+    .meta { color: var(--ink-3); font-size: 0.88em; margin-bottom: 28px; }
+
+    .page-head { padding: 40px 0 0; }
+    .toc { position: sticky; top: 0; z-index: 100; background: rgba(246,247,249,0.92);
+           backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+           border-bottom: 1px solid var(--line-2); margin: 0 -24px 24px; padding: 8px 24px; }
+    .toc-inner { max-width: 1080px; margin: 0 auto; display: flex; gap: 4px; flex-wrap: wrap; }
+    .toc a { display: inline-block; padding: 5px 11px; border-radius: 4px; font-size: 0.78em;
+             color: var(--ink-3); text-decoration: none; font-weight: 550; white-space: nowrap;
+             transition: color .15s, background .15s; }
+    .toc a:hover { color: var(--accent); background: var(--accent-bg); }
+    .toc a:active { color: var(--accent); background: var(--accent-bg); }
+
+    .card { background: var(--surface); border: 1px solid var(--line-2); border-radius: var(--radius);
+            padding: 20px 24px; margin-bottom: 16px; box-shadow: var(--shadow); }
+
+    .bar { display: flex; gap: 6px; flex-wrap: wrap; margin: 12px 0; }
+    .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.78em; font-weight: 550; letter-spacing: 0.01em; }
+    .tag-flow    { background: var(--cat-blue-bg);   color: var(--cat-blue); }
+    .tag-role    { background: var(--cat-indigo-bg); color: var(--cat-indigo); }
+    .tag-evidence{ background: var(--cat-green-bg);  color: var(--cat-green); }
+    .tag-guard   { background: var(--cat-red-bg);    color: var(--cat-red); }
+    .tag-auto    { background: var(--cat-brown-bg);  color: var(--cat-brown); }
+    .tag-ledger  { background: var(--cat-gold-bg);   color: var(--cat-gold); }
+    .tag-green   { background: var(--ok-bg);         color: var(--ok); }
+    .tag-yellow  { background: var(--warn-bg);       color: var(--warn); }
+
+    .tbl-wrap { overflow-x: auto; margin: 12px 0; border: 1px solid var(--line-2); border-radius: var(--radius); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.86em; }
+    th, td { padding: 7px 12px; text-align: left; border-bottom: 1px solid var(--line-2); vertical-align: top; }
+    tr:first-child th { background: var(--surface-2); font-weight: 650; color: var(--ink-2);
+                                  font-size: 0.78em; text-transform: uppercase; letter-spacing: 0.04em;
+                                  border-bottom: 1px solid var(--line); white-space: nowrap; }
+    tr:hover td { background: #fafbfc; }
+    tr:last-child td { border-bottom: none; }
+
+    .flow-row { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; margin: 16px 0; }
+    .flow-node { padding: 7px 12px; border-radius: 5px; font-size: 0.8em; font-weight: 600;
+                 text-align: center; min-width: 56px; line-height: 1.3; letter-spacing: 0.01em; }
+    .flow-arrow { color: var(--ink-3); font-size: 0.9em; font-weight: 400; }
+    .fn-intake  { background: var(--cat-blue-bg);   color: var(--cat-blue); }
+    .fn-spec    { background: var(--cat-indigo-bg); color: var(--cat-indigo); }
+    .fn-plan    { background: var(--cat-indigo-bg); color: var(--cat-indigo); }
+    .fn-approve { background: var(--cat-red-bg);    color: var(--cat-red); border: 1.5px dashed var(--cat-red); }
+    .fn-impl    { background: var(--cat-green-bg);  color: var(--cat-green); }
+    .fn-review  { background: var(--cat-orange-bg); color: var(--cat-orange); }
+    .fn-test    { background: var(--cat-purple-bg); color: var(--cat-purple); }
+    .fn-release { background: var(--cat-red-bg);    color: var(--cat-red); border: 1.5px dashed var(--cat-red); }
+    .fn-accept  { background: var(--cat-teal-bg);   color: var(--cat-teal); }
+    .fn-close   { background: var(--cat-slate-bg);  color: var(--cat-slate); }
+    .fn-star    { font-style: italic; }
+
+    .flow-group { display: inline-flex; align-items: center; gap: 5px;
+                  border: 1.5px dashed var(--cat-purple); border-radius: 8px;
+                  padding: 8px 10px; position: relative; }
+    .flow-group-label { position: absolute; top: -9px; left: 10px;
+                        background: var(--cat-purple-bg); color: var(--cat-purple);
+                        font-size: 0.68em; font-weight: 600; padding: 0 6px;
+                        border-radius: 3px; letter-spacing: 0.03em; }
+    .fn-node-sm { padding: 6px 10px; border-radius: 5px; font-size: 0.72em;
+                  font-weight: 600; text-align: center; min-width: 72px; line-height: 1.35; }
+    .fn-node-sm .sub { font-size: 0.88em; font-weight: 400; opacity: 0.85; display: block; }
+
+    .legend { display: flex; gap: 14px; flex-wrap: wrap; margin: 14px 0; font-size: 0.8em; color: var(--ink-2); }
+    .legend-item { display: flex; align-items: center; gap: 5px; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 2px; }
+
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin: 16px 0; }
+    .stat { background: var(--surface); border: 1px solid var(--line-2); border-radius: var(--radius);
+            padding: 16px 8px; text-align: center; transition: border-color .15s; }
+    .stat:hover { border-color: var(--accent); }
+    .stat-num { font-size: 1.6em; font-weight: 700; color: var(--accent); letter-spacing: -0.02em; line-height: 1.2; }
+    .stat-label { font-size: 0.75em; color: var(--ink-3); margin-top: 2px; }
+
+    .panel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 768px) { .panel-grid { grid-template-columns: 1fr; } }
+
+    pre { background: var(--surface-2); border: 1px solid var(--line-2); padding: 12px 14px;
+          border-radius: var(--radius); font-size: 0.82em; overflow-x: auto; margin: 8px 0; line-height: 1.5; }
+    code { font-family: "SF Mono", "Fira Code", "JetBrains Mono", monospace; font-size: 0.92em; }
+    p code, li code, td code { background: var(--surface-2); padding: 1px 5px; border-radius: 3px; font-size: 0.88em; }
+    .highlight { background: var(--cat-gold-bg); padding: 1px 4px; border-radius: 3px; }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; text-underline-offset: 2px; }
+    ul { padding-left: 18px; }
+    li { margin-bottom: 3px; }
+    p { max-width: var(--measure); }
+    .card > p { max-width: none; }
+    @media print { .toc { display: none; } body { padding: 0; } .card { break-inside: avoid; } }
+  </style>
+</head>
+<body>
+<div class="container">
+
+<nav class="toc" aria-label="页面导航">
+  <div class="toc-inner">
+    <a href="#s-what">是什么</a>
+    <a href="#s-flow">全流程</a>
+    <a href="#s-auto">自动化</a>
+    <a href="#s-ledger">Ledger</a>
+    <a href="#s-compare">对比</a>
+    <a href="#s-assets">资产</a>
+    <a href="#s-start">快速开始</a>
+    <a href="#s-boundary">边界</a>
+    <a href="#s-version">版本</a>
+    <a href="#s-appendix">附录</a>
+  </div>
+</nav>
+
+<h1>🔧 我的 AI 工作流</h1>
+
+<!-- ====== 一句话是什么 ====== -->
+<div class="card">
+  <h3 id="s-what">📌 一句话：这是什么</h3>
+  <p>AIWorflow 是一套<strong>纯文件驱动的 AI 研发控制层</strong>。它把一次"让 AI 干活"的请求，变成一条<strong>可编排（块 DAG）、可分权（四角色）、可验证（门禁 + 证据）、可自动推进（loop_control 信号驱动循环）、可接管（状态与账本）、可恢复（ledger 轮次日志）</strong>的交付链路。</p>
+  <div class="bar">
+    <span class="tag tag-flow">Flow 层 · 块 DAG</span>
+    <span class="tag tag-role">Role 层 · 四角色</span>
+    <span class="tag tag-evidence">Evidence 层 · 只追加账本</span>
+    <span class="tag tag-guard">三层护栏</span>
+    <span class="tag tag-auto">自动化推进</span>
+    <span class="tag tag-ledger">轮次日志 ledger</span>
+  </div>
+</div>
+
+<!-- ====== 核心数字 ====== -->
+<div class="stats">
+  <div class="stat"><div class="stat-num">35</div><div class="stat-label">规则文档 + README</div></div>
+  <div class="stat"><div class="stat-num">9</div><div class="stat-label">共享契约</div></div>
+  <div class="stat"><div class="stat-num">5+1</div><div class="stat-label">Skill 包</div></div>
+  <div class="stat"><div class="stat-num">11</div><div class="stat-label">工作流 (4正+7反)</div></div>
+  <div class="stat"><div class="stat-num">16</div><div class="stat-label">确定性代码脚本</div></div>
+  <div class="stat"><div class="stat-num">70/70</div><div class="stat-label">selftest PASS</div></div>
+  <div class="stat"><div class="stat-num">0 新增</div><div class="stat-label">外部依赖（已有 PyYAML）</div></div>
+  <div class="stat"><div class="stat-num">124</div><div class="stat-label">文章+项目吸收 (001–124)</div></div>
+</div>
+
+<!-- ====== G0-G10 全流程 ====== -->
+<h2 id="s-flow">🔄 G0–G10 全流程（环骨架）</h2>
+
+<div class="card">
+  <div class="legend">
+    <span class="legend-item"><span class="legend-dot" style="background:#e3f2fd"></span>Intake/Recon</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#e8eaf6"></span>Spec/Plan</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#fce4ec;border:2px dashed #c62828"></span>人工确认 ★</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#e8f5e9"></span>实现</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#fff3e0"></span>审核</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#f3e5f5"></span>测试</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#e0f2f1"></span>入库</span>
+  </div>
+
+  <div class="flow-row">
+    <span class="flow-node fn-intake">G0<br>Intake</span><span class="flow-arrow">→</span>
+    <span class="flow-node fn-intake">G1<br>Recon</span><span class="flow-arrow">→</span>
+    <span class="flow-node fn-spec">G2<br>Spec</span><span class="flow-arrow">→</span>
+    <span class="flow-node fn-star">⭐ G3<br>Approve</span><span class="flow-arrow">→</span>
+    <span class="flow-node fn-spec">G4<br>TDD Red</span><span class="flow-arrow">→</span>
+    <span class="flow-node fn-impl">G5<br>Implement</span><span class="flow-arrow">→</span>
+    <span class="flow-node fn-review">Code Review</span><span class="flow-arrow">→</span>
+    <span class="flow-group">
+      <span class="flow-group-label">验证（Tester）</span>
+      <span class="fn-node-sm fn-test">G6 集成<span class="sub">增量测试</span></span><span class="flow-arrow">→</span>
+      <span class="fn-node-sm fn-test">G7 完整验证<span class="sub">浏览器 + 视口矩阵</span></span>
+    </span><span class="flow-arrow">→</span>
+    <span class="flow-node fn-star">⭐ G8<br>Release</span><span class="flow-arrow">→</span>
+    <span class="flow-node fn-accept">G9<br>Accept</span><span class="flow-arrow">→</span>
+    <span class="flow-node fn-close">G10<br>Close</span>
+  </div>
+
+  <p style="margin-top:12px;font-size:0.85em;color:var(--muted)">
+    ⭐ = 人工确认（<code>star:true</code>），不可代签。「环骨架」= 触发(G0)→生产(G1–G5)→闸门(G3/G5/G6/G7)→人审(G3★/G8★)→入库(G9)→复用(G10)。G5 后的 <em>Code Review</em> 是 G5 内的审查活动（先跑 review_preflight，再由 Reviewer 判定；通过证据 = CODE_REVIEW: APPROVE），不是独立门禁。<strong>G4</strong> = TDD Red：测试文件先于实现写入，执行确认 FAIL（证据绑定 SHA）。<strong>G6</strong> = 块合入集成分支后跑增量测试（Tester，绑定集成 SHA）；<strong>G7</strong> = 所有块验证后跑完整测试报告含真实浏览器 + 视口矩阵（Tester，绑定同一集成 SHA）。虚线框 = 验证阶段。
+  </p>
+</div>
+
+<!-- ====== 自动化推进 + 三层护栏 ====== -->
+<div class="panel-grid">
+  <div class="card">
+    <h3 id="s-auto">🤖 自动化推进闭环 (v1.6+)</h3>
+    <div class="tbl-wrap"><table>
+      <tr><th>信号</th><th>含义</th><th>动作</th></tr>
+      <tr><td><code>CONTINUE</code></td><td>check 通过，脚本自动推进</td><td>立即再次 --advance</td></tr>
+      <tr><td><code>DONE</code></td><td>全部完成</td><td>Planner close，ledger 写 final</td></tr>
+      <tr><td><code>WAIT_USER</code></td><td>遇到 ⭐ 人工确认</td><td>呈现结构化材料等人</td></tr>
+      <tr><td><code>WAIT_ROLE</code></td><td>需要角色处理</td><td>调角色 Skill → mark-done</td></tr>
+      <tr><td><code>BLOCKED</code></td><td>结构性障碍</td><td>停止并归因</td></tr>
+    </table></div>
+  </div>
+
+  <div class="card">
+    <h3>🛡️ 三层护栏体系</h3>
+    <div class="tbl-wrap"><table>
+      <tr><th>层级</th><th>机制</th><th>何时触发</th></tr>
+      <tr><td><span class="tag tag-guard">L1 编写时</span></td><td>validate_workflow.py / compile_dag.py</td><td>校验工作流定义时（7 条 hard guardrail）</td></tr>
+      <tr><td><span class="tag tag-guard">L2 提交时</span></td><td>pre-commit hook</td><td><code>git commit</code> 时阻断</td></tr>
+      <tr><td><span class="tag tag-guard">L3 运行时</span></td><td>run_flow.py 推进器</td><td>执行每块时（重试上限/熔断/loop_control）</td></tr>
+    </table></div>
+    <p style="font-size:0.82em;color:var(--muted);margin-top:8px">🔥 7 条 hard guardrail 每条都有反例工作流（<code>_invalid/</code>），selftest §9 逐条证明真的会开火</p>
+  </div>
+</div>
+
+<!-- ====== 轮次日志 ledger (v1.7.4 引入，v1.7.5 沿用) ====== -->
+<h2 id="s-ledger">📋 自动化推进轮次日志（ledger）v1.7.4 引入 · 沿用至今（v1.8.9）</h2>
+
+<div class="card">
+  <div class="panel-grid">
+    <div>
+      <h3>字段结构</h3>
+      <pre><code>ledger:
+  - round: 1            # 轮次编号
+    timestamp: "2026-09-14T..."  # ISO8601 UTC
+    block: "intake"     # 当前块 label
+    action: "STAR"      # STAR|CHECK|HANDOFF|DONE
+    signal: "WAIT_USER" # CONTINUE|DONE|WAIT_USER|WAIT_ROLE|BLOCKED
+    gate: "G3"          # 可选
+    passed: true         # CHECK 块是否通过
+    model: "qwen3.8-max" # v1.8.7 起会话归因；model 必填
+    tokens_used: 12345   # 宿主查不到时写 null，不估算</code></pre>
+    </div>
+    <div>
+      <h3>写入时机</h3>
+      <div class="tbl-wrap"><table>
+        <tr><th>触发</th><th>action</th><th>signal</th></tr>
+        <tr><td>⭐ star:true</td><td>STAR</td><td>WAIT_USER</td></tr>
+        <tr><td>CHECK 通过</td><td>CHECK</td><td>CONTINUE</td></tr>
+        <tr><td>CHECK 失败</td><td>CHECK</td><td>BLOCKED</td></tr>
+        <tr><td>CHECK 未执行</td><td>HANDOFF</td><td>WAIT_ROLE</td></tr>
+        <tr><td>交接给角色</td><td>HANDOFF</td><td>WAIT_ROLE</td></tr>
+        <tr><td>全部完成</td><td>DONE</td><td>DONE (round=final)</td></tr>
+      </table></div>
+      <p style="font-size:0.82em;color:var(--muted);margin-top:8px">
+        每轮自动写入 <code>state.yaml</code>。中断恢复只需读 ledger 最后一条即可定位，无需扫描 <code>evidence.md</code> 全账本。
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ====== 七工程对比 ====== -->
+<h2 id="s-compare">⚖️ 2026 大厂对标：我们的位置</h2>
+
+<div class="card">
+  <div class="tbl-wrap"><table>
+    <tr><th>维度</th><th>我们 AIWorflow v1.8.9</th><th>Skyvern</th><th>ric-dev</th><th>AWS AI-DLC</th><th>Langflow</th><th>CCG</th><th>AI Workflow</th></tr>
+    <tr>
+      <td><strong>定位</strong></td>
+      <td>AI 研发控制层（纯文件）</td>
+      <td>浏览器自动化</td>
+      <td>四角色Skill包</td>
+      <td>AI开发生命周期</td>
+      <td>可视化Agent编排</td>
+      <td>多模型协作引擎</td>
+      <td>Skill内容市场</td>
+    </tr>
+    <tr>
+      <td><strong>规模</strong></td>
+      <td>35 docs + 9 contracts + 16 scripts</td>
+      <td>5496文件</td>
+      <td>95文件</td>
+      <td>TypeScript+CLI</td>
+      <td>Python+React+DB</td>
+      <td>Go/Node.js+CLI</td>
+      <td>HTML(Skills集合)</td>
+    </tr>
+    <tr>
+      <td><strong>DAG 执行</strong></td>
+      <td><span class="tag tag-green">✅ run_flow.py</span></td>
+      <td><span class="tag tag-green">✅ 完整引擎</span></td>
+      <td><span class="tag tag-yellow">❌ 无</span></td>
+      <td><span class="tag tag-green">✅ aidlc CLI</span></td>
+      <td><span class="tag tag-green">✅ Python后端</span></td>
+      <td><span class="tag tag-green">✅ ccg CLI</span></td>
+      <td><span class="tag tag-yellow">❌ 无</span></td>
+    </tr>
+    <tr>
+      <td><strong>护栏</strong></td>
+      <td><span class="tag tag-green">✅ 三层全自动化</span></td>
+      <td><span class="tag tag-green">✅ author+review</span></td>
+      <td><span class="tag tag-yellow">⚠️ 语义定义</span></td>
+      <td><span class="tag tag-green">✅ approval gate</span></td>
+      <td><span class="tag tag-yellow">⚠️ 平台层</span></td>
+      <td><span class="tag tag-yellow">❌ 未明确</span></td>
+      <td><span class="tag tag-yellow">❌ 无</span></td>
+    </tr>
+    <tr>
+      <td><strong>版本管理</strong></td>
+      <td><span class="tag tag-green">✅ VERSION+SHA256收据</span></td>
+      <td><span class="tag tag-yellow">❌ 无</span></td>
+      <td><span class="tag tag-yellow">❌ 无</span></td>
+      <td><span class="tag tag-green">✅ GitHub Release</span></td>
+      <td><span class="tag tag-green">✅ PyPI</span></td>
+      <td><span class="tag tag-green">✅ npm</span></td>
+      <td><span class="tag tag-yellow">❌ 无</span></td>
+    </tr>
+    <tr>
+      <td><strong>selftest</strong></td>
+      <td><span class="tag tag-green">✅ <strong>70/70 PASS</strong></span></td>
+      <td><span class="tag tag-yellow">⚠️ pytest不测Skill</span></td>
+      <td><span class="tag tag-yellow">❌ 无</span></td>
+      <td><span class="tag tag-yellow">⚠️ 有CI</span></td>
+      <td><span class="tag tag-yellow">⚠️ 有pytest</span></td>
+      <td><span class="tag tag-yellow">⚠️ 有CI+codecov</span></td>
+      <td><span class="tag tag-yellow">❌ 无</span></td>
+    </tr>
+    <tr>
+      <td><strong>环系统建模</strong></td>
+      <td><span class="tag tag-green">✅ 显式建模+环间接口</span></td>
+      <td>隐式存在</td>
+      <td>未建模</td>
+      <td>隐式（13段）</td>
+      <td>隐式（流程）</td>
+      <td>未建模</td>
+      <td>未建模</td>
+    </tr>
+    <tr>
+      <td><strong>轮次日志</strong></td>
+      <td><span class="tag tag-green">✅ ledger 自动持久化</span></td>
+      <td>DB记录</td>
+      <td>无</td>
+      <td>无</td>
+      <td>DB记录</td>
+      <td>无</td>
+      <td>无</td>
+    </tr>
+    <tr>
+      <td><strong>外部依赖</strong></td>
+      <td><span class="tag tag-green">✅ <strong>0</strong></span></td>
+      <td>PostgreSQL+Redis+200+pkg</td>
+      <td>0</td>
+      <td>Node.js/Bun</td>
+      <td>Python+React+DB</td>
+      <td>Node.js>=20</td>
+      <td>Node.js</td>
+    </tr>
+    <tr>
+      <td><strong>可独立运行</strong></td>
+      <td><span class="tag tag-green">✅ 裸 Linux 直接跑</span></td>
+      <td>需完整基础设施</td>
+      <td>只有指令无执行</td>
+      <td>需 Node.js</td>
+      <td>需 Python+DB</td>
+      <td>需 Node.js</td>
+      <td>需 Node.js</td>
+    </tr>
+    <tr>
+      <td><strong>文章溯源</strong></td>
+      <td><span class="tag tag-green">✅ 124 外部来源全量吸收（001–086 全量核验 + 087–124 全网检索批标注收录）</span></td>
+      <td>无</td>
+      <td>无</td>
+      <td>无</td>
+      <td>无</td>
+      <td>无</td>
+      <td>无</td>
+    </tr>
+    <tr>
+      <td><strong>治理深度</strong></td>
+      <td>中（3层护栏+轮次日志，够用）</td>
+      <td><span class="tag tag-green"><strong>深</strong>（90个Copilot文件）</span></td>
+      <td>浅（语义层）</td>
+      <td>薄</td>
+      <td>中（平台层）</td>
+      <td>浅</td>
+      <td>无</td>
+    </tr>
+  </table></div>
+
+  <p style="margin-top:16px;font-weight:600;color:var(--accent)">一句话：AIWorflow v1.8.9 = 在「个人使用、除当前环境已有 PyYAML 外零新增依赖」约束下做到大厂级流程完备（已知缺口 100% 登记在册并有触发条件，无「不知道自己不知道」项，复盘结论见 docs/33），对标 Anthropic Workflow-first、美团人人对齐→人机对齐、快手 Context Assembly+Evidence Grounding、字节 DeerFlow 编排+记忆。124 条外部来源（9 个批次：核心方法论 + 开源项目 + 蚂蚁/阿里等 L1 全文 + 2026-09 各批扫描 + 2026-09-20 全网检索批；001–086 归属判定见 docs/33、087–124 见 docs/34）+ hongtao2agent 上下文工程/DSH插件/Agentic SRE/Pi Compaction + 黄迅/GoPS 环系统，去掉浏览器面和重型基础设施，加上 selftest 确定性自检、版本锁定分发、三层护栏下沉、环间接口规范、ledger 轮次日志与长周期任务恢复链——在"最小可验证"前提下做到最完整。</p>
+</div>
+
+<!-- ====== 核心资产清单 ====== -->
+<h2 id="s-assets">📦 核心资产清单</h2>
+
+<div class="card">
+  <div class="tbl-wrap"><table>
+    <tr><th>类型</th><th>数量</th><th>内容</th><th>校验方式</th></tr>
+    <tr><td>规则文档</td><td>35 篇 + README</td><td>全流程/架构/块目录/门禁/角色/状态/参数/失败/缓存/授权/适配/安装/扫描/路线图/实践/执行模型/DAG/证据/环系统/外部项目/多天任务/运行期强制方案/文章对照扫描/附录全量复盘/全网检索扫描</td><td>validate_package.py 校验相对链接完整性</td></tr>
+    <tr><td>共享契约</td><td>9 份</td><td>角色边界/门禁策略/证据规则/工作流状态/变更控制/Git策略/交接契约/规则生命周期/产物生命周期（护栏注册表在 docs/09 与脚本 GUARDRAIL_IDS，非独立契约文件）</td><td>validate_package.py + selftest §1</td></tr>
+    <tr><td>Skill 包</td><td>5 + 1</td><td>入口(aiworflow) + 四角色(planner/implementer/reviewer/tester) + 共享底座(_shared)</td><td>validate_package.py 校验 frontmatter/链接</td></tr>
+    <tr><td>工作流</td><td>4 正 + 7 反</td><td>功能交付/缺陷归因/重构迁移/页面验证 + 7 条 guardrail 反例 + 条件分支示例</td><td>validate_workflow.py + selftest §2/§9</td></tr>
+    <tr><td>Prompt 模板</td><td>7 个</td><td>intake/spec/implement/review/test/candidate-dag + 示例</td><td>validate_package.py 校验分段</td></tr>
+    <tr><td>确定性脚本</td><td>16 个代码脚本 + hook</td><td>校验×7：validate_workflow/validate_package/validate_run/validate_transition/validate_consistency/validate_content_quality/validate_site_consistency；引擎×7：compile_dag/run_flow/check_all/task_resume/review_preflight/install_skills/install_hooks；selftest + _yaml_min；另 pre-commit hook v3</td><td>selftest 70/70 全覆盖；§7d-ter 验证 session-meta，§7d-quatro 验证 preflight 正负例</td></tr>
+    <tr><td>运行期容器</td><td>16 个 run</td><td>RUN-20260914-001（skill-tool-tag，已合入 develop）/ RUN-20260917-006（中型优化 TDD）/ RUN-20260920-001（运行期强制执行落地）/ RUN-20260920-002（页面验证）/ RUN-20260920-003（首个 Claude Code 完整 run）+ 11 个 2026-09-20 按快照协议收口的历史 run</td><td>validate_run.py + runs/README.md 白名单</td></tr>
+    <tr><td>参考文章</td><td>124 个 (001–124)</td><td>20篇AI Coding/Harness/SDD/OPC/环系统 + 10个开源项目（含BMAD/MoAI-ADK/CEK/how-claude-code-works/flow-next/oddyssey）+ 4篇hongtao深度解读 + 2篇微信/阿里云最新文章（蚂蚁数科Harness、阿里AACR-Bench）+ 后续批次扫描（docs/23/24/26/28/32）+ 086 腾讯云三支柱（2026-09-20 L1）+ 全网检索批（docs/34：GitHub 周榜直抓 15 仓 + 12 组主题检索，087–124 共 38 条，L3 快照级为主）</td><td>curl+MicroMessenger/移动UA+GitHub API 逐个核验；103行访问核验表：001–086 批次 63行可访问、2行诚实标注不可用、086 即 row 65（webReader L1 全文核验，docs/32）；row 66–103 为 2026-09-20 全网检索批（周榜直抓 L1 / 检索快照 L3，逐条标注，docs/34）</td></tr>
+    <tr><td>上下文目录</td><td>9 文件</td><td>project/area/decisions/risk-register 四类知识 + 模板与实例（aiworkflow / agentwan / open-platform-docs / consistency）+ README；G1 读入 + G10 写出跨 Run 知识</td><td>validate_package.py</td></tr>
+    <tr><td>参考资产</td><td>4 个</td><td>V4.0 HTML + Skyvern + ric-dev + jakubkrehel-skills（11 Skill 界面质量参考）</td><td>git commit 钉住 + docs/12 扫描报告</td></tr>
+  </table></div>
+</div>
+
+<!-- ====== 快速开始 ====== -->
+<h2 id="s-start">🚀 快速开始</h2>
+
+<div class="card">
+  <pre><code># 1. 校验
+cd .ai_worflow
+python3 scripts/validate_package.py
+bash scripts/selftest.sh                    # 70/70 PASS（站点在线口径）
+
+# 2. 安装
+python3 scripts/install_skills.py --target "$HOME/.codex/skills" --mode symlink --apply
+python3 scripts/install_skills.py --target "$HOME/.codex/skills" --check
+
+# 3. 升级
+python3 scripts/install_skills.py --target "$HOME/.codex/skills" --upgrade --apply
+
+# 4. 选一条工作流开始
+# workflows/feature-delivery.workflow.yaml    → 功能交付
+# workflows/bugfix-triage.workflow.yaml        → 缺陷归因
+# workflows/refactor-migration.workflow.yaml   → 重构迁移
+# workflows/ui-verification.workflow.yaml      → 页面验证
+
+# 5. 自动化推进（每轮自动记录 ledger）
+python3 scripts/run_flow.py workflows/feature-delivery.workflow.yaml runs/RUN-ID --advance --execute-check
+
+# 6. 恢复中断：读 state.yaml 的 ledger 最后一条即可定位</code></pre>
+</div>
+
+<!-- ====== 不可妥协的边界 ====== -->
+<h2 id="s-boundary">🚫 不可妥协的边界</h2>
+
+<div class="card">
+  <ul>
+    <li><strong>人负责意图、授权与产品判断</strong>；<code>*</code> 标记节点必须人工确认，不得代签</li>
+    <li><strong>任何角色不得批准自己产出</strong>；Reviewer 对被审对象只读</li>
+    <li><strong>没有绑定 SHA / 命令输出的结论</strong>，不得写成 APPROVE / PASS / accepted</li>
+    <li><strong>不使用模糊完成声明</strong>；完成度由 completion_contract 逐条判定</li>
+    <li><strong>不把 secret 写入工作流定义、Prompt 或证据文件</strong></li>
+    <li><strong>自动化循环熔断</strong>：CONTINUE 超过 <code>loop_control.max_rounds</code>（默认 blocks+5，可配置最大 200）→ BLOCKED；WAIT_ROLE 连续 2 次失败 → BLOCKED</li>
+    <li><strong>长周期任务（2-3天）</strong>（v1.7.8+）：
+      <ul style="margin-top:4px">
+        <li>单 Session：checkpoint.yaml 每 10 轮写入，中断恢复</li>
+        <li>跨 Session：task.yaml 跨天状态 + context/ 交接 + timeline 追溯</li>
+        <li>自动恢复：<code>task_resume.py</code> 生成继续提示词</li>
+        <li>多会话编排：最多 12 个 Session × 6h = 72h（3天）任务能力</li>
+      </ul>
+    </li>
+    <li><strong>每轮推进自动写 ledger</strong>：中断恢复读最后一条，不依赖 stdout 或全账本扫描</li>
+    <li><strong>在 WanGoPlatform 内工作时</strong>，仓库 AGENTS.md 与 agent-delivery-protocol.md 优先</li>
+  </ul>
+</div>
+
+<!-- ====== 版本历史 ====== -->
+<h2 id="s-version">📜 版本演进</h2>
+
+<div class="card">
+  <p style="margin:0 0 12px;border-left:3px solid var(--accent);padding-left:10px;font-size:0.9em">📌 版本状态：本页原为 v1.7.8 全流程快照，2026-09-20 全量校准至当前 <strong>v1.8.9</strong>；版本唯一事实源是 <code>VERSION</code>（README 头部与之对齐）。v1.8.x 相对快照新增：写入时校验 T-01..T-04、DAG 语义一致性 R-1/R-2/R-3、check_all 全系统日检、规则生命周期 Add/Thin 与任务后能力观察、pre-commit hook v3 双布局、长周期任务恢复链自检覆盖、报告契约统一与账本可观测（v1.8.6）、会话归因与 Reviewer 确定性前置检查（v1.8.7，66→69）、checkpoint/state/ledger 消费与串行治理边界（v1.8.8，69→70）、4 条 P3 收口与当日全网检索批 087–124 入附录（v1.8.9），明细见下表最新 10 行。</p>
+  <div class="tbl-wrap"><table>
+    <tr><th>版本</th><th>日期</th><th>核心变更</th></tr>
+    <tr><td>v1.8.9</td><td>2026-09-20</td><td>P3 收口 + 全网检索批入附录：独立检查 4 条 P3 全部修复——review_preflight REVIEW_SIZE 消息与阈值统一为 added lines 口径、secret 告警不再回显密钥材料（selftest §7d-quatro 新增「密钥不回显」断言）、PROTECTED_PATHS 纵深防御边界说明落 docs/30 §十二、v1.8.7 期未申报的依赖措辞统一补记声明（docs/29）；新增 docs/34-web-scan-20260920.md（GitHub 周榜 2026-09-14~20 直抓 15 仓 + 12 组主题检索两轮 + 反趴复盘），附录 086→124（087–124 共 38 条，检索快照级 L3 为主并按 docs/33 §三标注「生态样本/非规则依据」），012/025/046/066 既有来源证据更新（012 本周 +15,028 星居周榜第一）；README 核验表扩至 row 103；本页计数全量同步</td></tr>
+    <tr><td>v1.8.8</td><td>2026-09-20</td><td>checkpoint 消费 + 串行边界 + 人类摘要：task_resume.py 读取 checkpoint.yaml、state.yaml 块状态与最近 ledger，恢复提示词明确 migration/commit/push 零重复；docs/04 声明 run 内单活跃角色串行推进是 Planner 唯一写入者治理设计，并行只发生在工作包层；review/test 报告补 human_summary；规则生命周期补模型替换/供应商切换复检；本地 HTML title 与 README 版本纳入一致性校验；selftest §4 改用 --check 防安装指纹漂移假 PASS；selftest 69→70（docs/29、docs/30 §十二）</td></tr>
+    <tr><td>v1.8.7</td><td>2026-09-20</td><td>会话归因 + Reviewer 确定性前置层：run_flow --session-meta 支持 model（必填）与 tokens_used（非负整数/null），自动入 ledger 并在 advance 报告回显；新增 review_preflight.py 对提交 diff 执行 secret/禁改区/破坏性命令/规模四规则，默认 stdout 保持只读，FAIL 非零；Reviewer CODE/RELEASE 第 0 步接线；selftest 66→69（docs/29、docs/30 §十一）</td></tr>
+    <tr><td>v1.8.6</td><td>2026-09-20</td><td>run_flow 报告契约统一 + 轮次账本可观测：--advance 的 TERMINAL/CYCLE_DETECTED 两条提前返回路径补齐 loop_control 键（双宿主按契约解析不再 KeyError，RUN-20260920-003 收口实际踩中后修复）；_append_round_ledger 写失败从 except:pass 静默吞掉改为 stderr 显式 WARN 且不阻断推进（与 v1.8.5"假成功"同族）；selftest 新增 §7d-bis 终结报告契约断言，65→66（docs/30 §十）</td></tr>
+    <tr><td>v1.8.5</td><td>2026-09-20</td><td>长周期任务恢复链自检覆盖：selftest 新增 §13 五项断言（模板结构/checkpoint 落盘/恢复提示词完整性/负例非零退出/容器兼容），59→65；修复三个真 bug——run_flow.py checkpoint 列表遍历 AttributeError（零测试覆盖路径，§13b 首跑捕获）、task_resume.py 列表字段丢失（completed_blocks 填充即丢）、task.yaml 缺失假成功退出 0（现退出 2）；修复 §12 死代码闸门（曾位于 exit 之后恒不执行，现在线跑+计数/离线显式 SKIP）；docs/30 新增 §九</td></tr>
+    <tr><td>v1.8.4</td><td>2026-09-20</td><td>附录收录 086（腾讯云《删掉80%的Prompt规则》，L1，docs/32）；新增 <code>docs/33-appendix-full-review-20260920.md</code>：86 条附录来源全量复盘，逐簇判定吸收状态与框架完善度；修正 docs/README 来源总数与验证命令的陈旧表述</td></tr>
+    <tr><td>v1.8.3</td><td>2026-09-20</td><td>按用户决定撤销 v1.8.2 的本地 git 仓库（本目录不入任何版本库）；pre-commit hook v3 装于主仓 .git/hooks（旧 v2 自动备份），布局 A 生效、布局 B 保留备用</td></tr>
+    <tr><td>v1.8.2</td><td>2026-09-20</td><td>docs/31 P3 收口：hook 升 v3（双布局探测）；<code>{{ run_id }}</code> 补渲染；7 个陈旧 run 按快照协议处置（state.prev.yaml + validate_transition/validate_run 双校验）；本地仓库部分于 v1.8.3 撤销</td></tr>
+    <tr><td>v1.8.1</td><td>2026-09-20</td><td>规则生命周期补齐（docs/32 两条真缺口）：任务后能力观察（Add 发现机制：信号触发、最多一条、只建议不自动改）+ 删减判据四信号（误伤≥2/无人消费/重复实现/模型升级复检）；selftest 58→59（3h 存在性护栏）</td></tr>
+    <tr><td>v1.8.0</td><td>2026-09-20</td><td>运行期强制执行三件套（docs/31）：① <code>validate_transition.py</code> 写入时校验 T-01..T-04（Planner 覆写前 cp state.prev.yaml 快照）；② <code>validate_run.py</code> DAG 语义一致性 R-1/R-2/R-3；③ <code>check_all.py</code> 全系统日检（mtime 陈旧检测+收据/闸门汇总）。selftest 52→58</td></tr>
+    <tr><td>v1.7.8+</td><td>2026-09-18</td><td>新增 <code>docs/30-multi-day-task-protocol.md</code>（2-3天任务协议：task.yaml + task_resume.py + 多会话编排 + timeline）；<code>docs/29-enhancement-roadmap.md</code>：5 项缺失能力实施方案（F1 长时运行熔断可配置 / F2 AST 依赖图 / F3 token 成本追踪 / F4 BM25 向量索引 / F5 Run 评估基准），总计 11h，全部不破坏 0 核心依赖；附录扩至 85 条，覆盖 12 家一二线大厂</td></tr>
+<tr><td>v1.7.8</td><td>2026-09-18</td><td>15 篇新参考 + Domain Modeling 落地：新增 <code>docs/26-reference-scan-20260918.md</code>（OpenViking 长期记忆 / 菜鸟端到端交付 / 自动修复循环 / Self-Improving 五层 / Trellis 可版本化 / TDD Skill / Domain Modeling / ADR / Security / Skill 生态盘点），39 张图片 RapidOCR；附录 59→74 条（001–074）；E9 落地到 <code>prompts/intake.md</code>（G0 Intake 增加领域术语与业务不变量字段）</td></tr>
+<tr><td>v1.7.7</td><td>2026-09-17</td><td>一致性护栏：新增 <code>validate_consistency.py</code>，机器校验 G0–G10、TDD Red、Code Review、人工 star 与 context 读写三方一致；selftest 52/52。</td></tr>
+    <tr><td>v1.7.6</td><td>2026-09-17</td><td>TDD 门禁补全：G4 从"测试计划文档"升级为 TDD Red——测试文件必须先于实现写入且执行确认 FAIL（Red 证据绑定 SHA），G6 增量测试的 PASS 证明 Red→Green 闭环。影响文件：<code>docs/03-gates.md</code> / <code>skills/_shared/contracts/gate-policy.md</code> / <code>skills/aiworflow-tester/SKILL.md</code> / <code>workflows/feature-delivery.workflow.yaml</code>；新增 <code>docs/25-large-task-protocol.md</code>（拆分阈值/跨 Run 交接）、<code>context/</code> 目录（项目/模块/决策/风险四类上下文文件，G1 读入 + G10 写出）</td></tr>
+<tr><td>v1.7.5</td><td>2026-09-14</td><td>全量来源核验收口：README「访问核验」表 26 行 → 64 行全量复跑（62 行可访问；<code>developers.openai.com</code> 403 区域封锁、<code>51cto.com</code> JS 反爬，两行诚实标注不可用）；23 个微信 URL 以 MicroMessenger UA 重抓并记录真实全文字数；035/036 升 L1 全文（腾讯新闻 8,259 字符 / 阿里云移动 UA SSR 提取 8,430 字符，AACR-Bench·南京大学·覆盖率+285%）；GitHub star 刷新为 API 实值；附录 34 → 36 条；证据分级 L1/L2/L3 定义于 <code>docs/22</code> §〇</td></tr>
+    <tr><td>v1.7.4</td><td>2026-09-14</td><td>微信搜索 + hongtao2agent.xyz 全站 25 篇扫描；新增 <code>docs/22-wechat-latest-scan.md</code>（Claude 5 上下文工程、DeepSeek Harness 插件、Agentic SRE、Pi Compaction）；附录新增 31–34</td></tr>
+    <tr><td>v1.7.3</td><td>2026-09-14</td><td>新增 <code>docs/21-emerging-paradigms.md</code> 前沿范式全景扫描（BMAD / MoAI-ADK TRUST 5 / CEK / flow-next 对抗式审查 / oddyssey ODD 等 12 个新兴范式）；附录新增 25–30</td></tr>
+    <tr><td>v1.7.2</td><td>2026-09-14</td><td><strong>自动化推进轮次日志（ledger）</strong>：<code>run_flow.py --advance</code> 每轮自动向 <code>state.yaml</code> 的 <code>ledger</code> 字段持久化轮次日志；模板新增 <code>ledger</code> 字段；DONE 信号自动写 final 条目；中断恢复只需读 ledger 最后一条</td></tr>
+    <tr><td>v1.7.1</td><td>2026-09-14</td><td>完整环系统建模 + 环间接口规范（吸收黄迅/GoPS）；失败必须有名字（信号混淆区分 UNKNOWN vs FAILED）；空操作失败检测</td></tr>
+    <tr><td>v1.7.0</td><td>2026-09-14</td><td>吸收 4 个开源项目(AI-DLC/Langflow/CCG/AI Workflow)；01–24 全收录；WAIT_USER 结构化交接</td></tr>
+    <tr><td>v1.6.0</td><td>2026-09-14</td><td>自动化推进闭环：loop_control 信号驱动循环（CONTINUE/DONE/WAIT_USER/WAIT_ROLE/BLOCKED）</td></tr>
+    <tr><td>v1.5.3</td><td>2026-09-11</td><td>install_hooks 修复 .git 查找逻辑；selftest 50/50</td></tr>
+    <tr><td>v1.5.1</td><td>2026-09-10</td><td>基于 18 篇文章系统优化所有共享契约 + 新增 rule-lifecycle.md</td></tr>
+    <tr><td>v1.4.1</td><td>2026-09-10</td><td>runs/ 容器一致性护栏；全量 selftest 48→50 项</td></tr>
+    <tr><td>v1.4.0</td><td>2026-09-10</td><td>护栏下沉到提交动作（pre-commit hook）；修复部分安装伪证缺陷</td></tr>
+    <tr><td>v1.3.0</td><td>2026-09-09</td><td>7 条 author-time hard guardrail 代码落地</td></tr>
+    <tr><td>v1.2.x</td><td>2026-09-08–09</td><td>VERSION 单一事实源 + 安装收据 + 漂移检测 + 原子升级 + 认领已装环境</td></tr>
+    <tr><td>v1.0–v1.1</td><td>2026-09-07</td><td>初始搭建：三层模型 + 四角色 + 20 docs + 5 workflows + 5 Skill 包</td></tr>
+  </table></div>
+</div>
+
+<!-- ====== 附录：124 篇参考文章+开源项目完整收录（001–124） ====== -->
+<h2 id="s-appendix">📚 附录：124 篇参考文章+开源项目（001–124）</h2>
+<p style="font-size:0.85em;color:var(--muted);margin:0 0 10px">087–124 为 2026-09-20 全网检索批（GitHub 周榜直抓 + 12 组主题检索，扫描记录与逐条归属判定见 <code>docs/34</code>）：GitHub 仓库条目 star/周增为周榜页快照值；L3 条目为检索快照级证据（深路径未单独核验，不得引用正文观点，仅生态样本/观点记录——docs/33 §三纪律）。</p>
+
+<div class="card" style="font-size:0.85em;">
+<div class="tbl-wrap"><table>
+<tr><th>#</th><th>日期</th><th>作者</th><th>标题与链接</th></tr>
+<tr><td>001</td><td>2026-09-09</td><td>闫鹏</td><td><a href="https://mp.weixin.qq.com/s/a07Lu59zXHjNkXDqembyWA">不做人工Code Review，如何保障 Vibe Coding 的项目质量？</a></td></tr>
+<tr><td>002</td><td>2026-08-29</td><td>AI模型之外</td><td><a href="https://mp.weixin.qq.com/s/hxB8tcV-APTdONcaLhiW3A">从"凭感觉写代码"到"可控地交付"：一篇讲透 Vibe Coding、SDD 与 Harness</a></td></tr>
+<tr><td>003</td><td>2026-08-28</td><td>仁</td><td><a href="https://mp.weixin.qq.com/s/qj-ac6mW809wUPeoKkz8Lw">第5章：Code Review 与 Verification Agent —— AI 如何审查 AI</a></td></tr>
+<tr><td>004</td><td>2026-08-13</td><td>左泽位</td><td><a href="https://mp.weixin.qq.com/s?__biz=MzIwNDY3MDg1OA==&mid=2247495595&idx=1&sn=ebe7d9e43744de542a47b1a97f471427&chksm=96fffb5b20d16bd53da410ef8c219a17dd470bcb23f9870e3e2f713159817147a038c00b1720#rd">多 AI Coding Agent 工程化实践：用 CLAUDE.md + AGENTS.md 建立统一工程约束</a></td></tr>
+<tr><td>005</td><td>2026-08-19</td><td>王安林</td><td><a href="https://mp.weixin.qq.com/s/r0f4HfjNVHb6deJPU4jyvQ">用 SpecKit + Pi + Superpowers 打造高效 AI 编程工作流</a></td></tr>
+<tr><td>006</td><td>2026-08-14</td><td>XPoet</td><td><a href="https://mp.weixin.qq.com/s/mDjpXRe_9TcIRD7VN2S17A">AI 编程工程化：实战——从 0 到 1 搭建 AI 编程工作流</a></td></tr>
+<tr><td>007</td><td>2026-08-22</td><td>离殇</td><td><a href="https://mp.weixin.qq.com/s/aycwkSyxhcRrJkyKPjU_8Q">Vibe Coding 项目规范</a></td></tr>
+<tr><td>008</td><td>2026-08-05</td><td>得乐胶囊</td><td><a href="https://mp.weixin.qq.com/s/tiBLN0_BFkGp2gZ-PX8QKg">AI 原生开发下的需求确定性构建：从渐进式澄清到 PRD，再到 Spec 驱动 AI Coding</a></td></tr>
+<tr><td>009</td><td>2026-09-10</td><td>老A</td><td><a href="https://mp.weixin.qq.com/s/T69Yk-kFDiQZBF4ChfHiTQ">团队普及 AI Coding 以后，技术负责人应该怎样重新评估团队产能、安排需求和制定研发排期？</a></td></tr>
+<tr><td>010</td><td>2026-07-30</td><td>丶单向箔</td><td><a href="https://mp.weixin.qq.com/s/P6kwha7fRnQznkrUoAHP7w">番外｜用一个完整需求跑通多天 AI Coding 工作流</a></td></tr>
+<tr><td>011</td><td>2026-09-08</td><td>dialog996</td><td><a href="https://mp.weixin.qq.com/s/EsQIMi0bXCf5f4dQ6CM91g">AI 编程助手正在从"流程叙事"转向"模型 + Harness"</a></td></tr>
+<tr><td>012</td><td>2026-07-27</td><td>Hank</td><td><a href="https://mp.weixin.qq.com/s/E96e9pVj7uak99aa8-4Glg">阿里内部用了两年的open-code-review：一条命令，扫完你 vibe coding 的所有雷</a></td></tr>
+<tr><td>013</td><td>2026-07-22</td><td>张逸少</td><td><a href="https://mp.weixin.qq.com/s/AXgQR5wxKvQXu8zpZIWUfw">SDD工程化落地：双环驱动开发流程</a></td></tr>
+<tr><td>014</td><td>2026-09-03</td><td>孔令飞</td><td><a href="https://mp.weixin.qq.com/s/ESWOKhUzBSJWutPqLSMdiA">Harness AI Coding工程化实践：如何将不同项目的代码一致性提升至 96%</a></td></tr>
+<tr><td>015</td><td>2026-09-10</td><td>The fool ss</td><td><a href="https://mp.weixin.qq.com/s/begqTCRK-6xA9dTJgLr_og">【AI-Native 研发踩坑·下】Harness 会过期：AI 编程的方法论也在迭代</a></td></tr>
+<tr><td>016</td><td>2026-08-27</td><td>AI实验室的一角</td><td><a href="https://mp.weixin.qq.com/s/txxB1aaO_nFbQ52r3oqaxw">玩转 AI Coding：一份面向团队的 Harness Engineering 实践指南</a></td></tr>
+<tr><td>017</td><td>2026-08-30</td><td>就是克克</td><td><a href="https://mp.weixin.qq.com/s/Psm4zIMJcbj95-alf2-4VQ">AI Coding 时代真正重要的是软件工程判断力</a></td></tr>
+<tr><td>018</td><td>2026-07-20</td><td>David</td><td><a href="https://mp.weixin.qq.com/s/ZjnmJYWoRmL7vdYFLq6cUA">《驾驭 AI Coding：一份面向团队的 Harness Engineering 落地规范》详细解读</a></td></tr>
+<tr><td>019</td><td>2026-09-12</td><td>黄迅/PUBG Mobile</td><td><a href="https://mp.weixin.qq.com/s/tSmMdSSzLgTsAX1JUaZI9Q">两万字长文｜手把手带你趟过 AI Coding 深水区：编码让位，人退到哪里</a> 🆕 环系统</td></tr>
+<tr><td>020</td><td>2026-07-12</td><td>AI运维实验室</td><td><a href="https://mp.weixin.qq.com/s/1fbIwI5omis0lQ9GFKhl2Q">在 GOPS 讲完"一人 + AI Agent 军团"：Agent 进生产，关键不在模型，而在 Harness</a> 🆕 OPC闭环</td></tr>
+<tr><td>021</td><td>2025+</td><td>AWS Labs</td><td><a href="https://github.com/awslabs/aidlc-workflows">AWS AI-DLC：一套核心适配 7 宿主（Claude/Codex/Cursor/Kiro/Copilot）</a> 🆕 4,598⭐</td></tr>
+<tr><td>022</td><td>2024+</td><td>Langflow</td><td><a href="https://github.com/langflow-ai/langflow">Langflow：可视化 Agent 工作流编排（块类型目录参考）</a> 🆕 155K⭐</td></tr>
+<tr><td>023</td><td>2025+</td><td>枫少</td><td><a href="https://github.com/fengshao1227/ccg-workflow">CCG：多模型协作引擎（Claude+Codex+Gemini 协作）</a> 🆕 5,884⭐</td></tr>
+<tr><td>024</td><td>2025+</td><td>nicepkg</td><td><a href="https://github.com/nicepkg/ai-workflow">AI Workflow：170+ 预构建 Skill 集合（14+ AI 工具）</a> 🆕 标签词典参考</td></tr>
+<tr><td>025</td><td>2025+</td><td>BMAD</td><td><a href="https://github.com/bmad-code-org/BMAD-METHOD">BMAD-METHOD：敏捷 AI 驱动开发突破方法（52,999⭐）</a> 🆕 Task Dependency Graph</td></tr>
+<tr><td>026</td><td>2025+</td><td>MoAI</td><td><a href="https://github.com/modu-ai/moai-adk">MoAI-ADK：验证驱动 Agent 编排 Harness — TRUST 5 质量门 + Kanban/Factory Mode（1,211⭐）</a> 🆕 No False Verification</td></tr>
+<tr><td>027</td><td>2025+</td><td>NeoLabHQ</td><td><a href="https://github.com/NeoLabHQ/context-engineering-kit">Context Engineering Kit：上下文工程工具包（1,694⭐）</a> 🆕 Skill 即上下文净化器</td></tr>
+<tr><td>028</td><td>2026</td><td>Windy3f</td><td><a href="https://github.com/Windy3f3f3f3f/how-claude-code-works">how-claude-code-works：Claude Code 源码解析 — Agent Loop/上下文工程（3,626⭐）</a> 🆕</td></tr>
+<tr><td>029</td><td>2025+</td><td>gmickel</td><td><a href="https://github.com/gmickel/flow-next">flow-next：可重复 Agentic 工程 — 对抗式跨模型审查 + receipts（696⭐）</a> 🆕</td></tr>
+<tr><td>030</td><td>2025+</td><td>using-system</td><td><a href="https://github.com/using-system/oddyssey">oddyssey：ODD（Observability-Driven Development）可观测驱动（7⭐）</a> 🆕</td></tr>
+<tr><td>031</td><td>2026</td><td>hongtao2agent</td><td><a href="https://hongtao2agent.xyz/html/claude-5-context-engineering/">Claude 5 上下文工程新规则 — Compilation/Subtraction/信息分层</a> 🆕 七个关键判断</td></tr>
+<tr><td>032</td><td>2026</td><td>hongtao2agent</td><td><a href="https://hongtao2agent.xyz/html/deepseek-harness-plugin-architecture/">DeepSeek Harness 插件机制全景解读 — 五层原理/装配与作用域分离</a> 🆕</td></tr>
+<tr><td>033</td><td>2026</td><td>hongtao2agent</td><td><a href="https://hongtao2agent.xyz/html/agentic-sre-control-plane/">Agentic SRE：重写可靠性控制面 — 动作分级/五层架构</a> 🆕</td></tr>
+<tr><td>034</td><td>2026</td><td>hongtao2agent</td><td><a href="https://hongtao2agent.xyz/html/pi-compaction/">Pi 的 Compaction：长会话如何继续工作</a> 🆕 中断恢复</td></tr>
+<tr><td>035</td><td>2026-09-04</td><td>InfoQ / 蚂蚁数科（魏长征）</td><td><a href="https://news.qq.com/rain/a/20260904A0BX2G00">AI Coding 的下一步不是写得更快，而是可验收：蚂蚁数科 Harness 工程实践</a> 🆕 <strong>L1</strong> 全文 8,259 字符（40多万行Rust/60万行C++/缺陷率20%+→个位数）</td></tr>
+<tr><td>036</td><td>2026-03-12</td><td>阿里云开发者（李峥峰）</td><td><a href="https://developer.aliyun.com/article/1716140">给"氛围编程"系上安全带：阿里集团 AI 代码评审实践与 Benchmark 开源</a> 🆕 <strong>L1</strong> 全文 8,430 字符（移动UA取SSR；AACR-Bench/南京大学/覆盖率+285%）</td></tr>
+<tr><td>037</td><td>2026-09-16</td><td>微信</td><td><a href="https://mp.weixin.qq.com/s/jf5OKEhBDWkP0228tC5o1w">agent优化之GEPA——一种提示词自进化的优化方案</a> 🆕 C2/C5 沉淀闭环</td></tr>
+<tr><td>038</td><td>2026-09-16</td><td>微信</td><td><a href="https://mp.weixin.qq.com/s/ORA4isIxlyhZ7IsifvmTkg">code-review-graph 压到 2 千 Token</a> 🆕 C1 Blast Radius</td></tr>
+<tr><td>039</td><td>2026-09-16</td><td>微信</td><td><a href="https://mp.weixin.qq.com/s/w7hBb9-jx60Jxt5BBpGZYg">AI Coding 代码越来越难维护怎么办</a> 🆕 C2 沉淀出口</td></tr>
+<tr><td>040</td><td>2026-09-16</td><td>微信</td><td><a href="https://mp.weixin.qq.com/s/7mBpAdhU24FirCvWW4iaWg">给 Codex 写高质量 AGENTS.md</a> 🆕 C3 规则加载验证</td></tr>
+<tr><td>041</td><td>2026-09-16</td><td>微信</td><td><a href="https://mp.weixin.qq.com/s/o_Gv4dFEPwVW6ZK31wTGjQ">Codex Harness 需求分析</a> 🆕 C2 沉淀闭环</td></tr>
+<tr><td>042</td><td>2026-09-16</td><td>微信</td><td><a href="https://mp.weixin.qq.com/s/RNt-ui75Lh4RNm0cKSlKaQ">多 Skill 分层加载机制</a> 🆕 Skill 分层印证</td></tr>
+<tr><td>043</td><td>持续</td><td>Google</td><td><a href="https://github.com/ChromeDevTools/chrome-devtools-mcp">Chrome DevTools MCP（52K⭐）</a> 🆕 浏览器检查，未来增强</td></tr>
+<tr><td>044</td><td>持续</td><td>HumanLayer</td><td><a href="https://github.com/humanlayer/skills">HumanLayer Skills</a> 🆕 指令格式参考</td></tr>
+<tr><td>045</td><td>持续</td><td>ruvnet</td><td><a href="https://github.com/ruvnet/ruflo">Ruflo Agent Harness（72K⭐）</a> 🆕 不采纳：重量级</td></tr>
+<tr><td>046</td><td>持续</td><td>mksglu</td><td><a href="https://github.com/mksglu/context-mode">Context Mode（23K⭐）</a> 🆕 C4 上下文经济</td></tr>
+<tr><td>047</td><td>2026-09-17</td><td>腾讯技术</td><td><a href="https://mp.weixin.qq.com/s/lyjKtDPyOLavVJZBHmOcVw">AGENTS.md 语言纪律</a> 🆕 印证现有规则</td></tr>
+<tr><td>048</td><td>2026-09-17</td><td>微信</td><td><a href="https://mp.weixin.qq.com/s/Cu6PEfMxEq982GXYFEBXqw">Matt Pocock 19 Skills（155K⭐）</a> 🆕 印证 G0→G10</td></tr>
+<tr><td>049</td><td>2026-09-17</td><td>货拉拉</td><td><a href="https://mp.weixin.qq.com/s/TPsMa8kj9SThzeVyrx7lLQ">货拉拉 AI Coding 组织落地</a> 🆕 D1 Spec 质量反馈 + D3 G10 资产沉淀</td></tr>
+<tr><td>050</td><td>2026-09-17</td><td>AliExpress</td><td><a href="https://mp.weixin.qq.com/s/eF-cdFtdiDX-laykhVEdqg">AAIC 技术方案双读者</a> 🆕 印证块 DAG</td></tr>
+<tr><td>051</td><td>2026-09-17</td><td>微信</td><td><a href="https://mp.weixin.qq.com/s/AKvtr7IQ9oCGf5xldKeBNw">Agent 自进化全景图</a> 🆕 理论参考</td></tr>
+<tr><td>052</td><td>2026-09-17</td><td>微信</td><td><a href="https://mp.weixin.qq.com/s/n6MjKCUnICp_woL5s61Luw">Matt Pocock 96 分钟工作坊</a> 🆕 印证最小任务包</td></tr>
+<tr><td>053</td><td>2026-09-17</td><td>微信</td><td><a href="https://mp.weixin.qq.com/s/mAqPfj3XQcx54Mip5LuzGw">Worktree + Submodule 多仓 Git</a> 🆕 印证 worktree 协议</td></tr>
+<tr><td>054</td><td>2026-09-17</td><td>微信</td><td><a href="https://mp.weixin.qq.com/s/lSHJg5UV-sZJMFOiXYvJwg">code-review-graph 82x</a> 🆕 印证 C1</td></tr>
+<tr><td>055</td><td>2026-09-17</td><td>微信</td><td><a href="https://mp.weixin.qq.com/s/8QdwzBs7WfdF9d4DtiJ6Uw">Compound Engineering</a> 🆕 印证 G2→G5→G6/G7</td></tr>
+<tr><td>056</td><td>2026-09-17</td><td>微信</td><td><a href="https://mp.weixin.qq.com/s/NuphzXKzgeXWUqjwOb9FOw">Bug 分析 Skill 八步</a> 🆕 与 D2 互补</td></tr>
+<tr><td>057</td><td>2026-09-17</td><td>微信</td><td><a href="https://mp.weixin.qq.com/s/v3I2txcItTm8DjcBPs0vcg">Debugging Skill 六步</a> 🆕 D2 调试六步</td></tr>
+<tr><td>058</td><td>2026-09-17</td><td>微信</td><td><a href="https://mp.weixin.qq.com/s/5aICLA2uA6ABizZyeGu1NQ">Archify 架构图生成（19.5K⭐）</a> 🆕 未来增强</td></tr>
+<tr><td>059</td><td>2026-09-17</td><td>微信</td><td><a href="https://mp.weixin.qq.com/s/5tgtahbjMbBZY6kBTpVjWQ">Codex 多 Agent 职责隔离</a> 🆕 印证四角色</td></tr>
+<tr><td>060</td><td>2026-09-18</td><td>火山引擎Agent社区</td><td><a href="https://mp.weixin.qq.com/s/aFHpPpidkes84K-Ca3uVZg">OpenViking：给 Codex 加上长期记忆</a> 🆕 E1 印证 context/</td></tr>
+<tr><td>061</td><td>2026-09-18</td><td>InfoQ</td><td><a href="https://mp.weixin.qq.com/s/qngxbSTQubV_FkTqkeN_aw">菜鸟 Agent 托管端到端交付</a> 🆕 E2 印证 G0-G10 完整链路</td></tr>
+<tr><td>062</td><td>2026-09-18</td><td>肥喵学AI</td><td><a href="https://mp.weixin.qq.com/s/w4XEG3DtavDDFCHJxoBtKQ">自动修复循环 Harness Engineering</a> 🆕 E3 印证 loop_control</td></tr>
+<tr><td>063</td><td>2026-09-18</td><td>月谈AI</td><td><a href="https://mp.weixin.qq.com/s/0KeY4DccH9_MTn07bAuIPA">Self-Improving Coding 五层机制</a> 🆕 E4 当前=Layer 1</td></tr>
+<tr><td>064</td><td>2026-09-18</td><td>编程拾录</td><td><a href="https://mp.weixin.qq.com/s/3pku2x0_UBpZH86Fe7U-Pg">Trellis 可版本化控制结构</a> 🆕 E5 印证 context/+workflow</td></tr>
+<tr><td>065</td><td>2026-09-18</td><td>编程拾录</td><td><a href="https://mp.weixin.qq.com/s/oNYxy49usrFubdHUgEPmcQ">分析→解决→复用工程能力</a> 🆕 E6 印证 Spec+调试</td></tr>
+<tr><td>066</td><td>2026-09-18</td><td>AICon</td><td><a href="https://mp.weixin.qq.com/s/IliUa2RhdXnAs8YiQyrfZg">Addy Osmani Agent Skills</a> 🆕 E7 印证 Skill 分层</td></tr>
+<tr><td>067</td><td>2026-09-18</td><td>程序员小黑</td><td><a href="https://mp.weixin.qq.com/s/CT-G1os02w5zpOUD4VKzBQ">Impeccable 前端设计 Skill</a> 🆕 参考</td></tr>
+<tr><td>068</td><td>2026-09-18</td><td>程序员小黑</td><td><a href="https://mp.weixin.qq.com/s/fGxN2Z2zMdEg5qzsER94Lw">TDD Skill Red→Green</a> 🆕 E8 直接印证 G4 TDD Red</td></tr>
+<tr><td>069</td><td>2026-09-18</td><td>程序员小黑</td><td><a href="https://mp.weixin.qq.com/s/qHTJp1d9E4QgBFOTCuiI9Q">Domain Modeling Skill</a> 🆕 E9 G0 增加领域术语</td></tr>
+<tr><td>070</td><td>2026-09-18</td><td>程序员小黑</td><td><a href="https://mp.weixin.qq.com/s/uqr5BFxzN2KvGG-SX2W3kA">Documentation & ADR Skill</a> 🆕 E10 印证 decisions</td></tr>
+<tr><td>071</td><td>2026-09-18</td><td>程序员小黑</td><td><a href="https://mp.weixin.qq.com/s/tJtza04c2QPhRLdQkaJeBQ">Security and Hardening Skill</a> 🆕 E11 未来增强</td></tr>
+<tr><td>072</td><td>2026-09-18</td><td>AI羊毛实验室</td><td><a href="https://mp.weixin.qq.com/s/v9I9zVORUi_GFAIYB0cBGQ">测试工程师 10 个 AI Skill</a> 🆕 生态参考</td></tr>
+<tr><td>073</td><td>2026-09-18</td><td>AI羊毛实验室</td><td><a href="https://mp.weixin.qq.com/s/LgUaniHgEP4IzZD0K01VBA">GitHub 高星 10 个 AI Skill</a> 🆕 生态参考</td></tr>
+<tr><td>074</td><td>2026-09-18</td><td>聆木听风</td><td><a href="https://mp.weixin.qq.com/s/GiJB3482il6s0LN5y9FcVw">从一句需求到代码交付一个 Skill</a> 🆕 生态参考</td></tr>
+<tr><td>075</td><td>2026-09-18</td><td>美团技术</td><td><a href="https://tech.meituan.com/2026/05/07/Agent-AI-Coding.html">用Agent评测思路管理AI Coding——31万行代码AI重构</a> 🆕 <strong>L1</strong> 90%AI生成+人人对齐→人机对齐</td></tr>
+<tr><td>076</td><td>2026-09-18</td><td>ByteDance</td><td><a href="https://github.com/bytedance/deer-flow">DeerFlow 2.0：SuperAgent Harness</a> 🆕 <strong>82.6K⭐</strong> Sub-agents+Memory+Sandbox</td></tr>
+<tr><td>077</td><td>2026-09-18</td><td>OpenAI</td><td><a href="https://github.com/openai/codex">Codex CLI：终端 Coding Agent</a> 🆕 <strong>125K⭐</strong> 轻量级本地Agent</td></tr>
+<tr><td>078</td><td>2026-09-18</td><td>Anthropic</td><td><a href="https://www.anthropic.com/engineering/building-effective-agents">Building Effective AI Agents</a> 🆕 <strong>L1</strong> Workflow-first原则</td></tr>
+<tr><td>079</td><td>2026-09-18</td><td>Anthropic</td><td><a href="https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents">Effective Context Engineering</a> 🆕 <strong>L1</strong> 最小充分上下文</td></tr>
+<tr><td>080</td><td>2026-09-18</td><td>Anthropic</td><td><a href="https://www.anthropic.com/engineering/claude-code-auto-mode">Claude Code Auto Mode</a> 🆕 <strong>L1</strong> 安全跳过权限</td></tr>
+<tr><td>081</td><td>2026-09-18</td><td>Anthropic</td><td><a href="https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents">Demystifying Evals for AI Agents</a> 🆕 <strong>L1</strong> Agent评估方法论</td></tr>
+<tr><td>082</td><td>2026-09-18</td><td>快手×华为</td><td><a href="https://mp.weixin.qq.com/s/MXecbb4eGyYRdWtkfAFtVg">「快手×华为」AI Coding 鸿蒙研发落地实践</a> 🆕 <strong>L1</strong> 8,972字鸿图AI：上下文装配+证据暴露+验证闭环</td></tr>
+<tr><td>083</td><td>2026-09-18</td><td>京东</td><td><a href="https://github.com/jd-opensource/joycode-agent">JoyCode Agent：SWE-bench 74.6%</a> 🆕 <strong>L1</strong> 345⭐ Repository Repair Agent</td></tr>
+<tr><td>084</td><td>2026-09-18</td><td>网易有道</td><td><a href="https://github.com/netease-youdao/LobsterAI">LobsterAI：桌面级 AI Agent</a> 🆕 <strong>L1</strong> 6,047⭐ 开源Agent</td></tr>
+<tr><td>085</td><td>2026-09-18</td><td>快手</td><td><a href="https://github.com/KwaiAppTeam/ks-arkts-skills">快手鸿蒙 AI Coding Skills</a> 🆕 <strong>L1</strong> 30⭐ API查询+生码约束+LSP+编译修复</td></tr>
+<tr><td>086</td><td>2026-09-20</td><td>蓝翔（腾讯云开发者）</td><td><a href="https://mp.weixin.qq.com/s/fV8qN6qs9ac-VXDwZCuaxA">删掉80%的Prompt规则，Agent交付成功率反而更高了</a> 🆕 <strong>L1</strong> 三支柱（可信上下文/可执行约束/可恢复流程）+ Add/Thin 修剪纪律；对照扫描见 docs/32，两条真缺口已于 v1.8.1 落地</td></tr>
+<tr><td>087</td><td>2026-09-20</td><td>affaan-m</td><td><a href="https://github.com/affaan-m/ECC">ECC：agent harness 性能优化系统（Skills/instincts/memory/security，适配 CC/Codex/Opencode/Cursor）</a> 🆕 <strong>262,961⭐</strong> +6,265/周 · 周榜直抓</td></tr>
+<tr><td>088</td><td>2026-09-20</td><td>Stably AI</td><td><a href="https://github.com/stablyai/orca">orca：并行 agent 舰队 ADE（桌面/移动/远程 runtime）</a> 🆕 <strong>72,621⭐</strong> +5,404/周 · 周榜直抓</td></tr>
+<tr><td>089</td><td>2026-09-20</td><td>Anthropic</td><td><a href="https://github.com/anthropics/knowledge-work-plugins">knowledge-work-plugins：Cowork 官方知识工作插件</a> 🆕 25,128⭐ +1,034/周 · 周榜直抓</td></tr>
+<tr><td>090</td><td>2026-09-20</td><td>ayghri</td><td><a href="https://github.com/ayghri/i-have-adhd">i-have-adhd：「别让 agent 把答案埋起来」输出纪律 Skill</a> 🆕 48,697⭐ +5,589/周 · 生态样本（非规则依据）</td></tr>
+<tr><td>091</td><td>2026-09-20</td><td>blader</td><td><a href="https://github.com/blader/humanizer">humanizer：去 AI 味写作 Skill</a> 🆕 50,255⭐ +3,024/周 · 生态样本（非规则依据）</td></tr>
+<tr><td>092</td><td>2026-09-20</td><td>Tencent</td><td><a href="https://github.com/Tencent/WeKnora">WeKnora：知识平台/RAG</a> 🆕 27,430⭐ +4,867/周 · 生态样本（「不自建 RAG」既有决定）</td></tr>
+<tr><td>093</td><td>2026-09-20</td><td>OpenAI</td><td><a href="https://github.com/openai/plugins">plugins：OpenAI Plugins 官方仓库</a> 🆕 7,034⭐ +522/周 · 周榜直抓</td></tr>
+<tr><td>094</td><td>2026-09-20</td><td>kunchenguid</td><td><a href="https://github.com/kunchengguid/firstmate">firstmate：Talk to one agent. Ship with a crew.</a> 🆕 6,734⭐ +1,073/周 · 周榜直抓</td></tr>
+<tr><td>095</td><td>2026-09-20</td><td>Max Sixty</td><td><a href="https://github.com/max-sixty/worktrunk">worktrunk：并行 AI agent 的 git worktree 管理 CLI</a> 🆕 8,117⭐ +1,141/周 · 印证工作包层并行</td></tr>
+<tr><td>096</td><td>2026-09-20</td><td>Panniantong</td><td><a href="https://github.com/Panniantong/Agent-Reach">Agent-Reach：Agent web-reading CLI</a> 🆕 83,462⭐ +3,914/周 · 生态样本</td></tr>
+<tr><td>097</td><td>2026-09-20</td><td>xiaohuailabs</td><td><a href="https://github.com/xiaohuailabs/xiaohu-wechat-format">xiaohu-wechat-format：公众号一键排版+发布 Skill（30 主题）</a> 🆕 L3 生态样本</td></tr>
+<tr><td>098</td><td>2026-09-20</td><td>Anthropic</td><td><a href="https://github.com/anthropics/claude-code">claude-code（宿主本体）</a> 🆕 146,711⭐ +2,000/周 · 周榜热度样本</td></tr>
+<tr><td>099</td><td>2026-09-20</td><td>Anthropic Help</td><td><a href="https://support.claude.com">Release notes：2026-09-01 Fable 5.1 与 Mythos 5.1 发布</a> 🆕 L3 · 模型换代触发 rule-lifecycle 复检</td></tr>
+<tr><td>100</td><td>2026-09-20</td><td>ClockedCode</td><td><a href="https://clockedcode.com">Claude Code v2.1.263：Sonnet 5 成为默认模型（9/6）</a> 🆕 L3</td></tr>
+<tr><td>101</td><td>2026-09-20</td><td>Releasebot</td><td><a href="https://releasebot.io">Codex 2026-09 功能包：voice / live reasoning / task management / Touch-ID / daemon</a> 🆕 L3</td></tr>
+<tr><td>102</td><td>2026-09-20</td><td>Blake Crosley</td><td><a href="https://blakecrosley.com">Codex CLI v0.154.0（9/9）</a> 🆕 L3</td></tr>
+<tr><td>103</td><td>2026-09-20</td><td>OpenAI Developers</td><td><a href="https://developers.openai.com">Agents API 公测：managed Codex harness（本环境 403 区域封锁，row 63 先例）</a> 🆕 L3</td></tr>
+<tr><td>104</td><td>2026-09-20</td><td>claude.com</td><td><a href="https://claude.com">changelog：2026-09-08 Windows KB5124008 兼容问题</a> 🆕 L3 宿主生态样本</td></tr>
+<tr><td>105</td><td>2026-09-20</td><td>SWE-bench</td><td><a href="https://github.com/SWE-bench/SWE-bench">SWE-bench（Multimodal v2 于 9/1 全量开源，480 任务）</a> 🆕 L3 · F5 生态样本</td></tr>
+<tr><td>106</td><td>2026-09-20</td><td>Artificial Analysis</td><td><a href="https://artificialanalysis.ai">Terminal-Bench 2.1 榜单：frontier 模型 &lt;65%</a> 🆕 L3 · F5 生态样本</td></tr>
+<tr><td>107</td><td>2026-09-20</td><td>Terminal-Bench</td><td><a href="https://www.tbench.ai">Dataset Registry：terminal 任务注册表</a> 🆕 L3 · F5 生态样本</td></tr>
+<tr><td>108</td><td>2026-09-20</td><td>arXiv</td><td><a href="https://arxiv.org">Terminal-Bench 论文（2026-01-17，三 CLI agent 实测）</a> 🆕 L3</td></tr>
+<tr><td>109</td><td>2026-09-20</td><td>GitHub Blog</td><td><a href="https://github.blog">Spec-driven development with AI: Get started with a new toolkit（2025-09-02 原始公告，本轮回溯）</a> 🆕 L3</td></tr>
+<tr><td>110</td><td>2026-09-20</td><td>LinkedIn</td><td><a href="https://www.linkedin.com">techievinayak 9/8 转述帖：GitHub Spec Kit SDD 生态动态（快照 URL 截断，落站点根）</a> 🆕 L3</td></tr>
+<tr><td>111</td><td>2026-09-20</td><td>Wavect</td><td><a href="https://wavect.io">GitHub Spec Kit Review for Production Teams（9/2）</a> 🆕 L3</td></tr>
+<tr><td>112</td><td>2026-09-20</td><td>DevOps.com</td><td><a href="https://devops.com">GitHub's Spec Kit Puts the Spec Back in Software（5/11）</a> 🆕 L3</td></tr>
+<tr><td>113</td><td>2026-09-20</td><td>CodeMySpec</td><td><a href="https://codemyspec.com">GitHub Spec Kit: How It Works and When to Use It（6/3）</a> 🆕 L3 · 「sea-of-markdown」批评印证删减纪律</td></tr>
+<tr><td>114</td><td>2026-09-20</td><td>博客园</td><td><a href="https://www.cnblogs.com">《给 Claude Code 装上 40 个 Skill 后》：3 个月实战复盘（9/16）</a> 🆕 L3 生态样本</td></tr>
+<tr><td>115</td><td>2026-09-20</td><td>博客园</td><td><a href="https://www.cnblogs.com">《54k+Star 爆火！AI「新王者框架」Harness Agent 来了！》（4/12）</a> 🆕 L3 生态样本</td></tr>
+<tr><td>116</td><td>2026-09-20</td><td>知乎专栏</td><td><a href="https://zhuanlan.zhihu.com">《国内用 Claude Code 三条路径》：官方订阅 / API 中转 / 换国产模型 GLM、DeepSeek（9/9）</a> 🆕 L3 生态样本</td></tr>
+<tr><td>117</td><td>2026-09-20</td><td>知乎</td><td><a href="https://zhuanlan.zhihu.com">《2026年AI智能体开发指南》：企业级智能体市场 449 亿元、年增 107%</a> 🆕 L3 宏观样本（非规则依据）</td></tr>
+<tr><td>118</td><td>2026-09-20</td><td>Google Codelabs</td><td><a href="https://developers.google.cn">构建多智能体系统实验（专业角色分工，9/8 更新）</a> 🆕 L3</td></tr>
+<tr><td>119</td><td>2026-09-20</td><td>InfoQ</td><td><a href="https://www.infoq.com">LinkedIn《Context Engineering at LinkedIn》：MCP 组织级上下文层（Ajay Prakash，9/19）</a> 🆕 L3 · 印证 context/</td></tr>
+<tr><td>120</td><td>2026-09-20</td><td>腾讯元器</td><td><a href="https://yuanqi.tencent.com">《5 分钟创建公众号智能体》（2/5）</a> 🆕 L3 生态样本</td></tr>
+<tr><td>121</td><td>2026-09-20</td><td>Traversaal</td><td><a href="https://blog.traversaal.ai/durable-execution-for-ai-agents">Durable Execution for AI Agents（9/1）</a> 🆕 L3 · 印证 F1</td></tr>
+<tr><td>122</td><td>2026-09-20</td><td>Louis Bouchard</td><td><a href="https://www.louisbouchard.ai">Context Engineering in 2026: Why We Stopped（8/18，compaction vs prompt caching 成本权衡）</a> 🆕 L3 · E2 触发后评估</td></tr>
+<tr><td>123</td><td>2026-09-20</td><td>Winder.ai</td><td><a href="https://winder.ai">A Comparison of AI Agent Harnesses in 2026（8/20，Qwen Code harness-模型绑定）</a> 🆕 L3</td></tr>
+<tr><td>124</td><td>2026-09-20</td><td>OpenAI</td><td><a href="https://openai.com">Harness Engineering 报告</a> 🆕 L3</td></tr>
+</table></div>
+</div>
+
+<p style="text-align:center;color:var(--muted);font-size:0.85em;margin-top:32px">
+  AIWorflow v1.8.9 · 纯文件驱动 · 除已有 PyYAML 外 0 新增依赖 · selftest 70/70 PASS · 7 工程对比 · 124 外部来源吸收（001–086 全量核验 + 087–124 全网检索批）<br>
+  📁 源文档位于 <code>.ai_worflow/</code> · <code>README.md</code> / <code>docs/00-overview.md</code> / <code>docs/03-gates.md</code> / <code>docs/22-wechat-latest-scan.md</code>
+</p>
+
+</div>
+</body>
+</html>

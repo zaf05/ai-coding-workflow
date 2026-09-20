@@ -1,0 +1,111 @@
+schema_version: 1
+name: "缺陷修复：搜索闪烁"
+workflow_id: "bugfix-search-flicker"
+description: "修复 5 个页面搜索框逐键写 URL 导致的闪烁问题"
+max_elapsed_time_minutes: 120
+error_code_mapping:
+  AIW_SCOPE_OVERFLOW: "变更超出工作包预算"
+  AIW_EVIDENCE_MISSING: "结论缺少绑定证据"
+  AIW_TEST_REGRESSION: "修复引入回归"
+finally_block_label: close
+blocks:
+  - label: intake
+    block_type: intake
+    next_block_label: recon
+    role: planner
+    gate: G0
+    goal: "确认 5 个页面的搜索闪烁问题范围与验收标准"
+    complete_criterion: "current.md#Intake 列出 5 个页面 + 统一修复方案"
+    evidence: ["current.md#Intake"]
+
+  - label: recon
+    block_type: recon
+    next_block_label: spec
+    role: planner
+    gate: G1
+    goal: "确认 useDebouncedUrlParam hook 已存在，5 个页面可直接复用"
+    complete_criterion: "base_commit SHA + hook 位置 + 5 个页面当前实现已记录"
+    evidence: ["current.md#Recon"]
+
+  - label: spec
+    block_type: spec
+    next_block_label: approve
+    role: planner
+    gate: G2
+    goal: "5 个页面统一改用 useDebouncedUrlParam，300ms 防抖 + keepPreviousData"
+    complete_criterion: "SPEC_REVIEW APPROVE"
+    evidence: ["current.md#Spec"]
+
+  - label: approve
+    block_type: approve
+    next_block_label: implement
+    role: user
+    gate: G3
+    star: true
+    goal: "用户批准修复方案"
+    complete_criterion: "用户明确批准"
+    evidence: ["evidence.md#APPROVAL-001"]
+
+  - label: implement
+    block_type: implement
+    next_block_label: check
+    role: implementer
+    goal: "修改 5 个页面，统一使用 useDebouncedUrlParam"
+    complete_criterion: "5 个页面搜索框不再逐键写 URL"
+    max_attempts: 2
+    retry_backoff_seconds: 60
+
+  - label: check
+    block_type: check
+    next_block_label: review
+    role: implementer
+    goal: "跑类型检查和单元测试"
+    complete_criterion: "命令退出码与 expect 一致"
+    commands:
+      - {cmd: "pnpm type-check", workdir: "wanGo/frontend", expect: 0}
+      - {cmd: "pnpm vitest run --reporter=verbose", workdir: "wanGo/frontend", expect: 0}
+
+  - label: review
+    block_type: review
+    next_block_label: test
+    role: reviewer
+    gate: G5
+    goal: "只读审核 5 个页面的改动"
+    complete_criterion: "CODE_REVIEW APPROVE，0 blocking Finding"
+    evidence: ["evidence.md#REVIEW-001"]
+
+  - label: test
+    block_type: test
+    next_block_label: smoke
+    role: tester
+    gate: G7
+    goal: "验证 5 个页面搜索行为正确，无闪烁"
+    complete_criterion: "test-report.yaml PASS"
+    evidence: ["test-plan.md", "evidence.md#TEST-001"]
+
+  - label: smoke
+    block_type: smoke
+    next_block_label: notify
+    role: tester
+    gate: G9
+    goal: "全量类型检查 + 构建通过"
+    complete_criterion: "pnpm type-check + pnpm build exit 0"
+    evidence: ["evidence.md#TEST-003"]
+
+  - label: notify
+    block_type: notify
+    next_block_label: close
+    role: planner
+    gate: G10
+    goal: "交付报告"
+    complete_criterion: "报告写入交付文档"
+    evidence: ["evidence.md"]
+
+  - label: close
+    block_type: close
+    next_block_label: null
+    role: planner
+    gate: G10
+    goal: "关闭与复盘"
+    complete_criterion: "DONE 且无未解决阻断项"
+    evidence: ["state.yaml"]

@@ -1,0 +1,16 @@
+schema_version: 1
+name: "反例：无界循环"
+workflow_id: "unbounded-loop-invalid"
+error_code_mapping: {}
+blocks:
+  - label: loop
+    block_type: while_loop
+    role: planner
+    goal: "缺 max_iterations"
+    complete_criterion: "必须被拒绝"
+    loop_blocks:
+      - label: retry
+        block_type: implement
+        role: implementer
+        goal: "返修"
+        complete_criterion: "无"

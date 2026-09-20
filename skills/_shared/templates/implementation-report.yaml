@@ -1,0 +1,19 @@
+schema_version: 1
+impl_id: "IMPL-NNN"
+supersedes: null
+implementer: ""
+created_at: ""
+session:
+  model: ""
+  tokens_used: null
+block_label: ""
+target:
+  base_sha: ""
+  head_sha: ""
+  spec_version: null
+summary: ""
+files_changed: []
+tests_run: []                   # {cmd, workdir, exit_code, expect}
+verification: ""                # 直接验证证据（页面需真实浏览器）
+known_issues: []
+follow_ups: []

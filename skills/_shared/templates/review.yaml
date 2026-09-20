@@ -1,0 +1,32 @@
+schema_version: 1
+review_id: "REVIEW-NNN"
+supersedes: null
+mode: "SPEC_REVIEW"             # SPEC_REVIEW|TEST_REVIEW|CODE_REVIEW|RELEASE_REVIEW|BASELINE_REVIEW
+reviewer: ""
+created_at: ""
+human_summary:
+  verdict: ""
+  blocking_count: 0
+  next_step: ""
+session:
+  model: ""
+  tokens_used: null
+preflight:
+  command: ""
+  verdict: null
+  rules: []
+target:
+  root_issue_id: "RUN-YYYYMMDD-NNN"
+  block_label: null
+  spec_version: null
+  test_plan_version: null
+  base_sha: null
+  head_sha: null
+  tested_sha: null
+verdict: "BLOCKED"              # APPROVE|REQUEST_CHANGES|BLOCKED
+summary: ""
+findings: []                    # {id, severity, category, location, scenario, evidence, impact, fix_direction}
+non_blocking_notes: []
+residual_risks: []
+evidence_reviewed: []
+unblock_conditions: []

@@ -1,0 +1,193 @@
+schema_version: 1
+name: 功能交付
+workflow_id: feature-delivery
+description: 从需求接收到合并后验证的完整纵向交付主链。
+max_elapsed_time_minutes: 240
+error_code_mapping:
+  AIW_SCOPE_OVERFLOW: 变更超出工作包预算，必须拆包
+  AIW_EVIDENCE_MISSING: 结论缺少绑定证据
+  AIW_BASELINE_MISMATCH: base_sha 与实际集成基线不一致
+  AIW_AUTH_REQUIRED: 需要人工授权/凭据
+  AIW_DIRTY_OVERLAP: 脏工作区与本块写路径重叠
+finally_block_label: close
+blocks:
+- label: intake
+  block_type: intake
+  next_block_label: recon
+  role: planner
+  gate: G0
+  goal: 固定用户、场景、目标、非目标、验收方式与授权边界
+  complete_criterion: current.md#Intake 五要素齐全，star 边界已标注
+  evidence:
+  - current.md#Intake
+- label: recon
+  block_type: recon
+  next_block_label: spec
+  role: planner
+  gate: G1
+  goal: 建立仓库画像与当前基线
+  complete_criterion: base_commit 完整 SHA、脏工作区状态、工具链事实已记录
+  inputs:
+  - intake.output
+  evidence:
+  - current.md#Recon
+- label: spec
+  block_type: spec
+  next_block_label: decision
+  role: planner
+  gate: G2
+  goal: 写出行为规格、AC、UI/技术决策、变更预算
+  complete_criterion: SPEC_REVIEW APPROVE 且绑定 Spec 对象修订
+  inputs:
+  - recon.output
+  evidence:
+  - current.md#Spec
+- label: decision
+  block_type: decision
+  next_block_label: approve
+  role: planner
+  gate: G2
+  goal: 记录关键取舍与风险接受
+  complete_criterion: 决策已写入 current.md#Decisions
+  inputs:
+  - spec.output
+  evidence:
+  - current.md#Decisions
+- label: approve
+  block_type: approve
+  next_block_label: plan
+  role: user
+  gate: G3
+  star: true
+  goal: 用户批准已审核的产品行为与取舍
+  complete_criterion: 绑定 Spec 修订的用户批准记录存在
+  evidence:
+  - evidence.md#APPROVAL-001
+- label: plan
+  block_type: plan
+  next_block_label: implement
+  role: planner
+  gate: G4
+  goal: 冻结块 DAG 与测试计划审核
+  complete_criterion: TEST_REVIEW APPROVE 且 DAG 冻结
+  inputs:
+  - decision.output
+  evidence:
+  - current.md#Tasks
+  - test-plan.md
+- label: implement
+  block_type: implement
+  next_block_label: check
+  role: implementer
+  goal: 实现一个完整纵向块
+  complete_criterion: 块级测试通过且实现报告绑定 head_sha
+  inputs:
+  - plan.output
+  evidence:
+  - evidence.md#IMPL-001
+  max_attempts: 2
+  retry_backoff_seconds: 60
+- label: check
+  block_type: check
+  next_block_label: review
+  role: implementer
+  goal: 跑块级确定性检查
+  complete_criterion: 命令退出码与 expect 一致
+  inputs:
+  - implement.output
+  commands:
+  - cmd: git diff --check origin/develop...HEAD
+    workdir: ''
+    expect: 0
+  evidence:
+  - evidence.md
+- label: review
+  block_type: review
+  next_block_label: integrate
+  role: reviewer
+  gate: G5
+  goal: 只读审核 base..head 增量
+  complete_criterion: CODE_REVIEW APPROVE
+  inputs:
+  - implement.output
+  - check.output
+  evidence:
+  - evidence.md#REVIEW-001
+- label: integrate
+  block_type: integrate
+  next_block_label: test
+  role: planner
+  gate: G6
+  goal: 合入集成分支并记录 merge commit
+  complete_criterion: 增量测试 PASS 对应集成 SHA
+  inputs:
+  - review.output
+  evidence:
+  - state.yaml
+- label: test
+  block_type: test
+  next_block_label: verify_ui
+  role: tester
+  gate: G7
+  goal: 完整验证对应集成 SHA
+  complete_criterion: 完整测试报告 PASS
+  inputs:
+  - integrate.output
+  evidence:
+  - test-plan.md
+  - evidence.md#TEST-001
+- label: verify_ui
+  block_type: verify_ui
+  next_block_label: release_check
+  role: tester
+  gate: G7
+  goal: 真实浏览器 + 目标视口检查
+  complete_criterion: 视口矩阵与截图证据齐
+  inputs:
+  - test.output
+  evidence:
+  - attachments/
+  - evidence.md#TEST-002
+- label: release_check
+  block_type: release_check
+  next_block_label: smoke
+  role: reviewer
+  gate: G8
+  star: true
+  goal: 发布审核：迁移/配置/回滚/文档齐备
+  complete_criterion: RELEASE_REVIEW APPROVE
+  inputs:
+  - verify_ui.output
+  evidence:
+  - evidence.md#REVIEW-002
+- label: smoke
+  block_type: smoke
+  next_block_label: notify
+  role: tester
+  gate: G9
+  goal: 目标分支 SHA 冒烟
+  complete_criterion: 路由/auth/关键业务操作 PASS
+  inputs:
+  - release_check.output
+  evidence:
+  - evidence.md#TEST-003
+- label: notify
+  block_type: notify
+  next_block_label: close
+  role: planner
+  gate: G10
+  goal: 交付报告（≤60 行）与下一包进入条件
+  complete_criterion: 报告写入仓库交付文档
+  inputs:
+  - smoke.output
+  evidence:
+  - evidence.md
+- label: close
+  block_type: close
+  next_block_label: null
+  role: planner
+  gate: G10
+  goal: 关闭与复盘：completion_contract 逐条判定
+  complete_criterion: DONE 且无未解决阻断项
+  evidence:
+  - state.yaml

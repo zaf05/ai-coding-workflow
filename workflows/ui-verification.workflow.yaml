@@ -1,0 +1,56 @@
+schema_version: 1
+name: "页面验证"
+workflow_id: "ui-verification"
+description: "页面任务：真实启动 + 浏览器 + 目标视口。"
+max_elapsed_time_minutes: 120
+error_code_mapping:
+  AIW_EVIDENCE_MISSING: "结论缺少绑定证据"
+  AIW_AUTH_REQUIRED: "需要人工授权/凭据"
+finally_block_label: close
+blocks:
+  - label: intake
+    block_type: intake
+    next_block_label: "recon"
+    role: planner
+    gate: G0
+    goal: "固定验证页面、路由、视口、验收方式"
+    complete_criterion: "页面清单与视口矩阵已记录"
+    evidence: ["current.md#Intake"]
+
+  - label: recon
+    block_type: recon
+    next_block_label: "verify_ui"
+    role: planner
+    gate: G1
+    goal: "确认启动命令、端口、目标 SHA"
+    complete_criterion: "tested_sha 与环境可复现"
+    evidence: ["current.md#Recon"]
+
+  - label: verify_ui
+    block_type: verify_ui
+    next_block_label: "review"
+    role: tester
+    gate: G7
+    goal: "真实浏览器 + 视口矩阵 + 状态覆盖"
+    complete_criterion: "加载/空/错误/无权限/关键业务状态截图齐"
+    inputs: ["recon.output"]
+    evidence: ["attachments/", "evidence.md#TEST-001"]
+
+  - label: review
+    block_type: review
+    next_block_label: "close"
+    role: reviewer
+    gate: G5
+    goal: "审核页面证据是否真实覆盖结论"
+    complete_criterion: "CODE_REVIEW APPROVE"
+    inputs: ["verify_ui.output"]
+    evidence: ["evidence.md#REVIEW-001"]
+
+  - label: close
+    block_type: close
+    next_block_label: null
+    role: planner
+    gate: G10
+    goal: "关闭并记录结论"
+    complete_criterion: "DONE"
+    evidence: ["state.yaml"]
