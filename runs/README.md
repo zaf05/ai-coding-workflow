@@ -32,11 +32,12 @@ runs/<RUN-ID>/
 - 验收证据写入 WanGo 的交付报告与 `docs/plan/` 计划正文/索引；
 - 状态以 WanGo 的 `planned -> ready -> in_progress -> implementer_verified -> accepted` 为准，映射表见 `../docs/10-wango-adapter.md`。
 
-## 入库状态（当前事实，2026-09-20 复核 · v1.8.3）
+## 入库状态（当前事实，2026-09-21 复核 · v1.8.10）
 
-- `.ai_worflow` **不是独立 Git 仓库**（v1.8.2 曾短暂自建本地仓库，v1.8.3 按用户决定撤销）：目录内无 `.git/`，`git rev-parse --show-toplevel` 指向主仓，`git ls-files .ai_worflow` 返回 0。
-- 主仓通过 `.git/info/exclude` 排除 `/.ai_worflow/`，本目录全部内容不进入父仓库历史；pre-commit hook v3 装于主仓 `.git/hooks/`（旧 v2 已自动备份）。
-- 因此 `runs/` 是本地过程索引，不是版本化证据；在 WanGoPlatform 内交付时以 `docs/plan/` 的交付报告和计划正文为验收证据来源。`runs/` 的护栏是 `validate_run`/`validate_transition`/`check_all`，不依赖 git。
+- `.ai_worflow` **是独立 Git 仓库**（历史：v1.8.2 自建 → v1.8.3 撤销 → **2026-09-20 21:02 重新自建**，init import 提交 `d551273`，分支 `main`，remote `git@github.com:zaf05/ai-coding-workflow.git`；2026-09-21 用户确认保留并适配）。
+- 主仓 `.git/info/exclude` 仍排除 `/.ai_worflow/`，本目录内容不进入父仓库历史；pre-commit hook v3 **双布局在位**：主仓 `.git/hooks/` 与本仓 `.git/hooks/` 各一份（本仓一份为 2026-09-21 `install_hooks.py --apply` 装入，布局 B 生效，`--check` PASS）。
+- `runs/` 因此升级为版本化过程索引；在 WanGoPlatform 内交付时验收证据来源不变（以 `docs/plan/` 的交付报告和计划正文为准），`runs/` 的机器护栏仍是 `validate_run`/`validate_transition`/`check_all`，不因入库而放松。
+- **发布注意**：`runs/` 与 `context/` 含个人过程记录与项目画像，推远端前由用户确认仓库可见性（建议私有）。
 
 ## 已登记的占位目录
 

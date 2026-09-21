@@ -11,7 +11,7 @@
 | author-time 硬护栏 7 条（代码强制，非文档承诺） | `scripts/validate_workflow.py`：`secret_inline` / `unsafe_command` / `star_bypass` / `banned_block` / `unbounded_loop` / `unbounded_retry` / `evidence_free_gate`；护栏 ID 必须在 `GUARDRAIL_IDS` 注册，错误输出带 ID；`selftest.sh` §9 逐条断言真实触发并检查无死护栏 |
 | 静态校验器 + 安装器 + 自检 | `scripts/`，`bash scripts/selftest.sh` 全绿 |
 | Prompt 模板 5 份（static/dynamic 分段，无模板引擎） | `prompts/` |
-| 真实 run 记录 | `runs/RUN-20260908-002` doc_fix；`RUN-20260908-004` bugfix-triage pytest；`RUN-20260908-005` ui-verification 双视口；`RUN-20260908-006` feature-delivery 已完成 G0–G10 全链路闭环（intake→recon→spec→decision→approve→plan→implement→check→review→integrate→test→verify_ui→release_check→smoke→notify→close），`run.status=completed`；均 `validate_run.py` PASS |
+| 真实 run 记录 | `runs/RUN-20260908-002` doc_fix；`RUN-20260908-004` bugfix-triage pytest；`RUN-20260908-005` ui-verification 双视口；`RUN-20260908-006` feature-delivery 已完成 G0–G10 全链路闭环（intake→recon→spec→decision→approve→plan→implement→check→review→integrate→test→verify_ui→release_check→smoke→notify→close），`run.status=completed`；均 `validate_run.py` PASS（该批 run 磁盘已于 2026-09-20 维护处置后不存在，为历史记录；现行可验证 run 见 `runs/`） |
 | Codex 宿主实机加载 | `~/.codex/skills/aiworflow*` 符号链接落地；Codex 以 `qwen3.7-flash + reasoning low` 实测触发 Reviewer 并输出 `verdict=APPROVE` |
 | 2025–2026 主流实践调研与吸收 | `docs/14-current-practices.md`：8 条一手/官方来源，结论已对照三层模型 |
 | 候选 DAG 编译器（LLM 候选 → 合法产物） | `scripts/compile_dag.py`：归一化已知漂移（id/type/next/字符串 schema_version/star）+ 块数预算上限，委托 `validate_workflow.py` 全量结构规则；正例编译 PASS、三类反例（approve 缺 star / 成环 / 超预算）按预期 REJECT，已并入 `scripts/selftest.sh` 第 6 节 |

@@ -73,6 +73,28 @@ Planner 覆写 `state.yaml` 前必须先 `cp state.yaml state.prev.yaml` 建立�
 标记 `timed_out|terminated`）——脚本不代写状态，唯一写入者仍是 Planner。白名单登记过的
 run 计 WARN 不计 FAIL（恒定 FAIL 会被当噪音，护栏被当噪音就等于没有）。
 
+#### 评审-only Run 的合法收尾（v1.8.10 起）
+
+适用：交付物是评审报告/建议本身、不改代码的 run，在 G3 用户接受后终结。处方全部来自
+RUN-20260921-001 实操（每条都是现场踩到后补齐的，缺一条 `validate_run` 就 FAIL）：
+
+1. **fix 路径块逐块跳过且带凭据**：`--mark-done <label> --status skipped`，每个 skipped 块
+   必须写 `skip_reason`（R-1 跳过凭据；`error_codes` 或块内注释亦可，`skip_reason` 最直白）。
+   理由示例："评审-only run：G3 用户接受后按 Decision 不进修复路径，修复另立工作包另行授权"。
+2. **notify/close 可 completed**：报告已当面交付（notify）与 run 终结（close）是真实完成的
+   事实，其 skipped 祖先凭 `skip_reason` 放行，不必硬跳整条尾巴。
+3. **`test-plan.md` 写 N/A 记录而非留空**：completed 状态强制该文件存在。评审-only run 写
+   N/A：列实际验证面（基线门禁的历史实测引用、主仓与 worktree `git status` 双空复核、
+   `validate_run` 结果），明确"不存在修复类测试计划"——不伪造测试计划。
+4. **star:user 块亲签出处必须落位**：mark-down approve 这类人工门块时，同步在 `approvals.<label>`
+   写 `decided_by/decided_at/evidence`（亲签原话 + 会话时间），账本追加一条注明"用户会话亲签、
+   AI 未代签"。Planner 的 mark-done 只做簿记，不产生批准。
+5. **终态前双复核**：`validate_run` PASS + `run_flow --advance` 输出 `loop_control: DONE`
+   （frontier 空）才算关闭。
+
+账本 note 的命令形态：`--append-ledger '{"note":"..."}'`（单个 JSON 参数；没有 `--note`
+标志——RUN-20260921-001 首次使用时踩过）。
+
 ### 轨道 C：交付状态（借自 DevFlow Root/Task + WanGo 工作包）
 
 ```text

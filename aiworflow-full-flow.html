@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>AIWorflow 全流程（v1.8.9）· 我的 AI 工作流</title>
+  <title>AIWorflow 全流程（v1.8.10）· 我的 AI 工作流</title>
   <style>
     :root {
       --bg: #f6f7f9;
@@ -251,7 +251,7 @@
 </div>
 
 <!-- ====== 轮次日志 ledger (v1.7.4 引入，v1.7.5 沿用) ====== -->
-<h2 id="s-ledger">📋 自动化推进轮次日志（ledger）v1.7.4 引入 · 沿用至今（v1.8.9）</h2>
+<h2 id="s-ledger">📋 自动化推进轮次日志（ledger）v1.7.4 引入 · 沿用至今（v1.8.10）</h2>
 
 <div class="card">
   <div class="panel-grid">
@@ -291,7 +291,7 @@
 
 <div class="card">
   <div class="tbl-wrap"><table>
-    <tr><th>维度</th><th>我们 AIWorflow v1.8.9</th><th>Skyvern</th><th>ric-dev</th><th>AWS AI-DLC</th><th>Langflow</th><th>CCG</th><th>AI Workflow</th></tr>
+    <tr><th>维度</th><th>我们 AIWorflow v1.8.10</th><th>Skyvern</th><th>ric-dev</th><th>AWS AI-DLC</th><th>Langflow</th><th>CCG</th><th>AI Workflow</th></tr>
     <tr>
       <td><strong>定位</strong></td>
       <td>AI 研发控制层（纯文件）</td>
@@ -414,7 +414,7 @@
     </tr>
   </table></div>
 
-  <p style="margin-top:16px;font-weight:600;color:var(--accent)">一句话：AIWorflow v1.8.9 = 在「个人使用、除当前环境已有 PyYAML 外零新增依赖」约束下做到大厂级流程完备（已知缺口 100% 登记在册并有触发条件，无「不知道自己不知道」项，复盘结论见 docs/33），对标 Anthropic Workflow-first、美团人人对齐→人机对齐、快手 Context Assembly+Evidence Grounding、字节 DeerFlow 编排+记忆。124 条外部来源（9 个批次：核心方法论 + 开源项目 + 蚂蚁/阿里等 L1 全文 + 2026-09 各批扫描 + 2026-09-20 全网检索批；001–086 归属判定见 docs/33、087–124 见 docs/34）+ hongtao2agent 上下文工程/DSH插件/Agentic SRE/Pi Compaction + 黄迅/GoPS 环系统，去掉浏览器面和重型基础设施，加上 selftest 确定性自检、版本锁定分发、三层护栏下沉、环间接口规范、ledger 轮次日志与长周期任务恢复链——在"最小可验证"前提下做到最完整。</p>
+  <p style="margin-top:16px;font-weight:600;color:var(--accent)">一句话：AIWorflow v1.8.10 = 在「个人使用、除当前环境已有 PyYAML 外零新增依赖」约束下做到大厂级流程完备（已知缺口 100% 登记在册并有触发条件，无「不知道自己不知道」项，复盘结论见 docs/33），对标 Anthropic Workflow-first、美团人人对齐→人机对齐、快手 Context Assembly+Evidence Grounding、字节 DeerFlow 编排+记忆。124 条外部来源（9 个批次：核心方法论 + 开源项目 + 蚂蚁/阿里等 L1 全文 + 2026-09 各批扫描 + 2026-09-20 全网检索批；001–086 归属判定见 docs/33、087–124 见 docs/34）+ hongtao2agent 上下文工程/DSH插件/Agentic SRE/Pi Compaction + 黄迅/GoPS 环系统，去掉浏览器面和重型基础设施，加上 selftest 确定性自检、版本锁定分发、三层护栏下沉、环间接口规范、ledger 轮次日志与长周期任务恢复链——在"最小可验证"前提下做到最完整。</p>
 </div>
 
 <!-- ====== 核心资产清单 ====== -->
@@ -492,9 +492,10 @@ python3 scripts/run_flow.py workflows/feature-delivery.workflow.yaml runs/RUN-ID
 <h2 id="s-version">📜 版本演进</h2>
 
 <div class="card">
-  <p style="margin:0 0 12px;border-left:3px solid var(--accent);padding-left:10px;font-size:0.9em">📌 版本状态：本页原为 v1.7.8 全流程快照，2026-09-20 全量校准至当前 <strong>v1.8.9</strong>；版本唯一事实源是 <code>VERSION</code>（README 头部与之对齐）。v1.8.x 相对快照新增：写入时校验 T-01..T-04、DAG 语义一致性 R-1/R-2/R-3、check_all 全系统日检、规则生命周期 Add/Thin 与任务后能力观察、pre-commit hook v3 双布局、长周期任务恢复链自检覆盖、报告契约统一与账本可观测（v1.8.6）、会话归因与 Reviewer 确定性前置检查（v1.8.7，66→69）、checkpoint/state/ledger 消费与串行治理边界（v1.8.8，69→70）、4 条 P3 收口与当日全网检索批 087–124 入附录（v1.8.9），明细见下表最新 10 行。</p>
+  <p style="margin:0 0 12px;border-left:3px solid var(--accent);padding-left:10px;font-size:0.9em">📌 版本状态：本页原为 v1.7.8 全流程快照，2026-09-20 全量校准至当前 <strong>v1.8.10</strong>；版本唯一事实源是 <code>VERSION</code>（README 头部与之对齐）。v1.8.x 相对快照新增：写入时校验 T-01..T-04、DAG 语义一致性 R-1/R-2/R-3、check_all 全系统日检、规则生命周期 Add/Thin 与任务后能力观察、pre-commit hook v3 双布局、长周期任务恢复链自检覆盖、报告契约统一与账本可观测（v1.8.6）、会话归因与 Reviewer 确定性前置检查（v1.8.7，66→69）、checkpoint/state/ledger 消费与串行治理边界（v1.8.8，69→70）、4 条 P3 收口与当日全网检索批 087–124 入附录（v1.8.9）、首个真实 G3 门评审 run 的收尾规则固化（v1.8.10，docs/05·07），明细见下表最新 10 行。</p>
   <div class="tbl-wrap"><table>
     <tr><th>版本</th><th>日期</th><th>核心变更</th></tr>
+    <tr><td>v1.8.10</td><td>2026-09-21</td><td>真实 G3 门评审 run 的规则固化：RUN-20260921-001（六功能域只读评审、用户亲签、validate_run PASS、--advance DONE）踩出三条运行规则成文——docs/07 侦察 fan-out 启动清单（manifest 先行、按域回收不按份数、重试同域原 prompt、分类器不可用时 Planner 直评有界域）、docs/05 评审-only Run 合法收尾处方（skipped+skip_reason、notify/close 可 completed、test-plan.md 写 N/A、approvals 落亲签出处、终态双复核）、star 块 mark-down 只做簿记边界；入库状态适配：install_hooks 装闸门入本仓 .git/hooks（布局 B，双布局在位），runs/README、docs/11、context 形态事实按 2026-09-20 21:02 重新自建仓库（d551273，remote zaf05/ai-coding-workflow）改写并附隐私提示；无脚本变更，selftest 恢复 70/70</td></tr>
     <tr><td>v1.8.9</td><td>2026-09-20</td><td>P3 收口 + 全网检索批入附录：独立检查 4 条 P3 全部修复——review_preflight REVIEW_SIZE 消息与阈值统一为 added lines 口径、secret 告警不再回显密钥材料（selftest §7d-quatro 新增「密钥不回显」断言）、PROTECTED_PATHS 纵深防御边界说明落 docs/30 §十二、v1.8.7 期未申报的依赖措辞统一补记声明（docs/29）；新增 docs/34-web-scan-20260920.md（GitHub 周榜 2026-09-14~20 直抓 15 仓 + 12 组主题检索两轮 + 反趴复盘），附录 086→124（087–124 共 38 条，检索快照级 L3 为主并按 docs/33 §三标注「生态样本/非规则依据」），012/025/046/066 既有来源证据更新（012 本周 +15,028 星居周榜第一）；README 核验表扩至 row 103；本页计数全量同步</td></tr>
     <tr><td>v1.8.8</td><td>2026-09-20</td><td>checkpoint 消费 + 串行边界 + 人类摘要：task_resume.py 读取 checkpoint.yaml、state.yaml 块状态与最近 ledger，恢复提示词明确 migration/commit/push 零重复；docs/04 声明 run 内单活跃角色串行推进是 Planner 唯一写入者治理设计，并行只发生在工作包层；review/test 报告补 human_summary；规则生命周期补模型替换/供应商切换复检；本地 HTML title 与 README 版本纳入一致性校验；selftest §4 改用 --check 防安装指纹漂移假 PASS；selftest 69→70（docs/29、docs/30 §十二）</td></tr>
     <tr><td>v1.8.7</td><td>2026-09-20</td><td>会话归因 + Reviewer 确定性前置层：run_flow --session-meta 支持 model（必填）与 tokens_used（非负整数/null），自动入 ledger 并在 advance 报告回显；新增 review_preflight.py 对提交 diff 执行 secret/禁改区/破坏性命令/规模四规则，默认 stdout 保持只读，FAIL 非零；Reviewer CODE/RELEASE 第 0 步接线；selftest 66→69（docs/29、docs/30 §十一）</td></tr>

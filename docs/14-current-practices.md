@@ -55,7 +55,7 @@
 | 第三方 `github/spec-kit` 本地 clone | 未完成 | 2026-09-08 尝试 `git clone --depth 1 https://github.com/github/spec-kit.git` 失败：`Failed to connect to github.com port 443 after 136915 ms`；官方文档经网页可读 |
 | 本文网页调研 | 已完成（可复现） | 上表 URL，检索日期 2026-09-08 |
 | 上述修正是否落地 | 部分待办 | 第 1、2、3 项是本次补充；模板字段是否已存在需跑 `scripts/selftest.sh` 与 `validate_package.py` 确认 |
-| 真实 run / Codex 宿主实机加载 | 已完成一个 FAST 冒烟实例 | `runs/RUN-20260908-002`，`validate_run.py` PASS；Codex 实测触发 Reviewer 输出 `verdict=APPROVE` |
+| 真实 run / 宿主实机加载 | 已完成多个真实 run + 双宿主实测 | 历史 `RUN-20260908-002`（Codex Reviewer `verdict=APPROVE`，磁盘已不存在）；现行可验证 run 见 `runs/`（`RUN-20260920-003` `validate_run.py` PASS；`RUN-20260921-001` 首个真实任务驱动 + G3 用户亲签 + 评审-only 合法收尾，validate_run PASS / `--advance` DONE）；2026-09-20 Codex exec 与 Claude Code 嵌套会话双宿主只读探针均实测发现/实读 skill |
 | Claude Code / ZCode 宿主实机加载、Flow 引擎 | 未验证/未实现 | 见 `13-roadmap.md` |
 
 ## 四、下一步（按优先级）

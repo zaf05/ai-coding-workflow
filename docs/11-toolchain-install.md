@@ -48,7 +48,7 @@ python3 scripts/install_skills.py --target "/home/feifz/workspace/WanGoPlatform/
 | 事实 | 位置 |
 |---|---|
 | 包版本单一事实源 | 仓库根 `VERSION`（semver） |
-| 版本历史 | 本目录独立 Git 仓库，分支 `main`，tag `v1.4.1`；父仓库经 `.gitignore` 与 `.git/info/exclude` 排除本目录 |
+| 版本历史 | 本目录独立 Git 仓库（v1.8.2 自建 → v1.8.3 撤销 → 2026-09-20 21:02 重新自建，init import `d551273`，分支 `main`，remote `zaf05/ai-coding-workflow`，暂无 tag；2026-09-21 用户确认保留）；父仓库经 `.git/info/exclude` 排除本目录 |
 | 目标机器安装事实 | `<target>/aiworflow-install-receipt.json`（收据，**不入来源库**） |
 
 收据记录 `source_root` / `source_version` / `source_fingerprint` / `mode` / `installed_at` / `manifest`（逐文件 SHA256）。
@@ -117,7 +117,7 @@ bash scripts/selftest.sh                                  # 正例 + 反例
 ls -l "$HOME/.codex/skills" | grep aiworflow              # 链接是否落地
 ```
 
-**当前事实**：Codex 已实机加载并产出真实 Run `runs/RUN-20260908-002`（`~/.codex/skills/aiworflow*` 符号链接落地，`validate_run.py` PASS）。Claude Code / ZCode 侧仍只完成文件系统安装与静态校验，未做实机触发验证；这两类宿主的实机加载证据必须来自对应宿主会话内的真实触发记录，不能由目录或安装成功推断。模型/参数选择见 `15-execution-model.md`。
+**当前事实**：Codex 已实机加载并产出真实 Run（历史 `RUN-20260908-002` 磁盘已不存在，现行可验证 Run 见 `runs/`，如 `RUN-20260920-003` `validate_run.py` PASS）。Claude Code 侧已于 2026-09-20 完成实机触发验证：嵌套 `claude -p` 只读探针会话的系统 skill 清单实际注册全部 5 个 `aiworflow*` skill，并经 `~/.claude/skills` 符号链接实读 SKILL.md / 安装收据（source_version 1.8.9）/ `_shared/contracts`；两宿主 `install_skills.py --check` 收据指纹一致。ZCode 侧仍只完成文件系统安装与静态校验，未做实机触发验证；该宿主的实机加载证据必须来自对应宿主会话内的真实触发记录，不能由目录或安装成功推断。模型/参数选择见 `15-execution-model.md`。
 
 ## 验证规则加载生效
 

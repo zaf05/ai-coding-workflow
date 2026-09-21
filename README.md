@@ -1,8 +1,8 @@
 # AIWorflow · 我的 AI 工作流
 
-版本：v1.8.9（单一事实源 `VERSION`） · `schema_version: 1` · 更新日期：2026-09-20
+版本：v1.8.10（单一事实源 `VERSION`） · `schema_version: 1` · 更新日期：2026-09-21
 
-这是属于我自己的 AI 原生研发工作流系统（当前 v1.8.9，124 个外部参考来源，覆盖 13 家一二线大厂：国内 9——阿里/腾讯/字节/美团/快手/华为/京东/网易有道/货拉拉，国际 4——OpenAI/Anthropic/AWS/Google）。它把一次“让 AI 干活”的请求，升级成一条**可编排（块 DAG）、可分权（四角色）、可验证（门禁 + 证据）、可自动推进（loop_control 信号驱动循环）、可接管（状态与账本）**的交付链路。当前状态：v1.8.9，selftest **70/70 PASS**（站点在线时；离线 69/69 + 1 SKIP），validate_package **全部通过**。近期演进：v1.8.5 修复长周期恢复链三个真 bug；v1.8.6 统一 `--advance` 报告契约并让账本写失败可观测；v1.8.7 落地会话归因与 Reviewer 确定性前置检查；v1.8.8 让 `task_resume` 消费 checkpoint/state/ledger、声明 run 内串行治理边界、补人类摘要与模型替换复检；v1.8.9 收口独立检查的 4 条 P3（REVIEW_SIZE 口径统一 / secret 告警不回显密钥 / PROTECTED_PATHS 边界说明 / 依赖措辞统一补申报），并把当日全网检索批（087–124，`docs/34`）全部编入 HTML 附录索引。诚实边界：真实 ≥3 块的 L3 断点演练仍未执行，当前只能声明恢复组件可用且有自检，不能声明跨会话实战闭环。
+这是属于我自己的 AI 原生研发工作流系统（当前 v1.8.10，124 个外部参考来源，覆盖 13 家一二线大厂：国内 9——阿里/腾讯/字节/美团/快手/华为/京东/网易有道/货拉拉，国际 4——OpenAI/Anthropic/AWS/Google）。它把一次“让 AI 干活”的请求，升级成一条**可编排（块 DAG）、可分权（四角色）、可验证（门禁 + 证据）、可自动推进（loop_control 信号驱动循环）、可接管（状态与账本）**的交付链路。当前状态：v1.8.10，selftest **70/70 PASS**（站点在线时；离线 69/69 + 1 SKIP），validate_package **全部通过**。近期演进：v1.8.5 修复长周期恢复链三个真 bug；v1.8.6 统一 `--advance` 报告契约并让账本写失败可观测；v1.8.7 落地会话归因与 Reviewer 确定性前置检查；v1.8.8 让 `task_resume` 消费 checkpoint/state/ledger、声明 run 内串行治理边界、补人类摘要与模型替换复检；v1.8.9 收口独立检查的 4 条 P3（REVIEW_SIZE 口径统一 / secret 告警不回显密钥 / PROTECTED_PATHS 边界说明 / 依赖措辞统一补申报），并把当日全网检索批（087–124，`docs/34`）全部编入 HTML 附录索引；v1.8.10 用首个真实任务驱动的 G3 人工门评审 run（RUN-20260921-001：六功能域只读评审、用户亲签接受、评审-only 合法收尾）沉淀三条运行规则——侦察 fan-out 启动清单、评审-only Run 收尾处方、star 块亲签出处落位。诚实边界：真实 ≥3 块的 L3 断点演练仍未执行，当前只能声明恢复组件可用且有自检，不能声明跨会话实战闭环。
 
 ## 血缘与来源
 
@@ -63,7 +63,7 @@ Evidence 层 runs/<RUN-ID>/             —— state.yaml / current.md / test-pl
 │   ├── candidate-dag.md       候选 DAG 生成模板（13 条规则）
 │   └── examples/              候选 DAG 示例
 ├── scripts/                   校验器、安装器、DAG 编译器与解释器（Python 3 标准库，无第三方依赖）
-├── runs/                      运行期证据容器（本地，不入库）
+├── runs/                      运行期证据容器（本目录自 2026-09-20 起为独立 git 仓库，见 runs/README 入库状态）
 └── references/                四个参考资产（V4.0 HTML + 3 工程 clone，只读）
     └── ai-native-dev-pipeline-v4-full-flow.html  V4.0 全流程讲解页（保留原文）
 ```
@@ -111,11 +111,11 @@ python3 scripts/run_flow.py workflows/feature-delivery.workflow.yaml runs/<RUN-I
 
 ## 执行模型选择（不是"一个参数跑到底"）
 
-`-m qwen3.7-flash -c model_reasoning_effort=low` **只用于低风险 smoke / 快速单角色自检**，不是正式工作流标准。理由：flash 在简单路径够快，但规划多块、权限/安全/重构等任务中曾出现 schema 漂移；工作流结论不能依赖低成本模型单点证明。
+低风险 smoke / 快速单角色自检用 `model_reasoning_effort=low` 即可，不是正式工作流标准。理由：低成本模型在简单路径够快，但规划多块、权限/安全/重构等任务中曾出现 schema 漂移；工作流结论不能依赖低成本模型单点证明。注：原推荐的 `qwen3.7-flash` 已于 2026-09-20 实测下线（`codex exec` 报「模型不存在」），smoke 探针改用 `~/.codex/config.toml` 默认模型 + low effort，实测可用。
 
 | 场景 | 建议参数 |
 |---|---|
-| 快速冒烟、单块 `doc_fix`、单角色 smoke | `-m qwen3.7-flash -c model_reasoning_effort=low` |
+| 快速冒烟、单块 `doc_fix`、单角色 smoke | `config.toml` 默认模型 + `-c model_reasoning_effort=low`（2026-09-20 实测 flash 已下线） |
 | 正式功能交付、权限/安全/数据/迁移、多块 Planner→Implementer→Reviewer→Tester | 使用 `~/.codex/config.toml` 默认模型 + `model_reasoning_effort=high`（2026-09-10 实测为 `qifu/qwen3.8-max`；以实测为准） |
 | 大模型规划慢或已过预算 | 规划仍用默认模型，单块实现/回归可按任务类型降级；不得让降级模型代签 `APPROVE`/`PASS` |
 
@@ -124,8 +124,8 @@ python3 scripts/run_flow.py workflows/feature-delivery.workflow.yaml runs/<RUN-I
 ```bash
 cd /home/feifz/workspace/WanGoPlatform/.ai_worflow
 python3 scripts/validate_package.py
-python3 scripts/validate_run.py runs/RUN-20260908-002
-timeout 180 codex exec   --ephemeral --skip-git-repo-check   -C /home/feifz/workspace/WanGoPlatform/.ai_worflow   --add-dir /tmp/aiworflow_fixture.o4YRIk   -s danger-full-access   -c model_reasoning_effort=low   -m qwen3.7-flash   -o /tmp/aiworflow-smoke.txt   '你是 aiworflow-reviewer。只读审核 RUN-20260908-002 的 doc_fix 块，输出 review.yaml 到对应 run 目录；不要改 state.yaml。'
+python3 scripts/validate_run.py runs/RUN-20260920-003
+timeout 180 codex exec   --ephemeral --skip-git-repo-check   -C /home/feifz/workspace/WanGoPlatform/.ai_worflow   -s danger-full-access   -c model_reasoning_effort=low   -o /tmp/aiworflow-smoke.txt   '你是 aiworflow-reviewer。只读审核 RUN-20260920-003 的 verify_ui 块，输出 review.yaml 到对应 run 目录；不要改 state.yaml。'
 ```
 
 ## 不可妥协的边界
@@ -145,6 +145,7 @@ timeout 180 codex exec   --ephemeral --skip-git-repo-check   -C /home/feifz/work
 
 | 版本 | 变更 | 对使用者的影响 |
 |---|---|---|
+| **v1.8.10** | **真实 G3 门评审 run 的规则固化**：首个以真实任务驱动完整走过 Planner 段 + 人工门 + 收尾的 run（RUN-20260921-001：六功能域只读评审，用户会话亲签"我接受"，validate_run PASS、`--advance` DONE）。踩出的三条运行规则沉淀为文档：① `docs/07` 新增**侦察 fan-out 启动清单**——fan-out 前 manifest 落 current.md、按域回收不按份数、重试必须同域原 prompt（实测事故：Soul 探针启动失败被 IAM prompt 顶替重试，4 份报告掩盖 1 域缺失）、分类器不可用时 Planner 直评有界域并显式记录；② `docs/05` 新增**评审-only Run 合法收尾处方**——fix 路径块逐块 skipped+skip_reason、notify/close 可 completed、test-plan.md 写 N/A 记录不伪造、`approvals.<label>` 落亲签出处、终态前 validate_run+DONE 双复核、`--append-ledger '{"note":...}'` 命令形态；③ star:user 块 mark-done 只做簿记不产生批准的边界成文；④ **入库状态适配**（2026-09-20 21:02 用户重新自建本目录 git 仓库 `d551273`、remote `zaf05/ai-coding-workflow`，2026-09-21 确认保留）：`install_hooks.py --apply` 把 pre-commit 闸门装入本仓 `.git/hooks/`（布局 B 生效，与主仓双布局在位，`--check` PASS），`runs/README` 入库状态、`docs/11` 版本历史行、`context/project-aiworkflow` 形态事实按新现实改写并附隐私提示（`runs/`、`context/` 推远端前用户确认可见性）。无脚本变更，selftest 恢复 70/70 | 评审-only 类任务有了可直接照抄的收尾路径，不再现场摸索踩 R-1/缺 test-plan 的 FAIL；多探针评审不会再出现"重复域顶替缺失域"的静默覆盖；人工门签收在 state.yaml 有结构化出处可审计 |
 | **v1.8.9** | **P3 收口 + 全网检索批入附录**：① 独立检查 4 条 P3 全部修复——`review_preflight.py` REVIEW_SIZE 消息与阈值统一为 added lines 口径（原消息打印 changed_lines 会误导对照）、secret 告警不再回显命中串前 8 字符（改为仅回显规则类别 sk-key/bearer-token/key-assignment，selftest §7d-quatro 新增「密钥材料不回显」断言）、PROTECTED_PATHS 对主仓同名路径的纵深防御边界说明落 `docs/30` §十二、v1.8.7 实施期未申报的「0 外部依赖→不新增外部依赖（已有 PyYAML）」措辞统一在 `docs/29` 补记声明；② 附录 086→**124**：新增 `docs/34-web-scan-20260920.md`（GitHub 周榜 2026-09-14~20 webReader 直抓 15 仓 + 12 组主题检索两轮 + 6+4 反趴复盘），087–124 共 38 条编入 HTML 附录与核验表 row 66–103（检索快照级 L3 为主，按 `docs/33` §三强制标注「生态样本/非规则依据」）；012/025/046/066 四条既有来源获证据更新（012 本周 +15,028 星居周榜第一）；README/docs/HTML 计数全量同步 | 检查发现的问题当版清零；今天全网爬到的内容全部可溯引入附录索引；secret 告警自身不再泄密 |
 | **v1.8.8** | **checkpoint 消费 + 串行边界 + 人类摘要**：① `task_resume.py` 读取 `checkpoint.yaml`、`state.yaml` 块状态与最近 ledger，恢复提示词明确“已 completed 块的 migration/commit/push 零重复执行”；② docs/04 声明 run 内单活跃角色与串行推进是 Planner 唯一写入者治理设计，并行只发生在工作包层；③ Review/Test 报告模板增加 `human_summary`，角色报告增加 `session.model/session.tokens_used`；④ 规则生命周期增加模型升级/替换/供应商切换复检；⑤ 本地 HTML `<title>` 与 README 版本行纳入 `validate_consistency.py`；⑥ selftest §4 从 dry-run 改为 `install_skills.py --check`，防止同版本指纹漂移假 PASS；selftest 69→70 | 恢复提示词从 task.yaml 单一来源升级为 task+checkpoint+state+ledger；L3 真实演练边界仍保留；签核者第一眼可读结论；模型漂移有复检触发 |
 | **v1.8.7** | **会话归因 + Reviewer 确定性前置层**：① `run_flow.py --session-meta` 支持 `model`（必填）与 `tokens_used`（非负整数或 `null`），自动写入本轮 ledger 并在 `--advance` 报告回显，非法输入非零退出；② 新增 `review_preflight.py`，对已提交 diff 执行 secret / 禁改区 / 破坏性命令 / 规模四条确定性规则，默认 stdout 保持 Reviewer 只读，FAIL 非零；③ Reviewer SKILL 接线为 CODE_REVIEW / RELEASE_REVIEW 第 0 步，机器 FAIL 直接转 deterministic finding；selftest 66→69 | 能回答“这个 run 由哪个模型执行”；secret、账本禁改区和破坏性命令从人工目测下沉为机器前置检查；token 查不到时诚实写 null，不估算 |
@@ -179,7 +180,7 @@ timeout 180 codex exec   --ephemeral --skip-git-repo-check   -C /home/feifz/work
 | 事实 | 位置 | 说明 |
 |---|---|---|
 | 包版本 | `VERSION` | semver，唯一权威；README 头部版本必须与之一致 |
-| 版本历史 | `VERSION` 文件为唯一事实源 | 主仓 `.git/info/exclude` 排除本目录，安装收据（`~/.codex/skills/aiworflow-install-receipt.json`）记录 source_version 与 source_root |
+| 版本历史 | `VERSION` 文件为唯一事实源 | 本目录为独立 git 仓库（2026-09-20 21:02 重新自建 `d551273`，remote `zaf05/ai-coding-workflow`）；主仓 `.git/info/exclude` 排除本目录，安装收据（`~/.codex/skills/aiworflow-install-receipt.json`）记录 source_version 与 source_root |
 | 第三方参考 | `references/`（**不入库**，590MB） | 来源与钉住 commit 记录在 `docs/12-reference-scan.md`，可按需重新 clone 复现 |
 
 ### 安装即锁定：收据 + 摘要
@@ -266,7 +267,7 @@ python3 scripts/install_hooks.py --check
 | 2025–2026 主流实践调研 | 已完成（网页证据） | `docs/14-current-practices.md`：8 条一手/官方来源、与三层模型对照、5 项应吸收修正 |
 | Prompt 模板 | 已完成（纯文本模板，无模板引擎依赖） | `prompts/` |
 | 真实 run 记录 | 已完成多个真实 run | `RUN-20260914-001`（skill-tool-tag，已合入 develop）、`RUN-20260920-001`（运行期强制执行落地 run，已完成）；2026-09-20 维护处置收口 7 个陈旧 run（详见 `docs/31` P3 记录与各 run `current.md#Change Log`）；历史 run（`RUN-20260908-*`）磁盘已不存在 |
-| 宿主实机加载 | Codex 已实测加载 | `~/.codex/skills` 的 `aiworflow*` 符号链接已落地；`RUN-20260908-002` 由 Codex 角色会话真实产出 |
+| 宿主实机加载 | Codex 与 Claude Code 双宿主已实测加载 | `~/.codex/skills` 与 `~/.claude/skills` 的 `aiworflow*` 符号链接均落地（两宿主 `install_skills.py --check` 收据 1.8.9 指纹一致）；`RUN-20260908-002` 由 Codex 角色会话真实产出；2026-09-20 双宿主只读探针复测：Codex 会话列出 5 个 skill 链接并读出 SKILL.md frontmatter / VERSION 1.8.9 / 角色规则引文，Claude Code 嵌套会话系统 skill 清单实际注册全部 5 个 aiworflow* skill 并经符号链接实读 SKILL.md / 安装收据 / contracts |
 | 会话归因（model / tokens_used） | 已完成（v1.8.7） | `run_flow.py --session-meta` + selftest §7d-ter：model 必填、tokens 可为 null、非法输入拒绝；角色报告模板含 session 字段 |
 | Review 确定性前置检查 | 已完成（v1.8.7） | `scripts/review_preflight.py` + selftest §7d-quatro：secret/禁改区/破坏性命令负例开火，干净 diff 通过 |
 | task_resume checkpoint/state/ledger 消费 | 已完成（v1.8.8） | selftest §13c-bis；真实 ≥3 块断点演练仍待触发，不能宣称 L3 实战闭环 |
@@ -312,7 +313,7 @@ AIWorflow 是一套**纯文件驱动的 AI 研发控制层**。它不提供浏�
 | 总代码行（脚本） | 5,180 行 Python + Shell（wc -l 实测 2026-09-20） |
 | 总文档行 | 6,055 行 Markdown（docs 5,336 + 根 README 719，wc -l 实测 2026-09-20） |
 | 外部依赖 | 0 新增（Python 3 + bash + 当前环境已有 PyYAML；不引入数据库/消息队列/npm 依赖） |
-| 宿主加载 | Codex 已实测加载，`~/.codex/skills/aiworflow*` 符号链接落地 |
+| 宿主加载 | Codex 与 Claude Code 双宿主已实测加载（2026-09-20 只读探针：Codex exec 会话与 Claude Code `-p` 嵌套会话各自发现/注册并实读 skill；两宿主收据 1.8.9 指纹一致） |
 
 ### 三层防护体系
 
