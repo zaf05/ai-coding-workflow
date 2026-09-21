@@ -4,7 +4,8 @@
 
 ## 架构概要
 
-- 当前版本：v1.8.10。
+- 当前版本：v1.8.11。
+- v1.8.11 参考收编：微信《Loop engineering》（淘天·苏雄）对照批入附录 124→130（`docs/35`）；五组件印证既有设计，automations 心跳层登记 `docs/13` 未实现表（触发条件绑定，不预写代码）。
 - v1.8.10 真实任务闭环：RUN-20260921-001 首个以真实业务任务（六功能域只读评审）驱动完整走过 Planner 段→G3 用户亲签→评审-only 合法收尾的 run（validate_run PASS、`--advance` DONE）；沉淀规则见 `docs/07`（侦察 fan-out 启动清单）与 `docs/05`（评审-only 收尾处方）。
 - 形态：纯文件驱动的块 DAG + 四角色门禁；`.ai_worflow/` 在 WanGoPlatform 主仓被 `.git/info/exclude` 忽略。**本目录是独立 git 仓库**（v1.8.2 自建 → v1.8.3 撤销 → 2026-09-20 21:02 重新自建 `d551273`，remote `zaf05/ai-coding-workflow`，2026-09-21 用户确认保留；pre-commit hook v3 双布局在位——主仓与本仓 `.git/hooks/` 各一份，布局 B 生效）。
 - v1.8.0 运行期强制执行三件套：`validate_transition.py`（写入时 T-01..T-04，Planner 覆写 state 前先 `cp state.yaml state.prev.yaml`）、`validate_run.py` 新增 R-1/R-2/R-3（DAG 语义一致性）、`check_all.py` 全系统日检。
@@ -42,4 +43,5 @@ python3 scripts/check_all.py
 - docs/31（P0–P3 实施记录）与 2026-09-20 维护处置：v1.8.0–v1.8.6 演进依据见各对应文档。
 - docs/29 §2026-09-20 修订与 docs/30 §十一/§十二：v1.8.7（session-meta + review_preflight）与 v1.8.8（checkpoint 消费 + 串行边界 + human_summary + 模型替换复检）依据；selftest §7d-ter/§7d-quatro/§13c-bis 为机器证据。
 - docs/34（2026-09-20 全网检索批）与 docs/29 独立检查结论：v1.8.9（4 条 P3 收口 + 附录 087–124 入索引）依据；外部参考来源 86→124。
+- docs/35（2026-09-21 Loop Engineering 收编批）：v1.8.11 依据；外部参考来源 124→130，心跳层缺口登记 docs/13。
 - RUN-20260921-001：v1.8.10 依据——真实 G3 人工门评审 run 的事故与处方（fan-out 错域重试、skip 凭据、test-plan N/A、亲签出处落位）。

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>AIWorflow 全流程（v1.8.10）· 我的 AI 工作流</title>
+  <title>AIWorflow 全流程（v1.8.11）· 我的 AI 工作流</title>
   <style>
     :root {
       --bg: #f6f7f9;
@@ -184,7 +184,7 @@
   <div class="stat"><div class="stat-num">16</div><div class="stat-label">确定性代码脚本</div></div>
   <div class="stat"><div class="stat-num">70/70</div><div class="stat-label">selftest PASS</div></div>
   <div class="stat"><div class="stat-num">0 新增</div><div class="stat-label">外部依赖（已有 PyYAML）</div></div>
-  <div class="stat"><div class="stat-num">124</div><div class="stat-label">文章+项目吸收 (001–124)</div></div>
+  <div class="stat"><div class="stat-num">130</div><div class="stat-label">文章+项目吸收 (001–130)</div></div>
 </div>
 
 <!-- ====== G0-G10 全流程 ====== -->
@@ -251,7 +251,7 @@
 </div>
 
 <!-- ====== 轮次日志 ledger (v1.7.4 引入，v1.7.5 沿用) ====== -->
-<h2 id="s-ledger">📋 自动化推进轮次日志（ledger）v1.7.4 引入 · 沿用至今（v1.8.10）</h2>
+<h2 id="s-ledger">📋 自动化推进轮次日志（ledger）v1.7.4 引入 · 沿用至今（v1.8.11）</h2>
 
 <div class="card">
   <div class="panel-grid">
@@ -291,7 +291,7 @@
 
 <div class="card">
   <div class="tbl-wrap"><table>
-    <tr><th>维度</th><th>我们 AIWorflow v1.8.10</th><th>Skyvern</th><th>ric-dev</th><th>AWS AI-DLC</th><th>Langflow</th><th>CCG</th><th>AI Workflow</th></tr>
+    <tr><th>维度</th><th>我们 AIWorflow v1.8.11</th><th>Skyvern</th><th>ric-dev</th><th>AWS AI-DLC</th><th>Langflow</th><th>CCG</th><th>AI Workflow</th></tr>
     <tr>
       <td><strong>定位</strong></td>
       <td>AI 研发控制层（纯文件）</td>
@@ -394,7 +394,7 @@
     </tr>
     <tr>
       <td><strong>文章溯源</strong></td>
-      <td><span class="tag tag-green">✅ 124 外部来源全量吸收（001–086 全量核验 + 087–124 全网检索批标注收录）</span></td>
+      <td><span class="tag tag-green">✅ 130 外部来源全量吸收（001–086 全量核验 + 087–124 全网检索批 + 125–130 Loop Engineering 批标注收录）</span></td>
       <td>无</td>
       <td>无</td>
       <td>无</td>
@@ -414,7 +414,7 @@
     </tr>
   </table></div>
 
-  <p style="margin-top:16px;font-weight:600;color:var(--accent)">一句话：AIWorflow v1.8.10 = 在「个人使用、除当前环境已有 PyYAML 外零新增依赖」约束下做到大厂级流程完备（已知缺口 100% 登记在册并有触发条件，无「不知道自己不知道」项，复盘结论见 docs/33），对标 Anthropic Workflow-first、美团人人对齐→人机对齐、快手 Context Assembly+Evidence Grounding、字节 DeerFlow 编排+记忆。124 条外部来源（9 个批次：核心方法论 + 开源项目 + 蚂蚁/阿里等 L1 全文 + 2026-09 各批扫描 + 2026-09-20 全网检索批；001–086 归属判定见 docs/33、087–124 见 docs/34）+ hongtao2agent 上下文工程/DSH插件/Agentic SRE/Pi Compaction + 黄迅/GoPS 环系统，去掉浏览器面和重型基础设施，加上 selftest 确定性自检、版本锁定分发、三层护栏下沉、环间接口规范、ledger 轮次日志与长周期任务恢复链——在"最小可验证"前提下做到最完整。</p>
+  <p style="margin-top:16px;font-weight:600;color:var(--accent)">一句话：AIWorflow v1.8.11 = 在「个人使用、除当前环境已有 PyYAML 外零新增依赖」约束下做到大厂级流程完备（已知缺口 100% 登记在册并有触发条件，无「不知道自己不知道」项，复盘结论见 docs/33），对标 Anthropic Workflow-first、美团人人对齐→人机对齐、快手 Context Assembly+Evidence Grounding、字节 DeerFlow 编排+记忆。130 条外部来源（10 个批次：核心方法论 + 开源项目 + 蚂蚁/阿里等 L1 全文 + 2026-09 各批扫描 + 2026-09-20 全网检索批 + 2026-09-21 Loop Engineering 收编批；001–086 归属判定见 docs/33、087–124 见 docs/34、125–130 见 docs/35）+ hongtao2agent 上下文工程/DSH插件/Agentic SRE/Pi Compaction + 黄迅/GoPS 环系统，去掉浏览器面和重型基础设施，加上 selftest 确定性自检、版本锁定分发、三层护栏下沉、环间接口规范、ledger 轮次日志与长周期任务恢复链——在"最小可验证"前提下做到最完整。</p>
 </div>
 
 <!-- ====== 核心资产清单 ====== -->
@@ -430,7 +430,7 @@
     <tr><td>Prompt 模板</td><td>7 个</td><td>intake/spec/implement/review/test/candidate-dag + 示例</td><td>validate_package.py 校验分段</td></tr>
     <tr><td>确定性脚本</td><td>16 个代码脚本 + hook</td><td>校验×7：validate_workflow/validate_package/validate_run/validate_transition/validate_consistency/validate_content_quality/validate_site_consistency；引擎×7：compile_dag/run_flow/check_all/task_resume/review_preflight/install_skills/install_hooks；selftest + _yaml_min；另 pre-commit hook v3</td><td>selftest 70/70 全覆盖；§7d-ter 验证 session-meta，§7d-quatro 验证 preflight 正负例</td></tr>
     <tr><td>运行期容器</td><td>16 个 run</td><td>RUN-20260914-001（skill-tool-tag，已合入 develop）/ RUN-20260917-006（中型优化 TDD）/ RUN-20260920-001（运行期强制执行落地）/ RUN-20260920-002（页面验证）/ RUN-20260920-003（首个 Claude Code 完整 run）+ 11 个 2026-09-20 按快照协议收口的历史 run</td><td>validate_run.py + runs/README.md 白名单</td></tr>
-    <tr><td>参考文章</td><td>124 个 (001–124)</td><td>20篇AI Coding/Harness/SDD/OPC/环系统 + 10个开源项目（含BMAD/MoAI-ADK/CEK/how-claude-code-works/flow-next/oddyssey）+ 4篇hongtao深度解读 + 2篇微信/阿里云最新文章（蚂蚁数科Harness、阿里AACR-Bench）+ 后续批次扫描（docs/23/24/26/28/32）+ 086 腾讯云三支柱（2026-09-20 L1）+ 全网检索批（docs/34：GitHub 周榜直抓 15 仓 + 12 组主题检索，087–124 共 38 条，L3 快照级为主）</td><td>curl+MicroMessenger/移动UA+GitHub API 逐个核验；103行访问核验表：001–086 批次 63行可访问、2行诚实标注不可用、086 即 row 65（webReader L1 全文核验，docs/32）；row 66–103 为 2026-09-20 全网检索批（周榜直抓 L1 / 检索快照 L3，逐条标注，docs/34）</td></tr>
+    <tr><td>参考文章</td><td>130 个 (001–130)</td><td>20篇AI Coding/Harness/SDD/OPC/环系统 + 10个开源项目（含BMAD/MoAI-ADK/CEK/how-claude-code-works/flow-next/oddyssey）+ 4篇hongtao深度解读 + 2篇微信/阿里云最新文章（蚂蚁数科Harness、阿里AACR-Bench）+ 后续批次扫描（docs/23/24/26/28/32）+ 086 腾讯云三支柱（2026-09-20 L1）+ 全网检索批（docs/34：GitHub 周榜直抓 15 仓 + 12 组主题检索，087–124 共 38 条，L3 快照级为主）+ Loop Engineering 收编批（docs/35：125 淘天 L1 webReader + 126/127 Addy/MF 原文可达补录 + 128–130 转引 L3）</td><td>curl+MicroMessenger/移动UA+GitHub API 逐个核验；109行访问核验表：001–086 批次 63行可访问、2行诚实标注不可用、086 即 row 65（webReader L1 全文核验，docs/32）；row 66–103 为 2026-09-20 全网检索批（周榜直抓 L1 / 检索快照 L3，逐条标注，docs/34）；row 104–109 为 2026-09-21 Loop Engineering 批（docs/35）</td></tr>
     <tr><td>上下文目录</td><td>9 文件</td><td>project/area/decisions/risk-register 四类知识 + 模板与实例（aiworkflow / agentwan / open-platform-docs / consistency）+ README；G1 读入 + G10 写出跨 Run 知识</td><td>validate_package.py</td></tr>
     <tr><td>参考资产</td><td>4 个</td><td>V4.0 HTML + Skyvern + ric-dev + jakubkrehel-skills（11 Skill 界面质量参考）</td><td>git commit 钉住 + docs/12 扫描报告</td></tr>
   </table></div>
@@ -492,9 +492,10 @@ python3 scripts/run_flow.py workflows/feature-delivery.workflow.yaml runs/RUN-ID
 <h2 id="s-version">📜 版本演进</h2>
 
 <div class="card">
-  <p style="margin:0 0 12px;border-left:3px solid var(--accent);padding-left:10px;font-size:0.9em">📌 版本状态：本页原为 v1.7.8 全流程快照，2026-09-20 全量校准至当前 <strong>v1.8.10</strong>；版本唯一事实源是 <code>VERSION</code>（README 头部与之对齐）。v1.8.x 相对快照新增：写入时校验 T-01..T-04、DAG 语义一致性 R-1/R-2/R-3、check_all 全系统日检、规则生命周期 Add/Thin 与任务后能力观察、pre-commit hook v3 双布局、长周期任务恢复链自检覆盖、报告契约统一与账本可观测（v1.8.6）、会话归因与 Reviewer 确定性前置检查（v1.8.7，66→69）、checkpoint/state/ledger 消费与串行治理边界（v1.8.8，69→70）、4 条 P3 收口与当日全网检索批 087–124 入附录（v1.8.9）、首个真实 G3 门评审 run 的收尾规则固化（v1.8.10，docs/05·07），明细见下表最新 10 行。</p>
+  <p style="margin:0 0 12px;border-left:3px solid var(--accent);padding-left:10px;font-size:0.9em">📌 版本状态：本页原为 v1.7.8 全流程快照，2026-09-20 全量校准并持续同步至当前 <strong>v1.8.11</strong>；版本唯一事实源是 <code>VERSION</code>（README 头部与之对齐）。v1.8.x 相对快照新增：写入时校验 T-01..T-04、DAG 语义一致性 R-1/R-2/R-3、check_all 全系统日检、规则生命周期 Add/Thin 与任务后能力观察、pre-commit hook v3 双布局、长周期任务恢复链自检覆盖、报告契约统一与账本可观测（v1.8.6）、会话归因与 Reviewer 确定性前置检查（v1.8.7，66→69）、checkpoint/state/ledger 消费与串行治理边界（v1.8.8，69→70）、4 条 P3 收口与当日全网检索批 087–124 入附录（v1.8.9）、首个真实 G3 门评审 run 的收尾规则固化（v1.8.10，docs/05·07）、Loop Engineering 收编与心跳层缺口登记（v1.8.11，docs/35·13），明细见下表最新 10 行。</p>
   <div class="tbl-wrap"><table>
     <tr><th>版本</th><th>日期</th><th>核心变更</th></tr>
+    <tr><td>v1.8.11</td><td>2026-09-21</td><td>微信《Loop engineering》（淘天·苏雄）对照收编：新增 docs/35——六组件对照（worktrees/skills/connectors/sub-agents/memory 五条印证既有设计，六动作循环与 --advance 信号模型同构，六失败模式全有既有答案）；真缺口「触发/心跳层（automations）」登记 docs/13 并绑定触发条件（首个无人值守需求 + 宿主调度可用；形态先做唤醒 prompt 模板，不做守护进程）；三条候选做法记录在案（唤醒模板结构 / G0 loop 化六条件判据 / 维护环认定与 G10 能力观察同族，不新建流程）；附录 124→130（125 L1 webReader 全文 + 126 Addy 原文与 127 MF 原文 curl 200 可达补录 + 128–130 转引 L3 强制「生态样本/非规则依据」标注）；README 核验表扩至 row 109；修复页脚版本残留 v1.8.9；无脚本变更</td></tr>
     <tr><td>v1.8.10</td><td>2026-09-21</td><td>真实 G3 门评审 run 的规则固化：RUN-20260921-001（六功能域只读评审、用户亲签、validate_run PASS、--advance DONE）踩出三条运行规则成文——docs/07 侦察 fan-out 启动清单（manifest 先行、按域回收不按份数、重试同域原 prompt、分类器不可用时 Planner 直评有界域）、docs/05 评审-only Run 合法收尾处方（skipped+skip_reason、notify/close 可 completed、test-plan.md 写 N/A、approvals 落亲签出处、终态双复核）、star 块 mark-down 只做簿记边界；入库状态适配：install_hooks 装闸门入本仓 .git/hooks（布局 B，双布局在位），runs/README、docs/11、context 形态事实按 2026-09-20 21:02 重新自建仓库（d551273，remote zaf05/ai-coding-workflow）改写并附隐私提示；无脚本变更，selftest 恢复 70/70</td></tr>
     <tr><td>v1.8.9</td><td>2026-09-20</td><td>P3 收口 + 全网检索批入附录：独立检查 4 条 P3 全部修复——review_preflight REVIEW_SIZE 消息与阈值统一为 added lines 口径、secret 告警不再回显密钥材料（selftest §7d-quatro 新增「密钥不回显」断言）、PROTECTED_PATHS 纵深防御边界说明落 docs/30 §十二、v1.8.7 期未申报的依赖措辞统一补记声明（docs/29）；新增 docs/34-web-scan-20260920.md（GitHub 周榜 2026-09-14~20 直抓 15 仓 + 12 组主题检索两轮 + 反趴复盘），附录 086→124（087–124 共 38 条，检索快照级 L3 为主并按 docs/33 §三标注「生态样本/非规则依据」），012/025/046/066 既有来源证据更新（012 本周 +15,028 星居周榜第一）；README 核验表扩至 row 103；本页计数全量同步</td></tr>
     <tr><td>v1.8.8</td><td>2026-09-20</td><td>checkpoint 消费 + 串行边界 + 人类摘要：task_resume.py 读取 checkpoint.yaml、state.yaml 块状态与最近 ledger，恢复提示词明确 migration/commit/push 零重复；docs/04 声明 run 内单活跃角色串行推进是 Planner 唯一写入者治理设计，并行只发生在工作包层；review/test 报告补 human_summary；规则生命周期补模型替换/供应商切换复检；本地 HTML title 与 README 版本纳入一致性校验；selftest §4 改用 --check 防安装指纹漂移假 PASS；selftest 69→70（docs/29、docs/30 §十二）</td></tr>
@@ -529,7 +530,7 @@ python3 scripts/run_flow.py workflows/feature-delivery.workflow.yaml runs/RUN-ID
 
 <!-- ====== 附录：124 篇参考文章+开源项目完整收录（001–124） ====== -->
 <h2 id="s-appendix">📚 附录：124 篇参考文章+开源项目（001–124）</h2>
-<p style="font-size:0.85em;color:var(--muted);margin:0 0 10px">087–124 为 2026-09-20 全网检索批（GitHub 周榜直抓 + 12 组主题检索，扫描记录与逐条归属判定见 <code>docs/34</code>）：GitHub 仓库条目 star/周增为周榜页快照值；L3 条目为检索快照级证据（深路径未单独核验，不得引用正文观点，仅生态样本/观点记录——docs/33 §三纪律）。</p>
+<p style="font-size:0.85em;color:var(--muted);margin:0 0 10px">087–124 为 2026-09-20 全网检索批（GitHub 周榜直抓 + 12 组主题检索，扫描记录与逐条归属判定见 <code>docs/34</code>）：GitHub 仓库条目 star/周增为周榜页快照值；L3 条目为检索快照级证据（深路径未单独核验，不得引用正文观点，仅生态样本/观点记录——docs/33 §三纪律）。125–130 为 2026-09-21 Loop Engineering 收编批（扫描记录与逐条归属判定见 <code>docs/35</code>）：125 为 webReader L1 全文；126/127 为原文 curl 200 可达性级 L3（正文未读，观点经 125 转述）；128–130 为转引 L3（未核验，生态样本/非规则依据）。</p>
 
 <div class="card" style="font-size:0.85em;">
 <div class="tbl-wrap"><table>
@@ -658,11 +659,17 @@ python3 scripts/run_flow.py workflows/feature-delivery.workflow.yaml runs/RUN-ID
 <tr><td>122</td><td>2026-09-20</td><td>Louis Bouchard</td><td><a href="https://www.louisbouchard.ai">Context Engineering in 2026: Why We Stopped（8/18，compaction vs prompt caching 成本权衡）</a> 🆕 L3 · E2 触发后评估</td></tr>
 <tr><td>123</td><td>2026-09-20</td><td>Winder.ai</td><td><a href="https://winder.ai">A Comparison of AI Agent Harnesses in 2026（8/20，Qwen Code harness-模型绑定）</a> 🆕 L3</td></tr>
 <tr><td>124</td><td>2026-09-20</td><td>OpenAI</td><td><a href="https://openai.com">Harness Engineering 报告</a> 🆕 L3</td></tr>
+<tr><td>125</td><td>2026-09-21</td><td>苏雄 · 淘天集团</td><td><a href="https://mp.weixin.qq.com/s/RxRzTsRvmZJMmtQjQM79_g">Loop engineering：把 agent 放进工程循环</a> 🆕 L1 · 对照 docs/35：五组件印证 + automations 心跳层缺口登记 docs/13</td></tr>
+<tr><td>126</td><td>2026-09-21</td><td>Addy Osmani</td><td><a href="https://addyosmani.com/blog/loop-engineering/">Loop Engineering</a> 🆕 L3（200+标题，正文未读）· 125 的主源</td></tr>
+<tr><td>127</td><td>2026-09-21</td><td>Martin Fowler</td><td><a href="https://martinfowler.com/articles/harness-engineering.html">Harness engineering for coding agent users</a> 🆕 L3 · 原始出处补录（中文衍生 a18 与 hongtao 镜像已双 L1 在库）</td></tr>
+<tr><td>128</td><td>2026-09-21</td><td>Amplitude</td><td><a href="https://amplitude.com/blog/sweeping-logs-ralph-weng">Sweeping Logs（Ralph loop 实验）</a> 🆕 L3 转引（文章页未取到）· 心跳层实施时再读</td></tr>
+<tr><td>129</td><td>2026-09-21</td><td>arXiv</td><td><a href="https://arxiv.org/abs/2605.10907">AI Workflow Store（2605.10907）</a> 🆕 L3 转引（出口 000）· 生态样本/非规则依据</td></tr>
+<tr><td>130</td><td>2026-09-21</td><td>arXiv</td><td><a href="https://arxiv.org/abs/2606.13662">EurekAgent：E=mc² 框架（2606.13662）</a> 🆕 L3 转引（出口 000）· 生态样本/非规则依据</td></tr>
 </table></div>
 </div>
 
 <p style="text-align:center;color:var(--muted);font-size:0.85em;margin-top:32px">
-  AIWorflow v1.8.9 · 纯文件驱动 · 除已有 PyYAML 外 0 新增依赖 · selftest 70/70 PASS · 7 工程对比 · 124 外部来源吸收（001–086 全量核验 + 087–124 全网检索批）<br>
+  AIWorflow v1.8.11 · 纯文件驱动 · 除已有 PyYAML 外 0 新增依赖 · selftest 70/70 PASS · 7 工程对比 · 130 外部来源吸收（001–086 全量核验 + 087–124 全网检索批 + 125–130 Loop Engineering 批）<br>
   📁 源文档位于 <code>.ai_worflow/</code> · <code>README.md</code> / <code>docs/00-overview.md</code> / <code>docs/03-gates.md</code> / <code>docs/22-wechat-latest-scan.md</code>
 </p>
 
