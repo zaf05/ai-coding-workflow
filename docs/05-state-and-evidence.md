@@ -79,7 +79,8 @@ run 计 WARN 不计 FAIL（恒定 FAIL 会被当噪音，护栏被当噪音就�
 RUN-20260921-001 实操（每条都是现场踩到后补齐的，缺一条 `validate_run` 就 FAIL）：
 
 1. **fix 路径块逐块跳过且带凭据**：`--mark-done <label> --status skipped`，每个 skipped 块
-   必须写 `skip_reason`（R-1 跳过凭据；`error_codes` 或块内注释亦可，`skip_reason` 最直白）。
+   必须写 `skip_reason`（R-1 跳过凭据；`error_codes` 或块内注释亦可，
+   `skip_reason` 最直白）。
    理由示例："评审-only run：G3 用户接受后按 Decision 不进修复路径，修复另立工作包另行授权"。
 2. **notify/close 可 completed**：报告已当面交付（notify）与 run 终结（close）是真实完成的
    事实，其 skipped 祖先凭 `skip_reason` 放行，不必硬跳整条尾巴。
@@ -91,6 +92,20 @@ RUN-20260921-001 实操（每条都是现场踩到后补齐的，缺一条 `vali
    AI 未代签"。Planner 的 mark-done 只做簿记，不产生批准。
 5. **终态前双复核**：`validate_run` PASS + `run_flow --advance` 输出 `loop_control: DONE`
    （frontier 空）才算关闭。
+
+#### mark-done 硬门禁（v1.8.12 起，引擎强制）
+
+- **证据锚点门禁**：`--mark-done <label> --status completed` 时，引擎逐条校验工作流块
+  声明的 `evidence` 引用（文件存在 + `## Anchor` / `id: Anchor` 锚点存在），不满足即拒绝
+  写入（`AIW_EVIDENCE_MISSING`）。
+- **implement head_sha 门禁**：implement 类块 completed 必须绑定候选提交
+  `--head-sha <sha>`（或块内已有合法 head_sha），否则 `AIW_HEAD_SHA_MISSING` 拒绝。
+- **check/script 人工完成禁令**：check/script 块的 completed 只能由
+  `--advance --execute-check` 按命令退出码自动产生，人工 mark-done 一律拒绝。
+- **workflow 冻结**：引擎首触 run 时把 DAG 定义 SHA256 写入 `run.workflow_sha256`；
+  定义随后被修改则一切推进/写入被 `AIW_WORKFLOW_DRIFT` 拦截。
+- **终态引擎收口**：全部块 terminal 时 `--advance` 由引擎写入 `run.status=completed` 与
+  `current_block_label=finally`，消灭手改 state 的旁路；validate_run 以 R-4/R-5 复核。
 
 账本 note 的命令形态：`--append-ledger '{"note":"..."}'`（单个 JSON 参数；没有 `--note`
 标志——RUN-20260921-001 首次使用时踩过）。

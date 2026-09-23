@@ -1,10 +1,20 @@
 schema_version: 1
+loop_control:
+  max_rounds: 200
+  checkpoint_interval: 10
+task_control:
+  mode: multi_session
+  max_sessions: 12
+  session_timeout: 6h
+  handoff_required: true
 name: 功能交付
 workflow_id: feature-delivery
 description: 从需求接收到合并后验证的完整纵向交付主链。
 max_elapsed_time_minutes: 240
 error_code_mapping:
   AIW_SCOPE_OVERFLOW: 变更超出工作包预算，必须拆包
+  AIW_WORKFLOW_DRIFT: 工作流定义在 run 存续期间被修改，state 无法回答按哪个版本流转
+  AIW_HEAD_SHA_MISSING: implement 块 completed 缺少候选提交 head_sha 绑定
   AIW_EVIDENCE_MISSING: 结论缺少绑定证据
   AIW_BASELINE_MISMATCH: base_sha 与实际集成基线不一致
   AIW_AUTH_REQUIRED: 需要人工授权/凭据
@@ -68,13 +78,14 @@ blocks:
   next_block_label: implement
   role: planner
   gate: G4
-  goal: 冻结块 DAG 与测试计划审核
-  complete_criterion: TEST_REVIEW APPROVE 且 DAG 冻结
+  goal: 冻结块 DAG 与测试计划审核（TDD Red：测试文件先于实现写入且确认 FAIL）
+  complete_criterion: TEST_REVIEW APPROVE 且 DAG 冻结且测试文件 FAIL 证据绑定 SHA
   inputs:
   - decision.output
   evidence:
   - current.md#Tasks
   - test-plan.md
+  - evidence.md#TDD-RED
 - label: implement
   block_type: implement
   next_block_label: check

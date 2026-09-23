@@ -19,6 +19,8 @@ description: "从需求接收到合并后验证的完整纵向交付主链。"
 max_elapsed_time_minutes: 240
 error_code_mapping:
   AIW_SCOPE_OVERFLOW: "变更超出工作包预算，必须拆包"
+  AIW_WORKFLOW_DRIFT: "工作流定义在 run 存续期间被修改，state 无法回答按哪个版本流转"
+  AIW_HEAD_SHA_MISSING: "implement 块 completed 缺少候选提交 head_sha 绑定"
   AIW_EVIDENCE_MISSING: "结论缺少绑定证据"
   AIW_BASELINE_MISMATCH: "base_sha 与实际集成基线不一致"
   AIW_AUTH_REQUIRED: "需要人工授权/凭据"

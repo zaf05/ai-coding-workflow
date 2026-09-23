@@ -52,6 +52,24 @@ runs/<RUN-ID>/
 | `RUN-TEST-002/` | 同上 | 同上 |
 | `RUN-20260914-001/` | skill-tool-tag-classification 功能交付（已合入 develop `e7b544fd`） | DAG 定义与 state 块不一致（自建 merge/close 代替 integrate/test/verify_ui 等标准块）、gate owner 违规（G5=tester 应为 reviewer、G7/G8/G9 类似）；v1.8.0 起另命中 R-1（close completed 但 integrate/notify 留 pending）。已通过勘误 ERRATA-001 记录并承接下一 Run，详见 evidence.md#ERRATA-001。**显式承担，不伪造历史** |
 | `RUN-20260915-001/` | tag 管理交付 run（2026-09-16 机器重启致会话丢失；2026-09-20 维护处置标 terminated，快见 state.prev.yaml） | 命中 R-1：`review` 停在 running（待 G5 复审）但下游 `test`/`release_check` 已 completed，`integrate` skipped 无凭据——中断现场的真实不一致，无法补凭据而不伪造，显式承担 |
+| `RUN-20260914-002/` | canceled run | R-4：canceled 收口时 `current_block_label` 停在 `plan`，终态索引未归位 finally（v1.8.12 前无此护栏） |
+| `RUN-20260916-001/` | AgentWan 文档站 3 页交付 run（site/ 为 git 忽略本地产物） | R-4+R-5：run.status 手改为 completed 但 `current_block_label=implement`；implement/check/review 等关键块 `head_sha=null`、`attempts=0` 却全部 completed——引擎加固前的真实账本缺口，审计结论见 v1.8.12 工作包，不改写历史 |
+| `RUN-20260916-002/` | canceled run | R-4：canceled 收口时 `current_block_label=smoke` |
+| `RUN-20260917-001/` | doc_fix 交付 run | R-4+R-5：completed 但 `current_block_label=doc_fix`；implement 类块 completed 未绑定 head_sha |
+| `RUN-20260917-002/` | 功能交付 run | R-5：implement 块 completed 未绑定 head_sha |
+| `RUN-20260917-003/` | doc_fix run | R-5：doc_fix（implement 类）块 completed 未绑定 head_sha |
+| `RUN-20260917-004/` | doc_fix run | R-5：doc_fix（implement 类）块 completed 未绑定 head_sha |
+| `RUN-20260918-001/` | canceled run | R-4：canceled 收口时 `current_block_label=intake` |
+| `RUN-20260918-002/` | 功能交付 run | R-4：completed 但 `current_block_label=intake` |
+| `RUN-20260921-007/` | 启动即中断的 run（仅 current.md/test-plan.md） | 缺少 `state.yaml`，无机器可复核状态，显式承担；不虚构补写 |
+| `RUN-20260922-001/` | .venv 环境修复 run（FAST，Planner 直登） | 自定义块定义只存在于 current.md、`workflow_path: null`，DAG 定义不可机器复核——v1.8.12 起此类形态必须使用可保存的工作流定义，本 run 作为反面样本显式承担 |
+| `RUN-20260921-002/` | 停滞工作包 run（停在 integrate，2026-09-21） | 活跃漂移待裁决：旧定义冻结后本包升级错误码映射，按设计被 AIW_WORKFLOW_DRIFT 拦截；续跑需 Change Log 最小改图，否则应终结 |
+| `RUN-20260921-003/` | 停滞工作包 run（停在 review，2026-09-21） | 同上：活跃漂移待裁决 |
+| `RUN-20260921-004/` | 数字员工头像契约与边界修复 run（停在 implement） | 同上：活跃漂移待裁决；主仓交付状态以 docs/plan 为准 |
+| `RUN-20260921-005/` | 数字员工生命周期 send_back 语义修复 run（停在 implement） | 同上：活跃漂移待裁决 |
+| `RUN-20260921-006/` | Skill/Tools 标签治理一致性修复 run（停在 implement） | 同上：活跃漂移待裁决 |
+
+> 2026-09-23 引擎加固处置（v1.8.12）：新增 R-4（终态 current_block_label 必须归位 finally）、R-5（implement completed 必须绑定 head_sha）、workflow_sha256 冻结护栏后，历史 run 的账本缺口被显式暴露并登记为墓碑。`RUN-20260921-002..006` 是 5 个停滞的未完成工作包 run（分别停在 integrate/review/implement），引擎首触冻结了旧定义 SHA；本包升级 feature-delivery 错误码映射后它们按设计命中漂移护栏——不代收口、不代改状态，登记为"待裁决"，由 Planner/用户决定续跑（需按 Change Log 最小改图）或终结。原则：不改写历史，只显式承担。
 
 > 2026-09-20 维护处置（docs/31 P3-5）：`RUN-20260916-002`（check 补 skip_reason）、`RUN-20260917-003/004`（未命中分支块补 skipped+skip_reason）、`RUN-20260917-006`（integrate 补 skip_reason）、`RUN-20260920-001`（owner 大小写修正）已全部恢复 validate_run PASS 并移出本表；`RUN-20260914-002/16-001/17-001/18-001/18-002` 同批收口（canceled/completed），处置记录见各 run `current.md#Change Log`。
 

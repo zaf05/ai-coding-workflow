@@ -17,14 +17,14 @@
 
 | 事实 | 值 | 验证方式 |
 |---|---|---|
-| 当前分支 | `develop_test` | `git branch --show-current` |
-| `.ai_worflow/` 是否入库 | **否**，被根 `.gitignore:37` 忽略 | `git check-ignore -v .ai_worflow` → `.gitignore:37:.ai_worflow/` |
-| 忽略规则提交 | `d51eeaab chore: gitignore .ai_worflow/ local artifacts` | `git log -1 -S".ai_worflow" -- .gitignore` |
+| 主仓当前分支 | `develop`（2026-09-23 复核） | `git branch --show-current` |
+| `.ai_worflow/` 与主仓关系 | 被主仓 `.git/info/exclude:12` 排除（**本地排除文件，未版本化**，不是 `.gitignore`） | `git check-ignore -v .ai_worflow` |
+| `.ai_worflow/` 自身 | 2026-09-20 起为独立 Git 仓库（`main`，remote 私有），工作流定义/脚本/文档版本化，`runs/RUN-*/` 运行细节仍被本仓 `.gitignore` 排除、仅 `runs/README.md` 入库 | `git -C .ai_worflow log --oneline -3`；`.ai_worflow/.gitignore` |
 | 交付协议版本 | v0.6，创建 2026-08-10，最后修订 2026-08-18 | `docs/develop/agent-delivery-protocol.md` 头部 |
 | 项目 Skill | `.agents/skills/wango-delivery/SKILL.md`（20 行摘要）+ `agents/openai.yaml` | 目录实测 |
 | 宿主目录 | `.codex/`、`.claude/skills/wango-delivery`（软链）、`.agents/skills/` | 目录实测 |
 
-**推论（重要）**：因为 `.ai_worflow/` 不入库，本工作流的 `runs/` 证据**不能**作为仓库工作包的验收证据。仓库工作包的证据必须写入 WanGo 的交付报告与 `docs/plan/` 下的计划文档；`runs/` 只作为我自己的过程草稿与推理留痕。
+**推论（重要）**：`.ai_worflow/` 虽是独立版本化仓库，但主仓对它不可见，本工作流的 `runs/` 证据**仍不能**作为仓库工作包的验收证据。仓库工作包的证据必须写入 WanGo 的交付报告与 `docs/plan/` 下的计划文档；`runs/` 只作为个人过程索引与推理留痕。
 
 ## 状态机映射
 
@@ -76,7 +76,7 @@ integration baseline → base_commit → candidate commit → implementer_verifi
 
 - 不创建 `.ai-native/runs/`、`state.json`、运行状态数据库或每任务过程文档（协议 §10 末条）。本工作流的 `runs/` 属于被忽略的本地目录，**不得**被包装成仓库要求的产物。
 - 不用"主体完成""进入最终章"、提交数或测试数表示业务完成；进度只报已 `accepted` 的业务场景、当前活动工作包（默认 1 个、并行最多 2 个）、状态、阻塞与解除条件。
-- 不新建开发数据库；canonical 栈固定为 `wango_dev` / `wango_wanqore` / `wango_agno_live`，临时库必须记录用途、使用者和清理时间。
+- 不新建开发数据库；canonical 栈为单 PostgreSQL 库 `inner_esp_aipe` 加四 schema（`agentwan`/`agentcore`/`agentagno`/`agentdeck`，2026-09-21 迁移后形态，以主仓 AGENTS.md 为准）；临时库必须记录用途、使用者和清理时间。
 - 不把 Radix Themes 代替 Radix Primitives + shadcn，不引入 Redux，页面不直接导入 Mock Fixture 或散落 `fetch`。
 - 页面任务必须有真实启动 + 浏览器检查 + 目标视口检查；测试或构建通过不能单独证明页面可用。
 

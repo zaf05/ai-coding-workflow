@@ -7,3 +7,6 @@ references/skyvern/
 # 克隆残留的嵌套 git 元数据（.git 已重命名为 .git.bak，上游 github.com/jakubkrehel/skills）
 references/jakubkrehel-skills/.git/
 references/jakubkrehel-skills/.git.bak/
+
+# Python 字节码不入库（历史误提交在 v1.8.12 移除）
+__pycache__/

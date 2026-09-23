@@ -53,7 +53,7 @@ function run_automation(workflow_path, run_dir):
             ask_user_with_structured_handoff(output.actions[-1])
             on_confirm:
                 run("python3 scripts/run_flow.py ... --mark-done {star_block.label}")
-                continue
+                continue  # completed 需过证据锚点门禁（v1.8.12）
 
         elif signal == "WAIT_ROLE":
             // 环间交接：只传可验证事实（SHA+命令输出），不传"AI说是这样"
@@ -62,7 +62,8 @@ function run_automation(workflow_path, run_dir):
                 call implementer skill with handoff  // evidence-only, no AI claims
             else:
                 call {handoff_block.role} skill with handoff
-            run("python3 scripts/run_flow.py ... --mark-done {handoff_block.label}")
+            # implement 类块 completed 必须带 --head-sha <候选提交>（v1.8.12 硬门禁）
+            run("python3 scripts/run_flow.py ... --mark-done {handoff_block.label} [--head-sha <sha>]")
             continue
 
         elif signal == "BLOCKED":

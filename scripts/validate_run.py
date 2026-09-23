@@ -6,6 +6,7 @@
 """
 from __future__ import annotations
 
+import hashlib
 import re
 import sys
 from pathlib import Path
@@ -34,10 +35,15 @@ RUN_ID_RE = re.compile(r"^RUN-\d{8}-\d{3}$")
 ISO_TS_RE = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$")
 
 errors = []
+warns = []
 
 
 def err(msg):
     errors.append(msg)
+
+
+def warn(msg):
+    warns.append(msg)
 
 
 def resolve_workflow_path(p, run):
@@ -342,6 +348,15 @@ def main(path):
                         f"既没有 workflows/{wf}.workflow.yaml，"
                         f"也没有可用的 run.workflow_path 编译产物"
                     )
+            # 护栏 workflow_freeze（v1.8.12）：running/paused 的 run 必须已由引擎
+            # 首触冻结 workflow_sha256；created/queued 尚未首触不要求（模板即此形态）。
+            frozen_sha = run.get("workflow_sha256")
+            if frozen_sha not in (None, ""):
+                if not isinstance(frozen_sha, str) or not re.fullmatch(r"[0-9a-f]{64}", frozen_sha):
+                    err(f"run.workflow_sha256 格式非法: {frozen_sha!r}（应为 64 位 sha256 十六进制）")
+            elif run.get("status") in {"running", "paused"}:
+                err("run.status=running/paused 但缺少 run.workflow_sha256"
+                    "（引擎首触即冻结；历史活跃 run 需补记来源或显式终结）")
         else:
             err("state.yaml.run 必须是 map")
 
@@ -389,6 +404,26 @@ def main(path):
                 if wf_labels is None:
                     err(f"DAG 定义解析失败: {wf_path}")
                 else:
+                    # 护栏 workflow_drift（v1.8.12）：state 冻结的定义 SHA 必须与当前
+                    # 定义一致。活跃 run 漂移 = 错误（AIW_WORKFLOW_DRIFT）；终态 run =
+                    # 历史事实，仅 WARN 不改写历史。
+                    if isinstance(run, dict):
+                        frozen = run.get("workflow_sha256")
+                        if isinstance(frozen, str) and re.fullmatch(r"[0-9a-f]{64}", frozen):
+                            try:
+                                digest = hashlib.sha256(wf_path.read_bytes()).hexdigest()
+                            except Exception:
+                                digest = None
+                            if digest is not None and digest != frozen:
+                                if run.get("status") in {"completed", "failed", "canceled",
+                                                         "terminated", "timed_out"}:
+                                    warn(f"W-1: 终态 run 的 DAG 定义与冻结 SHA 不一致"
+                                         f"（历史漂移：state {frozen[:12]}… != 当前 {digest[:12]}…）；"
+                                         f"仅提示，不改写历史")
+                                else:
+                                    err(f"[AIW_WORKFLOW_DRIFT] 活跃 run 的 DAG 定义与冻结 SHA 不一致："
+                                        f"state {frozen[:12]}… != 当前 {digest[:12]}…"
+                                        f"（恢复定义原文，或新建 run 并终结旧 run）")
                     state_labels = [
                         b.get("label") for b in blocks if isinstance(b, dict)
                     ]
@@ -462,6 +497,35 @@ def main(path):
                             if fin and eff.get(fin) != "completed":
                                 err(f"R-2: run.status=completed 但 finally 块 {fin!r} 状态为 "
                                     f"{eff.get(fin)!r}（finally 必须已 completed）")
+
+                        # R-4：终态 run 的 current_block_label 必须是 finally 块或空。
+                        # 真实动机（RUN-20260916-001 实测）：run.status 被手改为
+                        # completed 后 current_block_label 仍停在 implement，
+                        # 账本索引与推进事实脱节。
+                        if run.get("status") in {"completed", "failed", "canceled",
+                                                 "terminated", "timed_out"}:
+                            cur = run.get("current_block_label")
+                            fin = wf_data.get("finally_block_label")
+                            if cur not in (None, "", fin):
+                                err(f"R-4: run.status={run.get('status')!r} 但 "
+                                    f"current_block_label={cur!r}"
+                                    f"（终态必须指向 finally {fin!r} 或为空）")
+
+                        # R-5：completed 的 implement 块必须绑定 head_sha。
+                        # "实现完成"的最低事实是候选提交存在；无 head_sha 的
+                        # completed 是口头完成（RUN-20260916-001 实测形态：
+                        # attempts=0/head_sha=null 却全部 completed）。
+                        btype_map = {b.get("label"): b.get("block_type")
+                                     for b in wf_blocks if isinstance(b, dict)}
+                        for sb in blocks:
+                            if not isinstance(sb, dict):
+                                continue
+                            if (sb.get("label")
+                                    and btype_map.get(sb.get("label")) == "implement"
+                                    and sb.get("status") == "completed"
+                                    and not str(sb.get("head_sha") or "").strip()):
+                                err(f"R-5: implement 块 {sb.get('label')!r} 已 completed "
+                                    f"但未绑定 head_sha（候选提交不存在，完成声明无事实支撑）")
                     except ImportError:
                         pass  # run_flow 不可用时跳过语义层（结构层护栏仍在）
 
@@ -511,6 +575,9 @@ def main(path):
         for e in errors:
             print(f"  - {e}")
         return 1
+    if warns:
+        for w in warns:
+            print(f"WARN: {w}")
     print(f"PASS: {path}（Run 容器结构合法）")
     return 0
 

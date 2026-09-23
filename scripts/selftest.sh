@@ -303,6 +303,238 @@ else
   echo "FAIL 规则生命周期接线断裂（契约、G10 或 Planner SKILL 缺能力观察/删减信号）"; fail=$((fail+1))
 fi
 
+# 3i 引擎完整性护栏（v1.8.12，RUN-20260916-001 审计驱动）。四条硬门禁：
+#     workflow SHA 冻结/漂移拦截、mark-done 证据锚点门禁、implement head_sha 门禁、
+#     终态引擎收口（消灭手改 state 把 running 改 completed 的旁路）。每条都要证明
+#     会开火，不是文档承诺。
+ei_dir="$(mktemp -d "${TMPDIR:-/tmp}/aiw-engine-integrity.XXXXXX")"
+mkdir -p "$ei_dir/run"
+cat > "$ei_dir/wf.yaml" <<'YAML'
+schema_version: 1
+name: "引擎完整性测试"
+workflow_id: selftest-engine-integrity
+error_code_mapping:
+  AIW_WORKFLOW_DRIFT: "定义漂移"
+  AIW_HEAD_SHA_MISSING: "缺候选提交"
+finally_block_label: done
+blocks:
+  - label: intake
+    block_type: intake
+    next_block_label: "impl"
+    role: planner
+    goal: "g"
+    complete_criterion: "c"
+    evidence: ["evidence.md#IMPL-001"]
+  - label: impl
+    block_type: implement
+    next_block_label: "done"
+    role: implementer
+    goal: "g"
+    complete_criterion: "实现报告绑定 head_sha"
+    evidence: ["evidence.md#IMPL-001"]
+  - label: done
+    block_type: close
+    next_block_label: null
+    role: planner
+    goal: "g"
+    complete_criterion: "c"
+    evidence: ["evidence.md#DONE-001"]
+YAML
+cat > "$ei_dir/run/state.yaml" <<'YAML'
+schema_version: 1
+run:
+  id: RUN-19700107-999
+  workflow: selftest-engine-integrity
+  status: running
+  current_block_label: null
+  finally_block_label: done
+repository:
+  root: /tmp
+blocks:
+  - {label: intake, status: pending, role: planner, gate: null, base_sha: null, head_sha: null, tested_sha: null, attempts: 0, error_codes: []}
+  - {label: impl, status: pending, role: implementer, gate: null, base_sha: null, head_sha: null, tested_sha: null, attempts: 0, error_codes: []}
+  - {label: done, status: pending, role: planner, gate: null, base_sha: null, head_sha: null, tested_sha: null, attempts: 0, error_codes: []}
+YAML
+printf '# Evidence\n' > "$ei_dir/run/evidence.md"
+cp "$ei_dir/wf.yaml" "$ei_dir/wf.orig"
+
+# 3i-1 首触冻结：默认 frontier 调用即写入 workflow_sha256
+python3 scripts/run_flow.py "$ei_dir/wf.yaml" "$ei_dir/run" >/dev/null 2>&1
+if python3 -c '
+import sys, yaml
+st = yaml.safe_load(open(sys.argv[1], encoding="utf-8"))
+sha = st.get("run", {}).get("workflow_sha256", "")
+assert len(sha) == 64 and all(c in "0123456789abcdef" for c in sha)
+' "$ei_dir/run/state.yaml" 2>/dev/null; then
+  echo "PASS 引擎首触冻结 workflow_sha256（64 位 sha256 落盘）"; pass=$((pass+1))
+else
+  echo "FAIL 引擎首触未冻结 workflow_sha256"; fail=$((fail+1))
+fi
+
+# 3i-2 漂移拦截：冻结后改定义，任何调用必须被拒
+printf '\n# tampered\n' >> "$ei_dir/wf.yaml"
+drift_out=$(python3 scripts/run_flow.py "$ei_dir/wf.yaml" "$ei_dir/run" --advance 2>&1)
+drift_rc=$?
+if [ $drift_rc -ne 0 ] && echo "$drift_out" | grep -q "AIW_WORKFLOW_DRIFT"; then
+  echo "PASS workflow 漂移拦截（冻结后改定义被拒且错误码可读）"; pass=$((pass+1))
+else
+  echo "FAIL workflow 漂移未拦截"; echo "$drift_out"; fail=$((fail+1))
+fi
+cp "$ei_dir/wf.orig" "$ei_dir/wf.yaml"   # 字节级还原，保证与冻结 SHA 一致
+
+# 3i-3 证据门禁：锚点缺失时 mark-done completed 必须被拒
+ev_out=$(python3 scripts/run_flow.py "$ei_dir/wf.yaml" "$ei_dir/run" --mark-done intake 2>&1)
+ev_rc=$?
+if [ $ev_rc -ne 0 ] && echo "$ev_out" | grep -q "AIW_EVIDENCE_MISSING" && echo "$ev_out" | grep -q "锚点不存在"; then
+  echo "PASS mark-done 证据门禁（锚点缺失被拒且原因可读）"; pass=$((pass+1))
+else
+  echo "FAIL mark-done 证据门禁未开火"; echo "$ev_out"; fail=$((fail+1))
+fi
+
+# 补锚点后放行，且 attempts/current_block_label 同步落盘
+printf '\n## IMPL-001 · test anchor\n' >> "$ei_dir/run/evidence.md"
+ev2_out=$(python3 scripts/run_flow.py "$ei_dir/wf.yaml" "$ei_dir/run" --mark-done intake 2>&1)
+if echo "$ev2_out" | grep -q '"new_status": "completed"' \
+   && python3 -c '
+import sys, yaml
+st = yaml.safe_load(open(sys.argv[1], encoding="utf-8"))
+b = next(b for b in st["blocks"] if b["label"] == "intake")
+assert b["status"] == "completed" and b["attempts"] == 1
+assert st["run"]["current_block_label"] == "intake"
+' "$ei_dir/run/state.yaml" 2>/dev/null; then
+  echo "PASS mark-done 放行后账本同步（attempts=1、current_block_label 归位）"; pass=$((pass+1))
+else
+  echo "FAIL mark-done 放行后账本未同步"; echo "$ev2_out"; fail=$((fail+1))
+fi
+
+# 3i-4 implement head_sha 门禁：有证据但无候选提交仍被拒
+hs_out=$(python3 scripts/run_flow.py "$ei_dir/wf.yaml" "$ei_dir/run" --mark-done impl 2>&1)
+hs_rc=$?
+if [ $hs_rc -ne 0 ] && echo "$hs_out" | grep -q "AIW_HEAD_SHA_MISSING"; then
+  echo "PASS implement head_sha 门禁（无候选提交被拒）"; pass=$((pass+1))
+else
+  echo "FAIL implement head_sha 门禁未开火"; echo "$hs_out"; fail=$((fail+1))
+fi
+hs2_out=$(python3 scripts/run_flow.py "$ei_dir/wf.yaml" "$ei_dir/run" --mark-done impl --head-sha 0123456789abcdef0123456789abcdef01234567 2>&1)
+if echo "$hs2_out" | grep -q '"new_status": "completed"' \
+   && python3 -c '
+import sys, yaml
+st = yaml.safe_load(open(sys.argv[1], encoding="utf-8"))
+b = next(b for b in st["blocks"] if b["label"] == "impl")
+assert b["head_sha"] == "0123456789abcdef0123456789abcdef01234567"
+' "$ei_dir/run/state.yaml" 2>/dev/null; then
+  echo "PASS --head-sha 绑定候选提交后放行且落盘"; pass=$((pass+1))
+else
+  echo "FAIL --head-sha 未生效"; echo "$hs2_out"; fail=$((fail+1))
+fi
+
+# 3i-5 check 块人工 completed 必须被拒（只能由命令退出码自动完成）
+cat > "$ei_dir/wf2.yaml" <<'YAML'
+schema_version: 1
+name: "check 拒绝手工完成"
+workflow_id: selftest-check-manual
+error_code_mapping: {}
+blocks:
+  - label: chk
+    block_type: check
+    next_block_label: null
+    role: implementer
+    goal: "g"
+    complete_criterion: "c"
+    commands:
+      - {cmd: "true", workdir: ".", expect: 0}
+YAML
+mkdir -p "$ei_dir/run-chk"
+cat > "$ei_dir/run-chk/state.yaml" <<'YAML'
+schema_version: 1
+run:
+  id: RUN-19700108-999
+  workflow: selftest-check-manual
+  status: running
+repository:
+  root: /tmp
+blocks:
+  - {label: chk, status: pending, role: implementer, gate: null, base_sha: null, head_sha: null, tested_sha: null, attempts: 0, error_codes: []}
+YAML
+chk_out=$(python3 scripts/run_flow.py "$ei_dir/wf2.yaml" "$ei_dir/run-chk" --mark-done chk 2>&1)
+chk_rc=$?
+if [ $chk_rc -ne 0 ] && echo "$chk_out" | grep -q "不得人工标记 completed"; then
+  echo "PASS check 块人工 completed 被拒（只能由 --execute-check 退出码完成）"; pass=$((pass+1))
+else
+  echo "FAIL check 块人工完成未拦截"; echo "$chk_out"; fail=$((fail+1))
+fi
+
+# 3i-6 终态引擎收口：全部块 terminal 时 --advance 写入 completed + finally 指针
+printf '\n## DONE-001 · test anchor\n' >> "$ei_dir/run/evidence.md"
+python3 scripts/run_flow.py "$ei_dir/wf.yaml" "$ei_dir/run" --mark-done done >/dev/null 2>&1
+python3 scripts/run_flow.py "$ei_dir/wf.yaml" "$ei_dir/run" --advance >/dev/null 2>&1
+if python3 -c '
+import sys, yaml
+st = yaml.safe_load(open(sys.argv[1], encoding="utf-8"))
+assert st["run"]["status"] == "completed"
+assert st["run"]["current_block_label"] == "done"
+' "$ei_dir/run/state.yaml" 2>/dev/null; then
+  echo "PASS 终态引擎收口（completed + current_block_label=finally，无需手改 state）"; pass=$((pass+1))
+else
+  echo "FAIL 终态引擎未收口"; head -12 "$ei_dir/run/state.yaml"; fail=$((fail+1))
+fi
+
+# 3i-7 validate_run R-4/R-5 负例：终态索引错位 + implement 无 head_sha 必须被点名
+mkdir -p "$ei_dir/RUN-19700109-999"
+cat > "$ei_dir/RUN-19700109-999/state.yaml" <<'YAML'
+schema_version: 1
+run:
+  id: RUN-19700109-999
+  workflow: feature-delivery
+  workflow_path: "workflows/feature-delivery.workflow.yaml"
+  status: completed
+  current_block_label: implement
+  finally_block_label: close
+repository:
+  root: /tmp
+  current_branch: wp/x
+  current_sha: null
+  target_branch: develop
+  target_base_sha: null
+  integration_branch: ""
+  integration_sha: null
+  dirty_worktree_detected: false
+  dirty_worktree_overlap: false
+blocks: []
+gates: {}
+versions: {spec: 1, test_plan: 1, change_budget: 1}
+approvals: {spec: null, user: null, test_plan: null}
+open_findings: []
+open_defects: []
+open_blockers: []
+completion_contract: []
+ledger: []
+YAML
+python3 - "$ei_dir/RUN-19700109-999/state.yaml" <<'PY'
+import sys, yaml
+from pathlib import Path
+p = Path(sys.argv[1])
+st = yaml.safe_load(p.read_text(encoding="utf-8"))
+wf_path = Path("workflows/feature-delivery.workflow.yaml").resolve()
+st["run"]["workflow_path"] = str(wf_path)
+wf = yaml.safe_load(wf_path.read_text(encoding="utf-8"))
+st["blocks"] = [
+    {"label": b["label"], "status": "completed", "role": b.get("role", "planner"),
+     "gate": b.get("gate"), "base_sha": None, "head_sha": None, "tested_sha": None,
+     "attempts": 1, "error_codes": []}
+    for b in wf["blocks"]]
+p.write_text(yaml.safe_dump(st, allow_unicode=True, sort_keys=False), encoding="utf-8")
+PY
+bad_out=$(python3 scripts/validate_run.py "$ei_dir/RUN-19700109-999" 2>&1)
+bad_rc=$?
+if [ $bad_rc -ne 0 ] && echo "$bad_out" | grep -q "R-4" && echo "$bad_out" | grep -q "R-5"; then
+  echo "PASS validate_run R-4/R-5 开火（终态索引错位与 implement 无 head_sha 都被点名）"; pass=$((pass+1))
+else
+  echo "FAIL validate_run R-4/R-5 未开火"; echo "$bad_out"; fail=$((fail+1))
+fi
+
+python3 -c 'import shutil,sys;shutil.rmtree(sys.argv[1],ignore_errors=True)' "$ei_dir"
+
 echo "== 4. 安装器本机锁定（本机收据属于本副本时应 PASS，否则 SKIP） =="
 # 静默失败是 bug 的藏身处：任何一项失败都必须打印 FAIL。
 # 可移植性（实测教训）：安装目标若属于**另一个来源根**（换机器 / 克隆到别处 /

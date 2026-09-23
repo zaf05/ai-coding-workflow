@@ -3,6 +3,7 @@ run:
   id: "RUN-YYYYMMDD-NNN"
   workflow: ""
   workflow_path: ""
+  workflow_sha256: ""   # 引擎首触时自动冻结 DAG 定义 SHA256；之后定义被修改将拒绝推进（AIW_WORKFLOW_DRIFT）
   status: "created"          # created|queued|running|paused|completed|failed|canceled|terminated|timed_out
   delivery_depth: "STANDARD" # FAST|STANDARD|HIGH_RISK
   planner_owner: ""

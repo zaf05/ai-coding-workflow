@@ -44,6 +44,8 @@
 ```text
 AIW_SCOPE_OVERFLOW        变更超出工作包预算，必须拆包
 AIW_EVIDENCE_MISSING      结论缺少绑定证据（SHA/命令/退出码/截图）
+AIW_WORKFLOW_DRIFT        工作流定义在 run 存续期间被修改（v1.8.12 起引擎首触冻结 SHA 并硬拦截）
+AIW_HEAD_SHA_MISSING      implement 块 completed 缺少候选提交 head_sha 绑定（v1.8.12 起硬门禁）
 AIW_GATE_NOT_APPLICABLE   声称门禁通过但该门禁不适用或证据已失效
 AIW_BASELINE_MISMATCH     base_sha 与实际集成基线不一致
 AIW_DIRTY_OVERLAP         脏工作区与本块写路径重叠，无法安全隔离

@@ -23,8 +23,9 @@
   --session-meta <json> 会话归因元数据：{"model":"...","tokens_used":123|null}
                         --advance 自动账本与 --append-ledger 会合并该元数据
   --mark-running <block_label> 将指定块状态设为 running（Planner 用）
-  --mark-done <block_label> [--status completed|failed|skipped]
-                        将指定块标记为完成/失败/跳过（Planner 用）
+  --mark-done <block_label> [--status completed|failed|skipped] [--head-sha <sha>]
+                        将指定块标记为完成/失败/跳过（Planner 用）。completed 必须通过
+                        证据锚点门禁；implement 块还必须绑定候选提交 --head-sha
   --advance             自动推进所有可确定性推进的块（check/script 自动执行，
                         STAR/HANDOFF 只输出不推进），输出完整推进报告
 
@@ -32,7 +33,9 @@
 """
 from __future__ import annotations
 
+import hashlib
 import json
+import re
 import subprocess
 import sys
 import time
@@ -59,6 +62,7 @@ RUN_TERMINAL = {"completed", "failed", "canceled", "terminated", "timed_out"}
 BLOCK_DONE = {"completed", "skipped"}
 CHECK_TYPES = {"check", "script"}
 VALID_BLOCK_STATUS = {"pending", "running", "completed", "failed", "terminated", "canceled", "timed_out", "skipped"}
+SHA_RE = re.compile(r"^[0-9a-f]{7,40}$")
 
 
 def load_yaml(path: Path):
@@ -347,8 +351,58 @@ def cmd_append_ledger(run_state_path, run_state, ledger_entry_json, session_meta
     return 0
 
 
-def cmd_mark_status(run_state_path, run_state, label, new_status):
-    """将指定块标记为指定状态。"""
+
+def file_sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _anchor_exists(content: str, anchor: str) -> bool:
+    escaped = re.escape(anchor)
+    h2 = re.search(rf'^##\s+{escaped}(?:\s|$|\(|·)', content, re.MULTILINE)
+    yid = re.search(rf'^id:\s+{escaped}\s*$', content, re.MULTILINE)
+    return bool(h2 or yid)
+
+
+def verify_block_evidence(block_def, run_dir):
+    """completed 门禁：块声明的 evidence 引用必须真实可达（文件 + 锚点）。
+
+    与 validate_run._verify_evidence_refs 同语义：锚点支持 `## Anchor` 标题与
+    `id: Anchor` 两种约定。引擎侧不 import 校验器，避免共享全局 errors 状态。
+    """
+    problems = []
+    refs = block_def.get("evidence") or []
+    if isinstance(refs, str):
+        refs = [refs]
+    for ref in refs:
+        if not isinstance(ref, str) or not ref.strip():
+            continue
+        part = ref.strip()
+        m = re.match(r'^(?P<file>[^#]+)#(?P<anchor>.+)$', part)
+        if not m:
+            problems.append(f"证据引用缺少 #anchor: {part}")
+            continue
+        ref_file = m.group('file')
+        anchor = m.group('anchor').strip()
+        resolved = run_dir / ref_file
+        if not resolved.exists():
+            alt = ROOT / ref_file
+            if alt.exists():
+                resolved = alt
+            else:
+                problems.append(f"证据文件不存在: {part}")
+                continue
+        try:
+            content = resolved.read_text(encoding='utf-8', errors='replace')
+        except Exception:
+            problems.append(f"证据文件不可读: {part}")
+            continue
+        if not _anchor_exists(content, anchor):
+            problems.append(f"证据锚点不存在: {part}")
+    return problems
+
+
+def cmd_mark_status(run_state_path, run_state, blocks, label, new_status, run_dir, head_sha=None):
+    """将指定块标记为指定状态（completed 必须过证据门禁与 implement head_sha 门禁）。"""
     if new_status not in VALID_BLOCK_STATUS:
         print(f"FAIL: 非法状态 {new_status!r}，合法值: {sorted(VALID_BLOCK_STATUS)}")
         return 1
@@ -358,8 +412,40 @@ def cmd_mark_status(run_state_path, run_state, label, new_status):
         print(f"FAIL: state.yaml 中无块 {label!r}")
         return 1
 
+    block_def = next((b for b in blocks if b.get("label") == label), None)
+    btype = (block_def or {}).get("block_type")
+
+    if new_status == "completed":
+        # check/script 块的 completed 只能由 --advance --execute-check 按命令
+        # 退出码自动产生；人工 mark-done 会绕过命令执行，一律拒绝。
+        if btype in CHECK_TYPES:
+            print(f"FAIL: [AIW_EVIDENCE_MISSING] 块 {label!r} 是 {btype} 块，"
+                  f"必须用 --advance --execute-check 按命令退出码完成，不得人工标记 completed")
+            return 1
+        problems = verify_block_evidence(block_def or {}, run_dir)
+        if problems:
+            print(f"FAIL: [AIW_EVIDENCE_MISSING] 块 {label!r} completed 证据门禁未通过：")
+            for q in problems:
+                print(f"  - {q}")
+            return 1
+        if btype == "implement":
+            effective_head = str(head_sha or block_st.get("head_sha") or "").strip()
+            if not effective_head:
+                print(f"FAIL: [AIW_HEAD_SHA_MISSING] implement 块 {label!r} completed 必须绑定"
+                      f"候选提交 head_sha（--head-sha <sha>）")
+                return 1
+            if not SHA_RE.match(effective_head):
+                print(f"FAIL: [AIW_HEAD_SHA_MISSING] 块 {label!r} head_sha 格式非法: {effective_head!r}")
+                return 1
+            if head_sha:
+                block_st["head_sha"] = str(head_sha).strip()
+
     old_status = block_st.get("status", "pending")
     block_st["status"] = new_status
+    block_st["attempts"] = int(block_st.get("attempts") or 0) + 1
+    run_cfg = run_state.get("run")
+    if isinstance(run_cfg, dict):
+        run_cfg["current_block_label"] = label
     save_yaml(run_state_path, run_state)
 
     print(json.dumps({
@@ -367,6 +453,10 @@ def cmd_mark_status(run_state_path, run_state, label, new_status):
         "action": "mark_status",
         "old_status": old_status,
         "new_status": new_status,
+        "attempts": block_st.get("attempts"),
+        "evidence_gate": ("passed" if new_status == "completed" and btype not in CHECK_TYPES
+                          else "not_applicable"),
+        "head_sha": block_st.get("head_sha"),
     }, ensure_ascii=False, indent=2))
     return 0
 
@@ -575,6 +665,16 @@ def cmd_advance(wf, run_state, run_state_path, blocks, succ, pred, labels, condi
                       "action": "DONE", "signal": "DONE", "remaining_blocks": remaining}
         done_entry.update(session_meta or {})
         run_state.setdefault("ledger", []).append(done_entry)
+        # 引擎收尾（v1.8.12）：全部块 terminal 时由引擎写入 run 终态与 finally 指针，
+        # 消灭"手改 state.yaml 把 running 改成 completed"的旁路。仍有未决块时
+        # （frontier 空但存在 failed/pending）不代写终态，交 Planner 归因。
+        if not remaining:
+            fin = wf.get("finally_block_label")
+            run_cfg = run_state.get("run")
+            if isinstance(run_cfg, dict) and run_cfg.get("status") not in RUN_TERMINAL:
+                run_cfg["status"] = "completed"
+                if fin:
+                    run_cfg["current_block_label"] = fin
         save_yaml(run_state_path, run_state)
     print(json.dumps(report, ensure_ascii=False, indent=2))
     return 1 if failed_any else 0
@@ -596,6 +696,7 @@ def main(argv):
     mark_running = None
     mark_done = None
     mark_done_status = "completed"
+    mark_done_head_sha = None
     advance = False
 
     i = 0
@@ -621,6 +722,9 @@ def main(argv):
             i += 2
             if i < len(rest) and rest[i] == "--status" and i + 1 < len(rest):
                 mark_done_status = rest[i + 1]
+                i += 2
+            if i < len(rest) and rest[i] == "--head-sha" and i + 1 < len(rest):
+                mark_done_head_sha = rest[i + 1]
                 i += 2
         elif arg == "--advance":
             advance = True
@@ -667,6 +771,25 @@ def main(argv):
         print("FAIL: state.yaml 格式错误")
         return 1
 
+    # 护栏 workflow_freeze（v1.8.12）：run 首次被引擎触碰时冻结 DAG 定义 SHA256；
+    # 之后定义被修改（运行中改图）则拒绝一切推进/写入——state 必须能回答
+    # "按哪个版本的工作流流转"。历史终态 run 不回写、不拦截（validate_run 仅 WARN）。
+    run_cfg = run_state.get("run")
+    if not isinstance(run_cfg, dict):
+        run_cfg = {}
+        run_state["run"] = run_cfg
+    if run_cfg.get("status") not in RUN_TERMINAL:
+        frozen = str(run_cfg.get("workflow_sha256") or "").strip()
+        wf_digest = file_sha256(wf_path)
+        if not frozen:
+            run_cfg["workflow_sha256"] = wf_digest
+            save_yaml(run_state_path, run_state)
+        elif frozen != wf_digest:
+            print(f"FAIL: [AIW_WORKFLOW_DRIFT] 工作流定义在运行中被修改："
+                  f"state 冻结 {frozen[:12]}…，当前 {wf_digest[:12]}…（{wf_path}）")
+            print("      处置：恢复定义原文，或经 Change Log 最小改图后新建 run 并终结旧 run")
+            return 1
+
     blocks = collect_top_blocks(wf["blocks"])
     succ, pred, labels, conditional_labels = build_graph(blocks)
 
@@ -682,10 +805,11 @@ def main(argv):
         return cmd_append_ledger(run_state_path, run_state, append_ledger_json, session_meta)
 
     if mark_running:
-        return cmd_mark_status(run_state_path, run_state, mark_running, "running")
+        return cmd_mark_status(run_state_path, run_state, blocks, mark_running, "running", run_dir)
 
     if mark_done:
-        return cmd_mark_status(run_state_path, run_state, mark_done, mark_done_status)
+        return cmd_mark_status(run_state_path, run_state, blocks, mark_done, mark_done_status,
+                                run_dir, mark_done_head_sha)
 
     if advance:
         cycles = find_cycles(succ, labels, conditional_labels)
