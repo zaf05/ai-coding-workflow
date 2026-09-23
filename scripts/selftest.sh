@@ -535,6 +535,91 @@ fi
 
 python3 -c 'import shutil,sys;shutil.rmtree(sys.argv[1],ignore_errors=True)' "$ei_dir"
 
+# 3j refreeze 受控迁移（v1.8.12，双宿主兼容：Codex 升级定义不得锁死 CC 在跑的 run）。
+#     结构变更（增删块/改角色）必须拒绝；非结构变更（注释/错误码表）允许迁移并留 ledger。
+rj_dir="$(mktemp -d "${TMPDIR:-/tmp}/aiw-refreeze.XXXXXX")"
+mkdir -p "$rj_dir/run"
+cat > "$rj_dir/wf.yaml" <<'YAML'
+schema_version: 1
+name: "refreeze 测试"
+workflow_id: selftest-refreeze
+error_code_mapping: {}
+blocks:
+  - label: only
+    block_type: intake
+    next_block_label: null
+    role: planner
+    goal: "g"
+    complete_criterion: "c"
+    evidence: ["evidence.md#A1"]
+YAML
+cat > "$rj_dir/run/state.yaml" <<'YAML'
+schema_version: 1
+run:
+  id: RUN-19700110-999
+  workflow: selftest-refreeze
+  status: running
+  current_block_label: null
+  finally_block_label: null
+repository:
+  root: /tmp
+blocks:
+  - {label: only, status: pending, role: planner, gate: null, base_sha: null, head_sha: null, tested_sha: null, attempts: 0, error_codes: []}
+YAML
+printf '# Evidence\n\n## A1 · anchor\n' > "$rj_dir/run/evidence.md"
+
+# 首触冻结
+python3 scripts/run_flow.py "$rj_dir/wf.yaml" "$rj_dir/run" >/dev/null 2>&1
+
+# 3j-1 负例：结构变更（加块）refreeze 必须拒绝
+cat > "$rj_dir/wf-struct.yaml" <<'YAML'
+schema_version: 1
+name: "refreeze 结构变更"
+workflow_id: selftest-refreeze
+error_code_mapping: {}
+blocks:
+  - label: only
+    block_type: intake
+    next_block_label: "extra"
+    role: planner
+    goal: "g"
+    complete_criterion: "c"
+    evidence: ["evidence.md#A1"]
+  - label: extra
+    block_type: implement
+    next_block_label: null
+    role: implementer
+    goal: "g"
+    complete_criterion: "c"
+    evidence: ["evidence.md#A1"]
+YAML
+rs_out=$(python3 scripts/run_flow.py "$rj_dir/wf-struct.yaml" "$rj_dir/run" --refreeze-workflow "结构迁移测试" 2>&1)
+rs_rc=$?
+if [ $rs_rc -ne 0 ] && echo "$rs_out" | grep -q "结构变更" && echo "$rs_out" | grep -q "块集合不一致"; then
+  echo "PASS refreeze 结构变更拒绝（增块被拒且原因可读）"; pass=$((pass+1))
+else
+  echo "FAIL refreeze 对结构变更放行"; echo "$rs_out"; fail=$((fail+1))
+fi
+
+# 3j-2 正例：非结构变更（加注释）迁移成功，ledger 留凭据，迁移后不再漂移
+printf '# non-structural comment\n' >> "$rj_dir/wf.yaml"
+rf_out=$(python3 scripts/run_flow.py "$rj_dir/wf.yaml" "$rj_dir/run" --refreeze-workflow "v1.8.12 错误码表升级，非结构变更" 2>&1)
+if echo "$rf_out" | grep -q '"result": "migrated"' \
+   && python3 -c '
+import sys, yaml
+st = yaml.safe_load(open(sys.argv[1], encoding="utf-8"))
+entries = [e for e in st.get("ledger", []) if e.get("action") == "workflow_refreeze"]
+assert entries and entries[-1]["reason"].startswith("v1.8.12")
+assert entries[-1]["structural_check"] == "labels+roles identical"
+' "$rj_dir/run/state.yaml" 2>/dev/null \
+   && python3 scripts/run_flow.py "$rj_dir/wf.yaml" "$rj_dir/run" >/dev/null 2>&1; then
+  echo "PASS refreeze 非结构迁移（ledger 留凭据，迁移后调用不再漂移）"; pass=$((pass+1))
+else
+  echo "FAIL refreeze 非结构迁移失败"; echo "$rf_out"; fail=$((fail+1))
+fi
+
+python3 -c 'import shutil,sys;shutil.rmtree(sys.argv[1],ignore_errors=True)' "$rj_dir"
+
 echo "== 4. 安装器本机锁定（本机收据属于本副本时应 PASS，否则 SKIP） =="
 # 静默失败是 bug 的藏身处：任何一项失败都必须打印 FAIL。
 # 可移植性（实测教训）：安装目标若属于**另一个来源根**（换机器 / 克隆到别处 /

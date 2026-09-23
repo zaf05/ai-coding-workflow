@@ -104,6 +104,10 @@ RUN-20260921-001 实操（每条都是现场踩到后补齐的，缺一条 `vali
   `--advance --execute-check` 按命令退出码自动产生，人工 mark-done 一律拒绝。
 - **workflow 冻结**：引擎首触 run 时把 DAG 定义 SHA256 写入 `run.workflow_sha256`；
   定义随后被修改则一切推进/写入被 `AIW_WORKFLOW_DRIFT` 拦截。
+- **refreeze 受控迁移（双宿主兼容）**：定义发生**非结构变更**（注释/错误码表等）且
+  state 块集合与角色与新定义逐项一致时，`--refreeze-workflow "<原因>"` 允许把冻结 SHA
+  迁移到当前定义并在 ledger 留 `workflow_refreeze` 凭据；结构变更（增删块/改角色）仍拒绝，
+  需 Change Log + 新建 run。用途：一个宿主升级工作流定义不得锁死另一宿主正在跑的 run。
 - **终态引擎收口**：全部块 terminal 时 `--advance` 由引擎写入 `run.status=completed` 与
   `current_block_label=finally`，消灭手改 state 的旁路；validate_run 以 R-4/R-5 复核。
 

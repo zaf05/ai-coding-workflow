@@ -65,6 +65,8 @@ function run_automation(workflow_path, run_dir):
             # implement 类块 completed 必须带 --head-sha <候选提交>（v1.8.12 硬门禁）
             run("python3 scripts/run_flow.py ... --mark-done {handoff_block.label} [--head-sha <sha>]")
             continue
+            // 定义非结构变更升级后，在跑 run 用受控迁移续命（结构校验不过则新建 run）：
+            // python3 scripts/run_flow.py ... --refreeze-workflow "<原因>"
 
         elif signal == "BLOCKED":
             report_blocked(output)

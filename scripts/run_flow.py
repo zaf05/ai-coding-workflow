@@ -23,6 +23,10 @@
   --session-meta <json> 会话归因元数据：{"model":"...","tokens_used":123|null}
                         --advance 自动账本与 --append-ledger 会合并该元数据
   --mark-running <block_label> 将指定块状态设为 running（Planner 用）
+  --refreeze-workflow <reason>
+                        受控迁移：工作流发生"非结构变更"（如错误码表/注释）且 run 的
+                        块集合与角色与新定义完全一致时，把冻结 SHA 迁移到当前定义并
+                        记 ledger；结构变更（增删块/改角色）仍拒绝，需新建 run
   --mark-done <block_label> [--status completed|failed|skipped] [--head-sha <sha>]
                         将指定块标记为完成/失败/跳过（Planner 用）。completed 必须通过
                         证据锚点门禁；implement 块还必须绑定候选提交 --head-sha
@@ -461,6 +465,79 @@ def cmd_mark_status(run_state_path, run_state, blocks, label, new_status, run_di
     return 0
 
 
+def cmd_refreeze_workflow(run_state_path, run_state, blocks, labels, reason,
+                          frozen, wf_digest):
+    """受控迁移冻结 SHA：仅当 state 块集合/角色与新定义完全一致（非结构变更）。
+
+    双宿主场景（Codex 升级工作流定义不能锁死 Claude Code 正在跑的 run）：
+    定义演进后，活跃 run 可凭结构兼容校验迁移到新 SHA 并留 ledger 凭据；
+    增删块/改角色属于结构变更，仍走 Change Log + 新建 run。
+    """
+    reason = (reason or "").strip()
+    if not reason:
+        print("FAIL: --refreeze-workflow 必须提供非空迁移原因（将写入 ledger）")
+        return 1
+
+    run_cfg = run_state.get("run")
+    if not isinstance(run_cfg, dict):
+        print("FAIL: state.yaml.run 必须是 map")
+        return 1
+    if run_cfg.get("status") in RUN_TERMINAL:
+        print(f"FAIL: [AIW_WORKFLOW_DRIFT] 终态 run 不得 refreeze（status="
+              f"{run_cfg.get('status')!r}，历史不改写）")
+        return 1
+
+    if frozen == wf_digest:
+        print(json.dumps({
+            "action": "workflow_refreeze",
+            "result": "noop",
+            "reason": "冻结 SHA 已与当前定义一致，无需迁移",
+            "workflow_sha256": wf_digest,
+        }, ensure_ascii=False, indent=2))
+        return 0
+
+    # 结构兼容校验：state 块标签（含顺序）与角色必须与新定义逐项一致。
+    state_blocks = [b for b in run_state.get("blocks") or [] if isinstance(b, dict)]
+    state_labels = [b.get("label") for b in state_blocks if b.get("label")]
+    state_roles = {b.get("label"): b.get("role") for b in state_blocks}
+    def_roles = {b.get("label"): b.get("role") for b in blocks if isinstance(b, dict)}
+    problems = []
+    if state_labels != labels:
+        extra = [x for x in state_labels if x not in labels]
+        missing = [x for x in labels if x not in state_labels]
+        problems.append(f"块集合不一致（state 多出 {extra}，定义缺失 {missing}，或顺序不同）")
+    for lab in labels:
+        if state_roles.get(lab) != def_roles.get(lab):
+            problems.append(f"块 {lab!r} 角色不一致：state={state_roles.get(lab)!r} "
+                            f"定义={def_roles.get(lab)!r}")
+    if problems:
+        print("FAIL: [AIW_WORKFLOW_DRIFT] 工作流发生结构变更，refreeze 拒绝（需 Change Log + 新建 run）：")
+        for q in problems:
+            print(f"  - {q}")
+        return 1
+
+    run_cfg["workflow_sha256"] = wf_digest
+    ledger = run_state.setdefault("ledger", [])
+    ledger.append({
+        "action": "workflow_refreeze",
+        "from_sha256": frozen,
+        "to_sha256": wf_digest,
+        "reason": reason,
+        "structural_check": "labels+roles identical",
+        "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+    })
+    save_yaml(run_state_path, run_state)
+    print(json.dumps({
+        "action": "workflow_refreeze",
+        "result": "migrated",
+        "from_sha256": frozen,
+        "to_sha256": wf_digest,
+        "reason": reason,
+        "structural_check": "labels+roles identical",
+    }, ensure_ascii=False, indent=2))
+    return 0
+
+
 def cmd_advance(wf, run_state, run_state_path, blocks, succ, pred, labels, conditional_labels, repo_root, execute, session_meta=None):
     """自动推进所有可确定性推进的块，输出完整报告。
 
@@ -697,6 +774,7 @@ def main(argv):
     mark_done = None
     mark_done_status = "completed"
     mark_done_head_sha = None
+    refreeze_reason = None
     advance = False
 
     i = 0
@@ -726,6 +804,9 @@ def main(argv):
             if i < len(rest) and rest[i] == "--head-sha" and i + 1 < len(rest):
                 mark_done_head_sha = rest[i + 1]
                 i += 2
+        elif arg == "--refreeze-workflow" and i + 1 < len(rest):
+            refreeze_reason = rest[i + 1]
+            i += 2
         elif arg == "--advance":
             advance = True
             i += 1
@@ -778,16 +859,17 @@ def main(argv):
     if not isinstance(run_cfg, dict):
         run_cfg = {}
         run_state["run"] = run_cfg
+    wf_digest = file_sha256(wf_path)
     if run_cfg.get("status") not in RUN_TERMINAL:
         frozen = str(run_cfg.get("workflow_sha256") or "").strip()
-        wf_digest = file_sha256(wf_path)
         if not frozen:
             run_cfg["workflow_sha256"] = wf_digest
             save_yaml(run_state_path, run_state)
-        elif frozen != wf_digest:
+        elif frozen != wf_digest and refreeze_reason is None:
             print(f"FAIL: [AIW_WORKFLOW_DRIFT] 工作流定义在运行中被修改："
                   f"state 冻结 {frozen[:12]}…，当前 {wf_digest[:12]}…（{wf_path}）")
-            print("      处置：恢复定义原文，或经 Change Log 最小改图后新建 run 并终结旧 run")
+            print("      处置：恢复定义原文；非结构变更可用 --refreeze-workflow <reason> 受控迁移；"
+                  "结构变更需 Change Log + 新建 run 并终结旧 run")
             return 1
 
     blocks = collect_top_blocks(wf["blocks"])
@@ -803,6 +885,11 @@ def main(argv):
 
     if append_ledger_json:
         return cmd_append_ledger(run_state_path, run_state, append_ledger_json, session_meta)
+
+    if refreeze_reason is not None:
+        frozen_now = str(run_state.get("run", {}).get("workflow_sha256") or "").strip()
+        return cmd_refreeze_workflow(run_state_path, run_state, blocks, labels,
+                                     refreeze_reason, frozen_now, wf_digest)
 
     if mark_running:
         return cmd_mark_status(run_state_path, run_state, blocks, mark_running, "running", run_dir)
