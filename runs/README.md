@@ -64,6 +64,7 @@ runs/<RUN-ID>/
 | `RUN-20260921-007/` | 启动即中断的 run（仅 current.md/test-plan.md） | 缺少 `state.yaml`，无机器可复核状态，显式承担；不虚构补写 |
 | `RUN-20260922-001/` | .venv 环境修复 run（FAST，Planner 直登） | 自定义块定义只存在于 current.md、`workflow_path: null`，DAG 定义不可机器复核——v1.8.12 起此类形态必须使用可保存的工作流定义，本 run 作为反面样本显式承担 |
 | `RUN-20260923-001/` | v1.8.13 工作包 run（bugfix-triage：DEFECT-001 修复 + F1-R L3 断点演练载体） | L3 演练恢复会话接续 implement→test→close 收口，收口后由 `validate_run` 直接通过；中断/中间态期间曾以本行占位防包校验恒定 FAIL |
+| `RUN-20260923-004/` | v1.8.15 引擎 CLI 契约收口 run（bugfix-triage；docs/13 两缺口销账载体） | 八块全终态；env_note/doc_fix 以新参数 --skip-reason 原生跳过（dogfood）；validate_run PASS |
 | `RUN-20260923-003/` | v1.8.14 真实任务 run（feature-delivery：六模块实测+修复；P2′ 端到端首战） | 16 块全链路 completed（G0-G10 闭环）；候选 1e4010f5 停 wp 分支待授权；validate_run/validate_package PASS |
 | `RUN-20260923-002/` | v1.8.14 工作包 run（bugfix-triage：P1 并发写保护 + R-1/R-2 复核发现修复） | 容器由修复后 `--init` 创建（dogfood 相对路径）；推进中间态直接通过 validate_run |
 
