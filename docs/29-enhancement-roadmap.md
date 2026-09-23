@@ -239,6 +239,21 @@ python3 scripts/metrics_summary.py --runs runs/ --output metrics-report.yaml
 
 ---
 
+## F6 · state.yaml 并发写保护（P1；2026-09-23 已落地 v1.8.14，RUN-20260923-002）
+
+**背景**：双宿主（Claude Code / Codex）日常使用同一 run 时，引擎「读→改→写」无锁——两个一次性 CLI 命令并发操作会「后写覆盖先写」静默丢账本/块状态；2026-09-23 归账实测踩中同型事故（旧快照覆写 skip 状态）。
+
+**已落地方案（乐观并发，零依赖）**：`load_run_state()` 记字节指纹（运行时键不落盘）→ `save_run_state()` 保存前重读比对 → 不一致 `AIW_STATE_CONFLICT` 拒绝写入且绝不覆盖 → 写入 temp+`os.replace` 原子替换；state.yaml 全部 9 处写点收口该函数。同包修复 R-1（advance 缺 task.yaml 告警）/ R-2（--init 相对 workflow_path）。
+
+- [x] 并发冲突拒绝且他人版本完好（selftest §14-1）
+- [x] 正常路径零回归：全量 selftest + validate_package/validate_run（§14-2，C2）
+- [x] 原子写无 .tmp 残留（§14-2）
+- [x] 恢复链缺件可见 + 容器可搬迁（§14-3/4，C4）
+
+**遗留边界**：守卫覆盖走引擎命令的写入者；绕过引擎直接改写 state.yaml 的行为仍由协议纪律约束（validate_transition 快照 + pre-commit）。写入者一律走引擎命令。
+
+---
+
 ## 实施优先级
 
 | 顺序 | 能力 | 工作量 | 依赖 | 效果 |

@@ -1823,7 +1823,88 @@ PY
 fi
 
 echo ""
-echo "== 14. count_sync（README/HTML 计数与实际总数机器联动，不计数只守门） =="
+echo ""
+echo "== 14. 并发写保护（v1.8.14）：指纹比对拒绝覆盖 + 原子写 + init/advance 门 =="
+# 15-1 冲突拒绝：加载→他人改写→保存必须拒绝，且他人版本完好（不覆盖）
+if python3 - <<'PY'
+import importlib.util, pathlib, tempfile, sys
+spec = importlib.util.spec_from_file_location("run_flow", "scripts/run_flow.py")
+rf = importlib.util.module_from_spec(spec); spec.loader.exec_module(rf)
+d = pathlib.Path(tempfile.mkdtemp()) / "state.yaml"
+rf.save_yaml(d, {"run": {"id": "RUN-X", "status": "created"}, "blocks": []})
+loaded = rf.load_run_state(d)
+loaded["run"]["status"] = "running"
+rf.save_yaml(d, {"run": {"id": "RUN-X", "status": "created", "foreign": True}, "blocks": []})
+if rf.save_run_state(d, loaded) is not False:
+    sys.exit("冲突保存未被拒绝")
+cur = rf.load_yaml(d)
+if cur["run"].get("foreign") is not True or cur["run"].get("status") != "created":
+    sys.exit("他人写入被覆盖")
+sys.exit(0)
+PY
+then
+  echo "PASS 并发冲突拒绝（AIW_STATE_CONFLICT 路径，他人写入完好）"; pass=$((pass+1))
+else
+  echo "FAIL 并发冲突保护未生效"; fail=$((fail+1))
+fi
+
+# 15-2 指纹刷新连续保存 + 原子写 + 指纹运行时键不落盘
+if python3 - <<'PY'
+import importlib.util, pathlib, tempfile, sys
+spec = importlib.util.spec_from_file_location("run_flow", "scripts/run_flow.py")
+rf = importlib.util.module_from_spec(spec); spec.loader.exec_module(rf)
+d = pathlib.Path(tempfile.mkdtemp()) / "state.yaml"
+rf.save_yaml(d, {"run": {"id": "RUN-X"}, "blocks": []})
+st = rf.load_run_state(d)
+st["run"]["status"] = "running"
+if rf.save_run_state(d, st) is not True:
+    sys.exit("首次保存失败")
+st["ledger"] = [{"round": 1}]
+if rf.save_run_state(d, st) is not True:
+    sys.exit("指纹刷新后第二次保存被误拒")
+if rf.load_yaml(d).get("ledger") != [{"round": 1}]:
+    sys.exit("连续保存内容丢失")
+if list(d.parent.glob("*.tmp")):
+    sys.exit("tmp 残留")
+if "__aiw_loaded_sha256__" in d.read_text(encoding="utf-8"):
+    sys.exit("指纹键落盘")
+sys.exit(0)
+PY
+then
+  echo "PASS 指纹刷新连续保存 + 原子写无残留 + 指纹键不落盘"; pass=$((pass+1))
+else
+  echo "FAIL 守卫正常路径回归"; fail=$((fail+1))
+fi
+
+# 15-3/15-4 CLI 门：--init 存相对 workflow_path；--advance 缺 task.yaml 必 WARN
+cc_dir="$(mktemp -d "${TMPDIR:-/tmp}/aiw-conc.XXXXXX")"
+mkdir -p "$cc_dir/runs"
+cat > "$cc_dir/wf.yaml" <<'YAML'
+schema_version: 1
+name: "并发守卫测试"
+workflow_id: selftest-concurrency
+error_code_mapping: {}
+finally_block_label: close
+blocks:
+  - {label: intake, block_type: intake, next_block_label: "close", role: planner, goal: "g", complete_criterion: "c", evidence: ["current.md#Intake"]}
+  - {label: close, block_type: close, next_block_label: null, role: planner, goal: "g", complete_criterion: "c", evidence: ["state.yaml"]}
+YAML
+python3 scripts/run_flow.py "$cc_dir/wf.yaml" "$cc_dir/runs/RUN-19700122-999" --init >/dev/null 2>&1
+if grep "workflow_path:" "$cc_dir/runs/RUN-19700122-999/state.yaml" | grep -qv "^\s*workflow_path: /"; then
+  echo "PASS --init 存相对 workflow_path（可随仓库搬迁）"; pass=$((pass+1))
+else
+  echo "FAIL --init 仍存绝对路径"; fail=$((fail+1))
+fi
+adv_cc=$(python3 scripts/run_flow.py "$cc_dir/wf.yaml" "$cc_dir/runs/RUN-19700122-999" --advance 2>&1)
+if echo "$adv_cc" | grep -q "WARN: task.yaml 不存在"; then
+  echo "PASS advance 缺 task.yaml 告警（恢复链断缝可见）"; pass=$((pass+1))
+else
+  echo "FAIL advance 缺 task.yaml 未告警"; fail=$((fail+1))
+fi
+python3 -c 'import shutil,sys;shutil.rmtree(sys.argv[1],ignore_errors=True)' "$cc_dir"
+
+echo ""
+echo "== 15. count_sync（README/HTML 计数与实际总数机器联动，不计数只守门；必须位于全部计数断言之后） =="
 total=$((pass+fail+site_offline))
 cs_fail=0
 if grep -q "在线全跑 ${total}/${total}" README.md && grep -q "${total}/${total}" aiworflow-full-flow.html; then

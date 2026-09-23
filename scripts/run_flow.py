@@ -42,6 +42,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
 import subprocess
 import sys
@@ -78,6 +79,46 @@ def load_yaml(path: Path):
 
 def save_yaml(path: Path, data):
     path.write_text(dump_yaml(data), encoding="utf-8")
+
+
+# 并发写保护（v1.8.14）：state.yaml 是唯一共享写热点，双宿主（Claude Code / Codex）
+# 同时操作同一 run 时，"各自读旧快照→整体覆写"会静默丢对方的写入（2026-09-23
+# 归账实测踩中同型事故）。策略 = 乐观并发：加载记字节指纹，保存前重读比对，
+# 不一致即拒绝写入（AIW_STATE_CONFLICT），绝不覆盖；写入走 temp+原子替换防撕裂读。
+LOADED_FP_KEY = "__aiw_loaded_sha256__"
+
+
+def load_run_state(path: Path):
+    """加载 run state 并在内存副本上记录字节指纹（运行时键，永不落盘）。"""
+    raw = path.read_bytes()
+    state = load_yaml_text(raw.decode("utf-8"))
+    if isinstance(state, dict):
+        state[LOADED_FP_KEY] = hashlib.sha256(raw).hexdigest()
+    return state
+
+
+def save_run_state(path: Path, state) -> bool:
+    """带并发写保护的 state 保存。
+
+    返回 True=已写入；False=检测到并发修改（AIW_STATE_CONFLICT），未写入任何
+    内容，调用方必须中止本命令。同一命令内多次保存：成功后刷新指纹，后续
+    保存与磁盘新内容比对而非与最初快照比对。
+    """
+    loaded_fp = state.pop(LOADED_FP_KEY, None) if isinstance(state, dict) else None
+    if loaded_fp is not None and path.exists():
+        current_fp = hashlib.sha256(path.read_bytes()).hexdigest()
+        if current_fp != loaded_fp:
+            print(f"FAIL: [AIW_STATE_CONFLICT] state.yaml 在本次操作期间被其他写入者修改"
+                  f"（加载时 {loaded_fp[:12]}…，现在 {current_fp[:12]}…）。"
+                  f"本命令未写入任何内容；请重新读取 state.yaml 后重试。")
+            return False
+    text = dump_yaml(state)
+    tmp = path.with_name(path.name + ".tmp")
+    tmp.write_text(text, encoding="utf-8")
+    os.replace(tmp, path)
+    if isinstance(state, dict):
+        state[LOADED_FP_KEY] = hashlib.sha256(text.encode("utf-8")).hexdigest()
+    return True
 
 
 def collect_top_blocks(blocks):
@@ -359,7 +400,8 @@ def cmd_retry(run_state_path, run_state, blocks, label):
     # 执行重试
     block_st["attempts"] = current_attempts + 1
     block_st["status"] = "pending"
-    save_yaml(run_state_path, run_state)
+    if not save_run_state(run_state_path, run_state):
+        return 1
 
     print(json.dumps({
         "label": label,
@@ -418,7 +460,8 @@ def cmd_append_ledger(run_state_path, run_state, ledger_entry_json, session_meta
     entry.update(session_meta or {})
     ledger.append(entry)
     run_state["ledger"] = ledger
-    save_yaml(run_state_path, run_state)
+    if not save_run_state(run_state_path, run_state):
+        return 1
 
     print(json.dumps({
         "action": "append_ledger",
@@ -461,7 +504,7 @@ def cmd_init(wf, wf_path: Path, run_dir: Path):
     state["run"].update({
         "id": run_id,
         "workflow": wf.get("workflow_id") or wf_path.stem,
-        "workflow_path": _re.sub(r"^\./", "", str(wf_path.resolve())),
+        "workflow_path": os.path.relpath(wf_path.resolve(), start=run_dir.resolve()),
         "workflow_sha256": file_sha256(wf_path),
         "status": "created",
         "current_block_label": None,
@@ -473,7 +516,8 @@ def cmd_init(wf, wf_path: Path, run_dir: Path):
          "tested_sha": None, "attempts": 0, "error_codes": []}
         for b in blocks_def if isinstance(b, dict) and b.get("label")
     ]
-    save_yaml(run_dir / "state.yaml", state)
+    if not save_run_state(run_dir / "state.yaml", state):
+        return 1
     print(json.dumps({
         "action": "init",
         "run_id": run_id,
@@ -573,7 +617,8 @@ def cmd_mark_status(run_state_path, run_state, blocks, label, new_status, run_di
     run_cfg = run_state.get("run")
     if isinstance(run_cfg, dict):
         run_cfg["current_block_label"] = label
-    save_yaml(run_state_path, run_state)
+    if not save_run_state(run_state_path, run_state):
+        return 1
 
     print(json.dumps({
         "label": label,
@@ -649,7 +694,8 @@ def cmd_refreeze_workflow(run_state_path, run_state, blocks, labels, reason,
         "structural_check": "labels+roles identical",
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
     })
-    save_yaml(run_state_path, run_state)
+    if not save_run_state(run_state_path, run_state):
+        return 1
     print(json.dumps({
         "action": "workflow_refreeze",
         "result": "migrated",
@@ -674,6 +720,9 @@ def cmd_advance(wf, run_state, run_state_path, blocks, succ, pred, labels, condi
     if session_meta is None:
         print("WARN: --advance 未携带 --session-meta（会话归因缺失；"
               "契约要求 model 必填、tokens_used 可为 null）", file=sys.stderr)
+    if not (run_state_path.parent / "task.yaml").exists():
+        print("WARN: task.yaml 不存在——本 run 无法通过 task_resume.py 断点恢复"
+              "（五件套缺件；见 docs/30 长周期协议）", file=sys.stderr)
     status = load_statuses(run_state, labels)
     run_status = (run_state.get("run") or {}).get("status")
 
@@ -737,7 +786,10 @@ def cmd_advance(wf, run_state, run_state_path, blocks, succ, pred, labels, condi
         entry.update(session_meta or {})
         run_state.setdefault("ledger", []).append(entry)
         try:
-            save_yaml(run_state_path, run_state)
+            if not save_run_state(run_state_path, run_state):
+                # AIW_STATE_CONFLICT（上方 FAIL 行）：不吞冲突。后续主流程保存
+                # 将同样冲突并中止整条命令；此处不 return，避免吞掉冲突信号。
+                pass
         except Exception as exc:
             # 失败必须有名字：轮次日志写失败不阻断推进，但必须在 stderr 可见，
             # 不允许静默吞掉（否则 ledger 可能悄悄缺行且无告警）。
@@ -828,7 +880,8 @@ def cmd_advance(wf, run_state, run_state_path, blocks, succ, pred, labels, condi
                     block_st = find_block_state(run_state, lab)
                     if block_st:
                         block_st["status"] = "completed"
-                        save_yaml(run_state_path, run_state)
+                        if not save_run_state(run_state_path, run_state):
+                            return 1
                         action["auto_marked"] = "completed"
                     _append_round_ledger(round_num + 1, lab, "CHECK", "CONTINUE", {"passed": True})
                     # 不阻断，不设 loop_control，继续下一轮
@@ -886,7 +939,8 @@ def cmd_advance(wf, run_state, run_state_path, blocks, succ, pred, labels, condi
                 run_cfg["status"] = "completed"
                 if fin:
                     run_cfg["current_block_label"] = fin
-        save_yaml(run_state_path, run_state)
+        if not save_run_state(run_state_path, run_state):
+            return 1
     print(json.dumps(report, ensure_ascii=False, indent=2))
     return 1 if failed_any else 0
 
@@ -969,7 +1023,7 @@ def main(argv):
         return 1
 
     wf = load_yaml(wf_path)
-    run_state = load_yaml(run_dir / "state.yaml")
+    run_state = load_run_state(run_dir / "state.yaml")
     run_state_path = run_dir / "state.yaml"
 
     session_meta = None
@@ -1012,7 +1066,8 @@ def main(argv):
         frozen = str(run_cfg.get("workflow_sha256") or "").strip()
         if not frozen:
             run_cfg["workflow_sha256"] = wf_digest
-            save_yaml(run_state_path, run_state)
+            if not save_run_state(run_state_path, run_state):
+                return 1
         elif frozen != wf_digest and refreeze_reason is None:
             print(f"FAIL: [AIW_WORKFLOW_DRIFT] 工作流定义在运行中被修改："
                   f"state 冻结 {frozen[:12]}…，当前 {wf_digest[:12]}…（{wf_path}）")
