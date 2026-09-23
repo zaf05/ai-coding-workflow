@@ -382,8 +382,11 @@ def verify_block_evidence(block_def, run_dir):
             continue
         part = ref.strip()
         m = re.match(r'^(?P<file>[^#]+)#(?P<anchor>.+)$', part)
+        # 与 validate_run._verify_evidence_refs 同语义：无 #anchor 的引用
+        # （state.yaml / test-plan.md / attachments/ 等）不是 completed 门禁的
+        # 锚点对象，跳过而不拒绝——否则真实工作流的 integrate/test/notify/close
+        # 会被误挡（v1.8.12 交付实测缺陷，§3k 回归守护）。
         if not m:
-            problems.append(f"证据引用缺少 #anchor: {part}")
             continue
         ref_file = m.group('file')
         anchor = m.group('anchor').strip()
@@ -446,7 +449,10 @@ def cmd_mark_status(run_state_path, run_state, blocks, label, new_status, run_di
 
     old_status = block_st.get("status", "pending")
     block_st["status"] = new_status
-    block_st["attempts"] = int(block_st.get("attempts") or 0) + 1
+    # attempts = 完成尝试次数，只在终态类迁移时 +1；
+    # --mark-running 是开始而非一次尝试，避免 running+done 双计数。
+    if new_status != "running":
+        block_st["attempts"] = int(block_st.get("attempts") or 0) + 1
     run_cfg = run_state.get("run")
     if isinstance(run_cfg, dict):
         run_cfg["current_block_label"] = label

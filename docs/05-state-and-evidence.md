@@ -97,7 +97,8 @@ RUN-20260921-001 实操（每条都是现场踩到后补齐的，缺一条 `vali
 
 - **证据锚点门禁**：`--mark-done <label> --status completed` 时，引擎逐条校验工作流块
   声明的 `evidence` 引用（文件存在 + `## Anchor` / `id: Anchor` 锚点存在），不满足即拒绝
-  写入（`AIW_EVIDENCE_MISSING`）。
+  写入（`AIW_EVIDENCE_MISSING`）。无 `#anchor` 的引用（`state.yaml` / `test-plan.md` /
+  `attachments/` 等）与 `validate_run` 同语义：跳过而非拒绝（§3k 回归守护）。
 - **implement head_sha 门禁**：implement 类块 completed 必须绑定候选提交
   `--head-sha <sha>`（或块内已有合法 head_sha），否则 `AIW_HEAD_SHA_MISSING` 拒绝。
 - **check/script 人工完成禁令**：check/script 块的 completed 只能由

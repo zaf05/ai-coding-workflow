@@ -620,6 +620,106 @@ fi
 
 python3 -c 'import shutil,sys;shutil.rmtree(sys.argv[1],ignore_errors=True)' "$rj_dir"
 
+# 3k 交付缺陷回归（v1.8.12 实测）：证据门禁曾拒绝真实工作流的 anchorless 引用
+#     （state.yaml / test-plan.md / attachments/ / evidence.md），会误挡
+#     integrate/test/verify_ui/notify/close；修复后与 validate_run 同语义=跳过。
+#     断言 1：四条出厂工作流的每个非 check 块都过门禁。
+#     断言 2：mark-running + mark-done 只计 1 次 attempts。
+k_dir="$(mktemp -d "${TMPDIR:-/tmp}/aiw-gate-regression.XXXXXX")"
+mkdir -p "$k_dir/run/attachments"
+cat > "$k_dir/run/current.md" <<'MD'
+# Current
+## Intake
+## Recon
+## Spec
+## Decisions
+## Tasks
+MD
+cat > "$k_dir/run/evidence.md" <<'MD'
+# Evidence
+## APPROVAL-001
+## TDD-RED
+## IMPL-001
+## IMPL-002
+## REVIEW-001
+## REVIEW-002
+## TEST-001
+## TEST-002
+## TEST-003
+MD
+printf 'plan\n' > "$k_dir/run/test-plan.md"
+printf 'state\n' > "$k_dir/run/state.yaml"
+
+if python3 - "$k_dir/run" <<'PY'
+import sys, yaml
+from pathlib import Path
+sys.path.insert(0, 'scripts')
+from run_flow import verify_block_evidence
+run_dir = Path(sys.argv[1])
+bad = []
+for wf_path in sorted(Path('workflows').glob('*.workflow.yaml')):
+    wf = yaml.safe_load(wf_path.read_text(encoding='utf-8'))
+    for b in wf.get('blocks') or []:
+        if not isinstance(b, dict) or b.get('block_type') in ('check', 'script'):
+            continue
+        problems = verify_block_evidence(b, run_dir)
+        if problems:
+            bad.append(f"{wf_path.name}:{b.get('label')} -> {problems}")
+if bad:
+    print('\n'.join(bad)); sys.exit(1)
+PY
+then
+  echo "PASS 证据门禁兼容全部出厂工作流（anchorless 引用不再误拒）"; pass=$((pass+1))
+else
+  echo "FAIL 证据门禁仍拒绝真实工作流的合法引用格式"; fail=$((fail+1))
+fi
+
+# attempts 语义：running 不计数，终态迁移才 +1
+cat > "$k_dir/wf.yaml" <<'YAML'
+schema_version: 1
+name: "attempts 语义"
+workflow_id: selftest-attempts
+error_code_mapping: {}
+blocks:
+  - label: only
+    block_type: intake
+    next_block_label: null
+    role: planner
+    goal: "g"
+    complete_criterion: "c"
+    evidence: ["evidence.md#IMPL-001"]
+YAML
+mkdir -p "$k_dir/run-att"
+cat > "$k_dir/run-att/state.yaml" <<'YAML'
+schema_version: 1
+run:
+  id: RUN-19700111-999
+  workflow: selftest-attempts
+  status: running
+  current_block_label: null
+  finally_block_label: null
+repository:
+  root: /tmp
+blocks:
+  - {label: only, status: pending, role: planner, gate: null, base_sha: null, head_sha: null, tested_sha: null, attempts: 0, error_codes: []}
+YAML
+printf '# Evidence\n\n## IMPL-001\n' > "$k_dir/run-att/evidence.md"
+python3 scripts/run_flow.py "$k_dir/wf.yaml" "$k_dir/run-att" >/dev/null 2>&1   # 首触冻结
+python3 scripts/run_flow.py "$k_dir/wf.yaml" "$k_dir/run-att" --mark-running only >/dev/null 2>&1
+python3 scripts/run_flow.py "$k_dir/wf.yaml" "$k_dir/run-att" --mark-done only >/dev/null 2>&1
+if python3 -c '
+import sys, yaml
+st = yaml.safe_load(open(sys.argv[1], encoding="utf-8"))
+b = next(b for b in st["blocks"] if b["label"] == "only")
+assert b["status"] == "completed" and b["attempts"] == 1, b
+' "$k_dir/run-att/state.yaml" 2>/dev/null; then
+  echo "PASS attempts 语义（mark-running 不计数，一次完成尝试 = attempts 1）"; pass=$((pass+1))
+else
+  echo "FAIL attempts 双计数或状态异常"; fail=$((fail+1))
+fi
+
+python3 -c 'import shutil,sys;shutil.rmtree(sys.argv[1],ignore_errors=True)' "$k_dir"
+
 echo "== 4. 安装器本机锁定（本机收据属于本副本时应 PASS，否则 SKIP） =="
 # 静默失败是 bug 的藏身处：任何一项失败都必须打印 FAIL。
 # 可移植性（实测教训）：安装目标若属于**另一个来源根**（换机器 / 克隆到别处 /
