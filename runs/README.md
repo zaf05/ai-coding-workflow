@@ -64,7 +64,7 @@ runs/<RUN-ID>/
 | `RUN-20260921-007/` | 启动即中断的 run（仅 current.md/test-plan.md） | 缺少 `state.yaml`，无机器可复核状态，显式承担；不虚构补写 |
 | `RUN-20260922-001/` | .venv 环境修复 run（FAST，Planner 直登） | 自定义块定义只存在于 current.md、`workflow_path: null`，DAG 定义不可机器复核——v1.8.12 起此类形态必须使用可保存的工作流定义，本 run 作为反面样本显式承担 |
 
-> 2026-09-23 引擎加固处置（v1.8.12）：新增 R-4（终态 current_block_label 必须归位 finally）、R-5（implement completed 必须绑定 head_sha）、workflow_sha256 冻结护栏后，历史 run 的账本缺口被显式暴露并登记为墓碑。`RUN-20260921-002..006` 是 **Claude Code 会话进行中的工作包 run**（分别停在 integrate/review/implement）：引擎首触冻结了旧定义 SHA，本包升级 feature-delivery 错误码映射后按设计命中漂移护栏；随后通过新增的 `--refreeze-workflow` 受控迁移（结构校验=块集合与角色逐项一致，ledger 留 `workflow_refreeze` 凭据）迁移到 v1.8.12 定义，五者已恢复 validate_run PASS，CC 会话可继续，不由 Codex 代收口。原则：不改写历史，只显式承担；结构变更仍需 Change Log + 新建 run。
+> 2026-09-23 引擎加固处置（v1.8.12）：新增 R-4（终态 current_block_label 必须归位 finally）、R-5（implement completed 必须绑定 head_sha）、workflow_sha256 冻结护栏后，历史 run 的账本缺口被显式暴露并登记为墓碑。`RUN-20260921-002..006` 是 Claude Code 会话的工作包 run（曾停在 integrate/review/implement）：v1.8.12 升级后经 `--refreeze-workflow` 结构校验迁移定义；**2026-09-23 用户确认 CC 彻底结束，Codex 接手归账收口**——implement 逐一绑定 review_passed target（002=`d63a215b`、003=`3057118e`、004=`4e081837`、005=`4cdc3c82`、006=`842e299f`），剩余流程块 skip+`BUSINESS_CLOSED_ELSEWHERE` 凭据（业务复核已由主仓计划协议完成，见各 run evidence.md 的 IMPL-001/CLOSEOUT-20260923），notify/close 完成后由引擎自动终态；五个 run validate_run 全 PASS。原则：不改写历史，只显式承担；结构变更仍需 Change Log + 新建 run。
 
 > 2026-09-20 维护处置（docs/31 P3-5）：`RUN-20260916-002`（check 补 skip_reason）、`RUN-20260917-003/004`（未命中分支块补 skipped+skip_reason）、`RUN-20260917-006`（integrate 补 skip_reason）、`RUN-20260920-001`（owner 大小写修正）已全部恢复 validate_run PASS 并移出本表；`RUN-20260914-002/16-001/17-001/18-001/18-002` 同批收口（canceled/completed），处置记录见各 run `current.md#Change Log`。
 
