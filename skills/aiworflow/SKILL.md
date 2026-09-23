@@ -65,8 +65,17 @@ Planner 冻结 DAG 后（G4），入口 Agent 启动自动化推进循环：
 
 ```bash
 python3 scripts/run_flow.py <wf> <run-dir> --mark-done <label>
+# implement 块 completed 必须绑定候选提交：
+python3 scripts/run_flow.py <wf> <run-dir> --mark-done <label> --head-sha <sha>
+# conditional 未走到的分支块用 skipped，写时必须携带凭据（v1.8.15）：
+python3 scripts/run_flow.py <wf> <run-dir> --mark-done <label> --status skipped \
+  --skip-reason "<为何可跳过>" --error-codes <A,B>   # 只给 reason 时默认 BRANCH_NOT_TAKEN
 # 然后继续循环
 ```
+
+引擎 CLI 契约（v1.8.15）：未知参数一律 `[AIW_UNKNOWN_FLAG]` FAIL（exit 2，零状态变更）——
+命令拼错会立刻显式失败，修正参数后重试，不要原样重跑；`--skip-reason/--error-codes`
+仅在 `--status skipped` 时有效，其他状态携带会被参数校验先行拒绝。
 
 ### 3b. 处理 WAIT_USER：人工确认边界
 

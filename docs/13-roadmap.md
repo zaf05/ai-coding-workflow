@@ -13,6 +13,8 @@
 | Prompt 模板 5 份（static/dynamic 分段，无模板引擎） | `prompts/` |
 | 真实 run 记录 | `runs/RUN-20260908-002` doc_fix；`RUN-20260908-004` bugfix-triage pytest；`RUN-20260908-005` ui-verification 双视口；`RUN-20260908-006` feature-delivery 已完成 G0–G10 全链路闭环（intake→recon→spec→decision→approve→plan→implement→check→review→integrate→test→verify_ui→release_check→smoke→notify→close），`run.status=completed`；均 `validate_run.py` PASS（该批 run 磁盘已于 2026-09-20 维护处置后不存在，为历史记录；现行可验证 run 见 `runs/`） |
 | Codex 宿主实机加载 | `~/.codex/skills/aiworflow*` 符号链接落地；Codex 以 `qwen3.7-flash + reasoning low` 实测触发 Reviewer 并输出 `verdict=APPROVE` |
+| Claude Code 宿主实机加载（发现层，2026-09-23） | `~/.claude/skills/aiworflow*` 符号链接收据统一到本副本 v1.8.15（原收据停在 1.8.12 且源指向旧副本）；CC 宿主会话内实测发现 `aiworflow` Skill 并列入可调用列表（Skill 工具 system-reminder 可见）。真实业务触发（路由一次开发请求）待首个任务留痕 |
+| 双宿主 CLI 契约同步（v1.8.15） | `aiworflow/SKILL.md` §3a 与 `references/flow-engine.md` 补齐 `--skip-reason`/`--error-codes` 写时凭据与 `[AIW_UNKNOWN_FLAG]` 契约；双宿主 Agent 照 SKILL 教学即可用新引擎，不靠撞 FAIL 自行发现；两目标 `install_skills.py --check` PASS |
 | 2025–2026 主流实践调研与吸收 | `docs/14-current-practices.md`：8 条一手/官方来源，结论已对照三层模型 |
 | 候选 DAG 编译器（LLM 候选 → 合法产物） | `scripts/compile_dag.py`：归一化已知漂移（id/type/next/字符串 schema_version/star）+ 块数预算上限，委托 `validate_workflow.py` 全量结构规则；正例编译 PASS、三类反例（approve 缺 star / 成环 / 超预算）按预期 REJECT，已并入 `scripts/selftest.sh` 第 6 节 |
 | 候选 DAG 生成 Prompt 模板 + 示例 | `prompts/candidate-dag.md`（13 条规则 + STATIC/DYNAMIC 分段）；`prompts/examples/candidate-dag-bugfix.yaml` 完整示例，`compile_dag.py` 编译通过 |
@@ -30,7 +32,7 @@
 |---|---|---|
 | **多个 feature-delivery 工作包的连续真实 run** | 当前仅完成一个 FAST 测试文件工作包闭环；多包并行、跨页回归、冲突交叉验证还未被真实 run 覆盖 | 下一次真实业务工作包按入口重新 Entry，保持默认一个活动包，并行最多两个 |
 | **GitHub Spec Kit 本地扫描** | 2026-09-08 clone 失败，官方文档已读但本地未扫描 | 网络可用后补 `git clone --depth 1 https://github.com/github/spec-kit.git` 到 `references/spec-kit`，新增 `docs/19-spec-kit-scan.md`（`docs/16` 已被 `16-legacy-and-dag-driving.md` 占用） |
-| **Claude Code / ZCode 宿主实机加载** | 只完成文件系统级安装与静态校验，没有对应宿主会话内的真实触发记录 | 在对应宿主开一次会话，记录触发原文与角色交接作为证据 |
+| **Claude Code / ZCode 宿主实机触发（业务层）** | CC 发现层已实测（见上）；但「路由一次真实开发请求」的触发原文与角色交接记录尚无。ZCode 宿主连发现层都未验证 | 下一个真实开发任务在 CC 内由 `aiworflow` Skill 入口 Entry 并留触发原文；ZCode 待环境可用后从安装层做起 |
 | **`run_flow.py` 语义自动化** | **已于 v1.6.0 闭环**：`--advance` 输出 `loop_control` 信号，`flow-engine.md` 定义完整推进协议（5 种信号 + Agent 伪代码 + 熔断）；Agent 根据信号自动循环推进，HANDOFF 后自动调用角色并继续 | 下一次真实 run 时端到端验证 v1.6 自动化推进闭环 |
 | **「Planner 真实产出候选 DAG → compile → G4 冻结」链路取证** | 编译器、解释器与 prompt 模板都已就绪，但还没有一次真实 run 由 Planner 用 prompt 模板生成候选 YAML 并走完全链；当前 4 条工作流仍是人工编写模板 | 下一个真实业务工作包由 Planner 用 `prompts/candidate-dag.md` 产出候选 DAG，`compile_dag.py` 编译通过后冻结，记录到 run 证据 |
 | **固化（`run_signature`）机制** | `docs/08` 只有规则，没有存固化产物、比对签名、回落 agent 的实现 | 等第一次 run 结束后，把重复出现的 `check` 命令写进工作流定义即可，暂不需要代码 |
@@ -44,7 +46,7 @@
 
 ```text
 1. 下一真实 run：用一个纵向业务工作包（非纯测试文件）验证 feature-delivery 全链路，并在 Program 收口集中跑全量单测/构建/E2E
-2. Claude Code / ZCode 宿主实机加载取证      → 只在对应宿主会话验证，不伪造
+2. CC 业务层触发取证 + ZCode 宿主验证         → 只在对应宿主会话验证，不伪造（CC 发现层已闭环，见已实现表）
 3. 三次 run 后抽取共性                       → 决定哪些块降级为 script/check
 4. 出现重复劳动时，把 check/script 命令固化进 workflow 定义，并用 run_flow.py 确定性执行          → 引擎已实现，缓存仍以真实重复为准
 5. 累积 5+ 条 evals                          → 才谈"流程回归测试"

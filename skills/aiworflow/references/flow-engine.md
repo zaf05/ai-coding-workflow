@@ -63,6 +63,9 @@ function run_automation(workflow_path, run_dir):
             else:
                 call {handoff_block.role} skill with handoff
             # implement 类块 completed 必须带 --head-sha <候选提交>（v1.8.12 硬门禁）
+            # conditional 未走到的分支块：--status skipped 必须写时携带
+            #   --skip-reason <text> 和/或 --error-codes <A,B>（v1.8.15 硬门禁，
+            #   只给 reason 默认 BRANCH_NOT_TAKEN；缺凭据被 AIW_SKIP_CREDENTIAL_MISSING 拒绝）
             run("python3 scripts/run_flow.py ... --mark-done {handoff_block.label} [--head-sha <sha>]")
             continue
             // 定义非结构变更升级后，在跑 run 用受控迁移续命（结构校验不过则新建 run）：
