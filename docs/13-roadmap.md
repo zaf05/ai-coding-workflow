@@ -38,6 +38,7 @@
 | **CI 侧再挂一次 `selftest.sh`** | pre-commit 闸门已于 v1.4.0 落地（`install_hooks.py`），但 `git commit --no-verify` 可绕过任何本地 hook，且换机器/新克隆时闸门需重新 `--apply` 才生效 | 在 CI job 里跑 `bash scripts/selftest.sh` + `python3 scripts/install_hooks.py --check`，失败即阻断合并；这样「绕过本地 hook」不再等于「绕过检查」 |
 | **evals / 场景用例库** | 参考工程有 `evals/*.md` 场景用例，我这里还没有 | 每次真实 run 后补一条"可观察决策"用例，不比对精确措辞 |
 | **触发/心跳层（automations，2026-09-21 登记，docs/35 §三）** | 循环本体（`run_flow --advance`）与循环驱动（谁唤醒下一轮）目前是同一宿主会话；无定时/宿主调度触发 `task_resume` 链路的无人值守路径 | 触发条件（二者齐备才动）：①出现首个「无人值守自动跟进」真实需求（如夜间 `check_all` 后自动处置停滞 run）；②宿主原生调度可用（Codex automations / Claude Code 定时任务）。形态先做唤醒 prompt 模板（前馈约束+反馈传感器+先读状态，docs/35 §四①），**不做守护进程**——守住 instruction-only 与 0 新增依赖边界 |
+| **`--mark-done --status skipped` 无 CLI 跳过凭据参数（2026-09-23 登记，RUN-20260923-002 实测）** | 引擎不接受 `--error-codes`/`--skip-reason`，未知 flag 被静默忽略——skipped 块只能靠 Planner 事后手改 state.yaml 补凭据，否则 `validate_run` R-1 FAIL（本 run 实测踩中） | 下次触碰 run_flow.py 时补 `--skip-reason <text>`（自动记 `BRANCH_NOT_TAKEN` 或显式 error_codes），并对未知 flag 改为显式 FAIL 而非静默忽略；过渡期 Planner 按 RUN-20260923-002 先例手补凭据 |
 
 ## 演进顺序（建议）
 
