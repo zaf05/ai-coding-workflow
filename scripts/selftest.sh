@@ -827,6 +827,54 @@ python3 -c 'import shutil,sys;shutil.rmtree(sys.argv[1],ignore_errors=True)' "$l
 
 python3 -c 'import shutil,sys;shutil.rmtree(sys.argv[1],ignore_errors=True)' "$k_dir"
 
+# 3l 创建守门 + 会话归因（Phase 1）：--init 创建即校验冻结；advance 缺归因必告警。
+il_dir="$(mktemp -d "${TMPDIR:-/tmp}/aiw-init.XXXXXX")"
+mkdir -p "$il_dir/runs"
+cat > "$il_dir/wf.yaml" <<'YAML'
+schema_version: 1
+name: "init 测试"
+workflow_id: selftest-init
+error_code_mapping: {}
+finally_block_label: close
+blocks:
+  - {label: intake, block_type: intake, next_block_label: "close", role: planner, goal: "g", complete_criterion: "c", evidence: ["current.md#Intake"]}
+  - {label: close, block_type: close, next_block_label: null, role: planner, goal: "g", complete_criterion: "c", evidence: ["state.yaml"]}
+YAML
+
+# 3l-1 --init 创建的 run 直接通过 validate_run，且首触即冻结
+init_out=$(python3 scripts/run_flow.py "$il_dir/wf.yaml" "$il_dir/runs/RUN-19700122-999" --init 2>&1)
+if echo "$init_out" | grep -q '"action": "init"' \
+   && python3 -c '
+import sys, yaml
+st = yaml.safe_load(open(sys.argv[1], encoding="utf-8"))
+assert len(st["run"]["workflow_sha256"]) == 64
+assert [b["label"] for b in st["blocks"]] == ["intake", "close"]
+' "$il_dir/runs/RUN-19700122-999/state.yaml" 2>/dev/null \
+   && python3 scripts/validate_run.py "$il_dir/runs/RUN-19700122-999" >/dev/null 2>&1; then
+  echo "PASS --init 创建即校验冻结（RUN-ID/逐块预填/64 位 SHA，validate_run 直接通过）"; pass=$((pass+1))
+else
+  echo "FAIL --init 产物不合法"; echo "$init_out"; fail=$((fail+1))
+fi
+
+# 3l-2 --init 拒绝重复初始化
+re_out=$(python3 scripts/run_flow.py "$il_dir/wf.yaml" "$il_dir/runs/RUN-19700122-999" --init 2>&1)
+re_rc=$?
+if [ $re_rc -ne 0 ] && echo "$re_out" | grep -q "AIW_RUN_EXISTS"; then
+  echo "PASS --init 拒绝覆盖已有 run"; pass=$((pass+1))
+else
+  echo "FAIL --init 可覆盖已有 run"; echo "$re_out"; fail=$((fail+1))
+fi
+
+# 3l-3 advance 缺 --session-meta 必须告警（stderr）
+adv_out=$(python3 scripts/run_flow.py "$il_dir/wf.yaml" "$il_dir/runs/RUN-19700122-999" --advance 2>&1)
+if echo "$adv_out" | grep -q "WARN.*session-meta"; then
+  echo "PASS advance 缺会话归因告警（可读 WARN，不静默）"; pass=$((pass+1))
+else
+  echo "FAIL advance 缺归因未告警"; echo "$adv_out" | head -3; fail=$((fail+1))
+fi
+
+python3 -c 'import shutil,sys;shutil.rmtree(sys.argv[1],ignore_errors=True)' "$il_dir"
+
 echo "== 4. 安装器本机锁定（本机收据属于本副本时应 PASS，否则 SKIP） =="
 # 静默失败是 bug 的藏身处：任何一项失败都必须打印 FAIL。
 # 可移植性（实测教训）：安装目标若属于**另一个来源根**（换机器 / 克隆到别处 /
@@ -1496,6 +1544,7 @@ rm -f "$negative_docs" "$negative_out"
 echo "== 12. 全站内容一致性（G7 增强 · 站点在线时计入，离线 SKIP） =="
 # 真实条件执行：先探测站点，在线才跑校验并计数；离线显式 SKIP 不计数。
 # （历史缺陷：本节曾位于 exit 之后恒不执行，"条件执行"实为死代码——闸门假象，v1.8.5 修复。）
+site_offline=0
 if python3 -c 'import sys,urllib.request;sys.exit(0 if urllib.request.urlopen("http://127.0.0.1:8096",timeout=2).status==200 else 1)' 2>/dev/null; then
   if python3 scripts/validate_site_consistency.py --base http://127.0.0.1:8096; then
     echo "PASS 全站内容一致性（站点在线）"; pass=$((pass+1))
@@ -1504,6 +1553,7 @@ if python3 -c 'import sys,urllib.request;sys.exit(0 if urllib.request.urlopen("h
   fi
 else
   echo "SKIP 全站内容一致性（127.0.0.1:8096 未启动；站点在线时自动计入，或手动：python3 scripts/validate_site_consistency.py --base http://127.0.0.1:8096）"
+  site_offline=1
 fi
 
 echo ""
@@ -1676,5 +1726,17 @@ PY
   if [ -e "$compat_run" ]; then echo "FAIL 兼容性 fixture 未清理干净"; fail=$((fail+1)); fi
 fi
 
+echo ""
+echo "== 14. count_sync（README/HTML 计数与实际总数机器联动，不计数只守门） =="
+total=$((pass+fail+site_offline))
+cs_fail=0
+if grep -q "在线全跑 ${total}/${total}" README.md && grep -q "${total}/${total}" aiworflow-full-flow.html; then
+  echo "PASS count_sync：README/HTML 均为 ${total}，与本次实际总数一致"
+else
+  echo "FAIL count_sync：README/HTML 的 selftest 计数应为 ${total}（当前文档口径已漂移，必须同步）"
+  cs_fail=1
+fi
+
 echo "结果: $pass 通过, $fail 失败"
+if [ "$cs_fail" -eq 1 ]; then exit 1; fi
 exit "$fail"

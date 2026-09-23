@@ -23,6 +23,9 @@
   --session-meta <json> 会话归因元数据：{"model":"...","tokens_used":123|null}
                         --advance 自动账本与 --append-ledger 会合并该元数据
   --mark-running <block_label> 将指定块状态设为 running（Planner 用）
+  --init                从模板创建 run 容器：校验工作流可解析、RUN-ID 合法、
+                        逐块预填 state，并立即冻结 workflow_sha256（防止再造出
+                        引用不存在 DAG 定义的脏 run）
   --refreeze-workflow <reason>
                         受控迁移：工作流发生"非结构变更"（如错误码表/注释）且 run 的
                         块集合与角色与新定义完全一致时，把冻结 SHA 迁移到当前定义并
@@ -367,6 +370,50 @@ def _anchor_exists(content: str, anchor: str) -> bool:
     return bool(h2 or yid)
 
 
+def cmd_init(wf, wf_path: Path, run_dir: Path):
+    """创建 run 容器：模板复制 + RUN-ID 校验 + 逐块预填 + 首触即冻结定义 SHA。"""
+    import re as _re
+    run_id = run_dir.name
+    if not _re.match(r"^RUN-\d{8}-\d{3}$", run_id):
+        print(f"FAIL: [AIW_INVALID_RUN_ID] run 目录名 {run_id!r} 必须形如 RUN-YYYYMMDD-NNN")
+        return 1
+    if (run_dir / "state.yaml").exists():
+        print(f"FAIL: [AIW_RUN_EXISTS] {run_dir}/state.yaml 已存在；续跑请直接调用引擎命令，不要 --init")
+        return 1
+    run_dir.mkdir(parents=True, exist_ok=True)
+    tmpl_dir = ROOT / "skills" / "_shared" / "templates"
+    for f in ("current.md", "evidence.md"):
+        src = tmpl_dir / f
+        if src.exists() and not (run_dir / f).exists():
+            (run_dir / f).write_text(src.read_text(encoding="utf-8"), encoding="utf-8")
+    state = load_yaml(tmpl_dir / "run-state.yaml")
+    blocks_def = collect_top_blocks(wf.get("blocks") or [])
+    state["run"].update({
+        "id": run_id,
+        "workflow": wf.get("workflow_id") or wf_path.stem,
+        "workflow_path": _re.sub(r"^\./", "", str(wf_path.resolve())),
+        "workflow_sha256": file_sha256(wf_path),
+        "status": "created",
+        "current_block_label": None,
+        "finally_block_label": wf.get("finally_block_label"),
+    })
+    state["blocks"] = [
+        {"label": b["label"], "status": "pending", "role": b.get("role", "planner"),
+         "gate": b.get("gate"), "base_sha": None, "head_sha": None,
+         "tested_sha": None, "attempts": 0, "error_codes": []}
+        for b in blocks_def if isinstance(b, dict) and b.get("label")
+    ]
+    save_yaml(run_dir / "state.yaml", state)
+    print(json.dumps({
+        "action": "init",
+        "run_id": run_id,
+        "workflow": state["run"]["workflow"],
+        "blocks": len(state["blocks"]),
+        "workflow_sha256": state["run"]["workflow_sha256"],
+    }, ensure_ascii=False, indent=2))
+    return 0
+
+
 def verify_block_evidence(block_def, run_dir):
     """completed 门禁：块声明的 evidence 引用必须真实可达（文件 + 锚点）。
 
@@ -554,6 +601,9 @@ def cmd_advance(wf, run_state, run_state_path, blocks, succ, pred, labels, condi
       WAIT_ROLE → 遇到需要角色处理的块，Agent 应调用对应 Skill 完成工作，然后 mark-done 再 --advance
       BLOCKED   → 遇到结构性障碍（环/check 失败/重试耗尽），Agent 应停止并归因
     """
+    if session_meta is None:
+        print("WARN: --advance 未携带 --session-meta（会话归因缺失；"
+              "契约要求 model 必填、tokens_used 可为 null）", file=sys.stderr)
     status = load_statuses(run_state, labels)
     run_status = (run_state.get("run") or {}).get("status")
 
@@ -789,6 +839,7 @@ def main(argv):
     mark_done_status = "completed"
     mark_done_head_sha = None
     refreeze_reason = None
+    do_init = False
     advance = False
 
     i = 0
@@ -821,6 +872,9 @@ def main(argv):
                 else:
                     mark_done_head_sha = rest[i + 1]
                 i += 2
+        elif arg == "--init":
+            do_init = True
+            i += 1
         elif arg == "--refreeze-workflow" and i + 1 < len(rest):
             refreeze_reason = rest[i + 1]
             i += 2
@@ -833,6 +887,13 @@ def main(argv):
     if not wf_path.exists():
         print(f"FAIL: 工作流不存在: {wf_path}")
         return 1
+    if do_init:
+        wf = load_yaml(wf_path)
+        if not isinstance(wf, dict) or not isinstance(wf.get("blocks"), list):
+            print("FAIL: 工作流格式错误")
+            return 1
+        return cmd_init(wf, wf_path, run_dir)
+
     if not run_dir.is_dir() or not (run_dir / "state.yaml").exists():
         print(f"FAIL: run 目录或 state.yaml 不存在: {run_dir}")
         return 1
