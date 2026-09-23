@@ -222,6 +222,6 @@ python3 scripts/run_flow.py <workflow> <run-dir> \
 
 恢复提示词显式写入：**已 completed 块的外部副作用（migration/commit/push）零重复执行**。这是提示词与自检层面的防重复协议，不等价于数据库迁移或 Git 操作自身的幂等性；执行不可逆副作用前仍必须读取原始提交与验证证据。
 
-run 内单块串行推进是 Planner 唯一写入者治理设计；并行只发生在工作包层（多 run / 多 worktree）。见 `docs/04-roles.md`。L3 真实断点演练仍按 `docs/29` F1-R 五条验收触发，不能因组件自检通过而提前宣称实战闭环。
+run 内单块串行推进是 Planner 唯一写入者治理设计；并行只发生在工作包层（多 run / 多 worktree）。见 `docs/04-roles.md`。L3 真实断点演练已于 2026-09-23 由 RUN-20260923-001（v1.8.13）按 `docs/29` F1-R 五条验收执行通过——「单点断点恢复（≥3 块中断→新会话接续）」可宣称实证；本协议 §九的多天 Session×Run 级联仍属协议层，不随单点演练通过而宣称多天实战闭环。
 
 **边界说明（v1.8.9）**：`review_preflight.py` 的 PROTECTED_PATHS 规则拦截的是**被审主仓 diff 中**名为 `runs/…` 与 `state.prev.yaml` 的路径——`.ai_worflow` 本身不是 git 仓库、其账本不会出现在被审 diff 里，因此该规则对主仓中的同名路径构成纵深防御（例如主仓内嵌另一套 `runs/` 账本或状态快照被误提交时仍会被拦下），并非对 `.ai_worflow/runs/` 的直接保护；后者的完整性由「runs/ 只追加、既有容器只读」边界与 selftest §3 墓碑护栏承担。

@@ -63,6 +63,7 @@ runs/<RUN-ID>/
 | `RUN-20260918-002/` | 功能交付 run | R-4：completed 但 `current_block_label=intake` |
 | `RUN-20260921-007/` | 启动即中断的 run（仅 current.md/test-plan.md） | 缺少 `state.yaml`，无机器可复核状态，显式承担；不虚构补写 |
 | `RUN-20260922-001/` | .venv 环境修复 run（FAST，Planner 直登） | 自定义块定义只存在于 current.md、`workflow_path: null`，DAG 定义不可机器复核——v1.8.12 起此类形态必须使用可保存的工作流定义，本 run 作为反面样本显式承担 |
+| `RUN-20260923-001/` | v1.8.13 工作包 run（bugfix-triage：DEFECT-001 修复 + F1-R L3 断点演练载体） | L3 演练恢复会话接续 implement→test→close 收口，收口后由 `validate_run` 直接通过；中断/中间态期间曾以本行占位防包校验恒定 FAIL |
 
 > 2026-09-23 引擎加固处置（v1.8.12）：新增 R-4（终态 current_block_label 必须归位 finally）、R-5（implement completed 必须绑定 head_sha）、workflow_sha256 冻结护栏后，历史 run 的账本缺口被显式暴露并登记为墓碑。`RUN-20260921-002..006` 是 Claude Code 会话的工作包 run（曾停在 integrate/review/implement）：v1.8.12 升级后经 `--refreeze-workflow` 结构校验迁移定义；**2026-09-23 用户确认 CC 彻底结束，Codex 接手归账收口**——implement 逐一绑定 review_passed target（002=`d63a215b`、003=`3057118e`、004=`4e081837`、005=`4cdc3c82`、006=`842e299f`），剩余流程块 skip+`BUSINESS_CLOSED_ELSEWHERE` 凭据（业务复核已由主仓计划协议完成，见各 run evidence.md 的 IMPL-001/CLOSEOUT-20260923），notify/close 完成后由引擎自动终态；五个 run validate_run 全 PASS。原则：不改写历史，只显式承担；结构变更仍需 Change Log + 新建 run。
 

@@ -1,8 +1,8 @@
 # AIWorflow · 我的 AI 工作流
 
-版本：v1.8.12（单一事实源 `VERSION`） · `schema_version: 1` · 更新日期：2026-09-23
+版本：v1.8.13（单一事实源 `VERSION`） · `schema_version: 1` · 更新日期：2026-09-23
 
-这是属于我自己的 AI 原生研发工作流系统（当前 v1.8.11，130 个外部参考来源，覆盖 13 家一二线大厂：国内 9——阿里/腾讯/字节/美团/快手/华为/京东/网易有道/货拉拉，国际 4——OpenAI/Anthropic/AWS/Google）。它把一次“让 AI 干活”的请求，升级成一条**可编排（块 DAG）、可分权（四角色）、可验证（门禁 + 证据）、可自动推进（loop_control 信号驱动循环）、可接管（状态与账本）**的交付链路。当前状态：v1.8.10，selftest **70/70 PASS**（站点在线时；离线 69/69 + 1 SKIP），validate_package **全部通过**。近期演进：v1.8.5 修复长周期恢复链三个真 bug；v1.8.6 统一 `--advance` 报告契约并让账本写失败可观测；v1.8.7 落地会话归因与 Reviewer 确定性前置检查；v1.8.8 让 `task_resume` 消费 checkpoint/state/ledger、声明 run 内串行治理边界、补人类摘要与模型替换复检；v1.8.9 收口独立检查的 4 条 P3（REVIEW_SIZE 口径统一 / secret 告警不回显密钥 / PROTECTED_PATHS 边界说明 / 依赖措辞统一补申报），并把当日全网检索批（087–124，`docs/34`）全部编入 HTML 附录索引；v1.8.10 用首个真实任务驱动的 G3 人工门评审 run（RUN-20260921-001：六功能域只读评审、用户亲签接受、评审-only 合法收尾）沉淀三条运行规则——侦察 fan-out 启动清单、评审-only Run 收尾处方、star 块亲签出处落位；v1.8.11 收编淘天《Loop engineering》对照批（`docs/35`，附录 124→130）：五组件印证既有设计、automations 心跳层登记为缺口（docs/13）、三条候选做法记录在案；v1.8.12 引擎完整性加固（RUN-20260916-001 审计驱动）：workflow SHA 冻结+漂移硬拦截、mark-done 证据锚点门禁、implement completed 必绑 head_sha、check 块禁人工完成、终态引擎自动收口，新增 R-4/R-5 校验与 9 项 selftest 负例/正例断言。诚实边界：真实 ≥3 块的 L3 断点演练仍未执行，当前只能声明恢复组件可用且有自检，不能声明跨会话实战闭环。
+这是属于我自己的 AI 原生研发工作流系统（当前 v1.8.13，130 个外部参考来源，覆盖 13 家一二线大厂：国内 9——阿里/腾讯/字节/美团/快手/华为/京东/网易有道/货拉拉，国际 4——OpenAI/Anthropic/AWS/Google）。它把一次“让 AI 干活”的请求，升级成一条**可编排（块 DAG）、可分权（四角色）、可验证（门禁 + 证据）、可自动推进（loop_control 信号驱动循环）、可接管（状态与账本）**的交付链路。当前状态：v1.8.13，selftest **95/95 PASS**（站点在线时；离线 94/94 + 1 SKIP），validate_package **全部通过**。近期演进：v1.8.5 修复长周期恢复链三个真 bug；v1.8.6 统一 `--advance` 报告契约并让账本写失败可观测；v1.8.7 落地会话归因与 Reviewer 确定性前置检查；v1.8.8 让 `task_resume` 消费 checkpoint/state/ledger、声明 run 内串行治理边界、补人类摘要与模型替换复检；v1.8.9 收口独立检查的 4 条 P3（REVIEW_SIZE 口径统一 / secret 告警不回显密钥 / PROTECTED_PATHS 边界说明 / 依赖措辞统一补申报），并把当日全网检索批（087–124，`docs/34`）全部编入 HTML 附录索引；v1.8.10 用首个真实任务驱动的 G3 人工门评审 run（RUN-20260921-001：六功能域只读评审、用户亲签接受、评审-only 合法收尾）沉淀三条运行规则——侦察 fan-out 启动清单、评审-only Run 收尾处方、star 块亲签出处落位；v1.8.11 收编淘天《Loop engineering》对照批（`docs/35`，附录 124→130）：五组件印证既有设计、automations 心跳层登记为缺口（docs/13）、三条候选做法记录在案；v1.8.12 引擎完整性加固（RUN-20260916-001 审计驱动）：workflow SHA 冻结+漂移硬拦截、mark-done 证据锚点门禁、implement completed 必绑 head_sha、check 块禁人工完成、终态引擎自动收口，新增 R-4/R-5 校验与 9 项 selftest 负例/正例断言；v1.8.13（RUN-20260923-001）修复 conditional expression 惰性缺陷（DEFECT-001：`--evaluate-conditional` 只实现 equals，bugfix-triage 三条 expression 分支被静默忽略、无论归因如何都落默认 implement；现支持受限文法 `true` / `<ident> == '<literal>'` 对 state.conditions 求值，新增 `inert_conditional` 编写期护栏 + `_invalid` 反例 + 文法外运行期显式 FAIL），并以该真实 run 执行 F1-R L3 断点演练（intake/recon/classify 完成后故意中断，全新零共享上下文会话经 `task_resume.py` 接续 implement→test→close，五条验收逐条取证通过）。诚实边界：L3 单点断点恢复已实证（`docs/29` F1-R）；Session×Run 多天级联仍属协议层（`docs/30`），不随单点演练通过而宣称多天实战闭环。
 
 ## 血缘与来源
 
@@ -146,6 +146,7 @@ timeout 180 codex exec   --ephemeral --skip-git-repo-check   -C /home/feifz/work
 
 | 版本 | 变更 | 对使用者的影响 |
 |---|---|---|
+| **v1.8.13** | **conditional expression 惰性缺陷修复 + F1-R L3 断点演练实证（RUN-20260923-001）**：① `run_flow.py --evaluate-conditional` 支持 `criteria_type: expression` 的受限文法求值——`true`（恒真，仅限 is_default 分支语义）与 `<ident> == '<literal>'`（对 `state.conditions` 求值）；文法之外或非默认分支无可求值负载时显式 `AIW_INERT_CONDITIONAL` FAIL，不再静默落默认分支（DEFECT-001：bugfix-triage 三条 expression 分支曾被只实现 equals 的匹配逻辑整体忽略，operator_usage_gap/environment_stale_state 归因也被路由到 implement 返修）；② `validate_workflow.py` 新增 author-time 护栏 `inert_conditional` 并注册进 `GUARDRAIL_IDS`——条件负载必须是引擎可求值形态（分支级 `condition_key`+`equals`，或 expression 且文法在支持子集内；恒真只许默认分支），新增 `_invalid/inert-conditional.workflow.yaml` 反例；③ 引擎求值与编写期护栏共用同一文法实现（`parse_conditional_expression`），两边不允许漂移；④ 以本 run 为载体执行 F1-R L3 断点演练：intake/recon/classify 完成后故意中断（ledger 留 INTERRUPT/SESSION_BREAK），全新零共享上下文恢复会话按 task_resume.py 接续，五条验收（恢复提示词含已完成块 / frontier 不选已完成块 / 新会话真读 context / ledger 可追溯中断历史 / 首动作读 checkpoint+零重复副作用）逐条取证通过，`docs/29` F1-R 升级为「真实断点恢复已实证」；⑤ selftest 91→**95**（§2 反例 +1、§7a-bis expression 正例（operator_usage_gap→doc_fix、environment_stale_state→env_note）、§7a-ter 文法负例拒绝、§9 inert_conditional 护栏逐条触发） | 条件分支从「看似有分支、实际恒走默认」变为可求值可拒绝：定义期挡住惰性条件，运行期 expression 真实路由；长周期恢复链从「组件可用且有自检」升级为「真实断点恢复已实证」（多天 Session×Run 级联仍属协议层，见 docs/30） |
 | **v1.8.12** | **引擎完整性加固（RUN-20260916-001 审计驱动）**：① `run_flow.py` 首触冻结 `run.workflow_sha256`，定义运行中被修改即 `AIW_WORKFLOW_DRIFT` 拒绝一切推进/写入；② `--mark-done --status completed` 增加证据锚点门禁（文件+`## Anchor`/`id: Anchor` 双约定，不满足即 `AIW_EVIDENCE_MISSING`）；③ implement 类块 completed 必须绑定候选提交 `--head-sha`（`AIW_HEAD_SHA_MISSING` 硬门禁），attempts 随 mark-done 递增、current_block_label 同步归位；④ check/script 块禁人工标记 completed，只能由 `--execute-check` 退出码自动完成；④b `--refreeze-workflow <reason>` 受控迁移——定义非结构变更且块集合/角色逐项一致时允许迁移冻结 SHA 并留 ledger （双宿主兼容：一个宿主升级定义不锁死另一宿主在跑的 run），结构变更仍拒绝；⑤ 全部块 terminal 时 `--advance` 由引擎写入 `run.status=completed` + `current_block_label=finally`，消灭手改 state 旁路；⑥ `validate_run.py` 新增 R-4（终态索引归位）/R-5（implement completed 必绑 head_sha）/workflow 漂移检测（活跃=错、终态=WARN）；⑦ 11 个历史 run 账本缺口登记墓碑、5 个 Claude Code 进行中 run 经 refreeze 结构校验迁移到 v1.8.12 定义恢复可用、2 个预存脏 run（缺 state / 自定义 DAG 未保存）收编治理；⑧ `docs/10` 适配层事实修正（排除文件实为 `.git/info/exclude:12`、分支 develop、canonical 库 inner_esp_aipe 四 schema）；⑨ 误提交的 `__pycache__` 移出版本库；selftest 70→**91**（§3i 门禁开火×9 + §3j refreeze×2 + §3k 缺陷回归×6 + §3l 创建守门×3：--init 创建即校验冻结、拒绝覆盖；advance 缺 session-meta 必告警；§14 count_sync 让 README/HTML 计数与实际总数机器联动，杜绝手抄漂移） | "完成"不再能靠改 state 或空口 mark-done 达成：证据锚点、候选提交、命令退出码、定义 SHA 四类事实缺一不可；历史账本缺口显式承担而非静默通过 |
 | **v1.8.11** | **微信《Loop engineering》对照收编（docs/35）**：六组件对照——worktrees/skills/connectors/sub-agents/memory 五条印证既有设计，六动作循环（读状态→判断→执行→验证→写状态→停止条件）与 `--advance` 信号模型同构，六条失败模式全部有既有答案；**真缺口「触发/心跳层（automations）」登记 `docs/13`** 并绑定触发条件（首个无人值守自动跟进真实需求 + 宿主原生调度可用；形态先做唤醒 prompt 模板——前馈约束+反馈传感器+先读状态——不做守护进程，守住 instruction-only 与 0 新增依赖边界）；三条候选做法记录在案不写代码（唤醒模板结构、G0 loop 化六条件判据、维护环认定与 G10 任务后能力观察同族——RUN-20260921-001 事故→处方固化即该环实例，不新建流程）；**附录 124→130**：125 淘天原文 L1（webReader 全文）、126 Addy Osmani《Loop Engineering》与 127 Martin Fowler 原文 curl 200 可达补录（L3 可达性级，正文未读观点经 125 转述）、128 Amplitude Ralph loop / 129 arXiv AI Workflow Store / 130 arXiv EurekAgent 转引 L3（出口失败，强制「生态样本/非规则依据」标注）；README 核验表扩至 row 109；修复 HTML 页脚版本残留 v1.8.9；无脚本变更，selftest 维持 70/70 | 该文的价值是「五个 yes 一个 no」：独立中文一线实践者印证既有设计，唯一 no（心跳层）已按纪律登记 roadmap 不预写代码；附录来源 +6 且每条证据级诚实标注 |
 | **v1.8.10** | **真实 G3 门评审 run 的规则固化**：首个以真实任务驱动完整走过 Planner 段 + 人工门 + 收尾的 run（RUN-20260921-001：六功能域只读评审，用户会话亲签"我接受"，validate_run PASS、`--advance` DONE）。踩出的三条运行规则沉淀为文档：① `docs/07` 新增**侦察 fan-out 启动清单**——fan-out 前 manifest 落 current.md、按域回收不按份数、重试必须同域原 prompt（实测事故：Soul 探针启动失败被 IAM prompt 顶替重试，4 份报告掩盖 1 域缺失）、分类器不可用时 Planner 直评有界域并显式记录；② `docs/05` 新增**评审-only Run 合法收尾处方**——fix 路径块逐块 skipped+skip_reason、notify/close 可 completed、test-plan.md 写 N/A 记录不伪造、`approvals.<label>` 落亲签出处、终态前 validate_run+DONE 双复核、`--append-ledger '{"note":...}'` 命令形态；③ star:user 块 mark-done 只做簿记不产生批准的边界成文；④ **入库状态适配**（2026-09-20 21:02 用户重新自建本目录 git 仓库 `d551273`、remote `zaf05/ai-coding-workflow`，2026-09-21 确认保留）：`install_hooks.py --apply` 把 pre-commit 闸门装入本仓 `.git/hooks/`（布局 B 生效，与主仓双布局在位，`--check` PASS），`runs/README` 入库状态、`docs/11` 版本历史行、`context/project-aiworkflow` 形态事实按新现实改写并附隐私提示（`runs/`、`context/` 推远端前用户确认可见性）。无脚本变更，selftest 恢复 70/70 | 评审-only 类任务有了可直接照抄的收尾路径，不再现场摸索踩 R-1/缺 test-plan 的 FAIL；多探针评审不会再出现"重复域顶替缺失域"的静默覆盖；人工门签收在 state.yaml 有结构化出处可审计 |
@@ -273,7 +274,7 @@ python3 scripts/install_hooks.py --check
 | 宿主实机加载 | Codex 与 Claude Code 双宿主已实测加载 | `~/.codex/skills` 与 `~/.claude/skills` 的 `aiworflow*` 符号链接均落地（两宿主 `install_skills.py --check` 收据指纹一致；2026-09-21 随 v1.8.11 升级复核）；`RUN-20260908-002` 由 Codex 角色会话真实产出；2026-09-20 双宿主只读探针复测：Codex 会话列出 5 个 skill 链接并读出 SKILL.md frontmatter / VERSION 1.8.9 / 角色规则引文，Claude Code 嵌套会话系统 skill 清单实际注册全部 5 个 aiworflow* skill 并经符号链接实读 SKILL.md / 安装收据 / contracts |
 | 会话归因（model / tokens_used） | 已完成（v1.8.7） | `run_flow.py --session-meta` + selftest §7d-ter：model 必填、tokens 可为 null、非法输入拒绝；角色报告模板含 session 字段 |
 | Review 确定性前置检查 | 已完成（v1.8.7） | `scripts/review_preflight.py` + selftest §7d-quatro：secret/禁改区/破坏性命令负例开火，干净 diff 通过 |
-| task_resume checkpoint/state/ledger 消费 | 已完成（v1.8.8） | selftest §13c-bis；真实 ≥3 块断点演练仍待触发，不能宣称 L3 实战闭环 |
+| task_resume checkpoint/state/ledger 消费 | 已完成（v1.8.8；L3 演练已实证 v1.8.13） | selftest §13c-bis；RUN-20260923-001 真实断点演练五条验收逐条通过（`docs/29` F1-R 已勾选），Session×Run 多天级联仍属协议层 |
 | Flow 引擎可执行实现（真正跑 DAG 的进程） | 已完成 | `scripts/run_flow.py` 已实现确定性 DAG 构图/环检测/frontier/STAR/HANDOFF/CHECK，`--execute-check` 真实执行 check；`RUN-20260908-006` 已用它跑 `check` 块并 PASS，最终 frontier 为空 |
 
 ---
@@ -302,21 +303,21 @@ AIWorflow 是一套**纯文件驱动的 AI 研发控制层**。它不提供浏�
   → G10 close（lessons/change-summary 写回供下一环复用）
 ```
 
-### 核心数字（2026-09-23，v1.8.12）
+### 核心数字（2026-09-23，v1.8.13）
 
 | 指标 | 数值 |
 |---|---|
 | 规则文档 | 36 篇 + docs/README |
 | 共享契约 | 9 份（角色/门禁/证据/状态/变更/Git/交接/规则生命周期/产物；护栏注册表在 `docs/09` 与脚本 `GUARDRAIL_IDS`，非独立契约文件） |
 | Skill 入口 | 5 个（入口+四角色）+ 1 个 `_shared` 共享底座 |
-| 工作流定义 | 4 正例 + 7 反例（每个反例对一条 hard guardrail 开火） |
+| 工作流定义 | 4 正例 + 8 反例（每个反例对一条 hard guardrail 开火；v1.8.13 新增 `inert-conditional` 对 `inert_conditional` 开火） |
 | Prompt 模板 | 7 个（intake/spec/implement/review/test/candidate-dag + 1 示例） |
 | 确定性脚本 | 16 个代码脚本 + pre-commit hook（校验×7：workflow/package/run/transition/consistency/content-quality/site-consistency；引擎×7：compile_dag/run_flow/check_all/task_resume/review_preflight/install×2；selftest + _yaml_min；Python 3 + bash + 已有 PyYAML） |
-| selftest | 91 项（在线全跑 91/91；离线 90 PASS + 1 SKIP），15 个分组覆盖包结构→反例→transition→DAG语义→引擎完整性→refreeze→交付缺陷回归→创建守门→日检→安装→编译→执行→版本锁定→闸门→站点一致性→长周期恢复链→计数联动 |
-| 总代码行（脚本） | 5,603 行 Python + Shell（wc -l 实测 2026-09-23） |
-| 总文档行 | 6,168 行 Markdown（docs 5,440 + 根 README 728，wc -l 实测 2026-09-23） |
+| selftest | 95 项（在线全跑 95/95；离线 94 PASS + 1 SKIP），15 个分组覆盖包结构→反例→transition→DAG语义→引擎完整性→refreeze→交付缺陷回归→创建守门→日检→安装→编译→执行→版本锁定→闸门→站点一致性→长周期恢复链→计数联动 |
+| 总代码行（脚本） | 6,338 行 Python + Shell（scripts/ 下 wc -l 实测 2026-09-23，v1.8.13） |
+| 总文档行 | 6,189 行 Markdown（docs 5,459 + 根 README 730，wc -l 实测 2026-09-23，v1.8.13） |
 | 外部依赖 | 0 新增（Python 3 + bash + 当前环境已有 PyYAML；不引入数据库/消息队列/npm 依赖） |
-| 宿主加载 | Codex 与 Claude Code 双宿主已实测加载（2026-09-20 只读探针：Codex exec 会话与 Claude Code `-p` 嵌套会话各自发现/注册并实读 skill；两宿主收据 1.8.12 指纹一致；2026-09-23 v1.8.12 升级后复核，并实测 Claude Code 嵌套会话 `claude -p` 真实列出全部 5 个 aiworflow* skill、Codex 会话内 5 个 skill 可读） |
+| 宿主加载 | Codex 与 Claude Code 双宿主已实测加载（2026-09-20 只读探针：Codex exec 会话与 Claude Code `-p` 嵌套会话各自发现/注册并实读 skill；2026-09-23 v1.8.13 升级后 `--check` 复核指纹一致，并实测 Claude Code 嵌套会话 `claude -p` 真实列出全部 5 个 aiworflow* skill、Codex 会话内 5 个 skill 可读） |
 
 ### 三层防护体系
 

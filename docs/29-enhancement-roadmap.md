@@ -46,27 +46,27 @@ loop_control:
 
 ### 工作量：2h
 
-### F1-R · L3 恢复演练（登记于 2026-09-20，待触发）
+### F1-R · L3 恢复演练（登记于 2026-09-20；2026-09-23 已执行，RUN-20260923-001）
 
 **当前已实证状态（防止文档冒充实现）**
 - v1.8.8 起：`task_resume.py` 已消费 `checkpoint.yaml`、`state.yaml` 的块状态与最近 ledger，并在恢复提示词中写明“已 completed 块的外部副作用零重复执行”
 - selftest §13 覆盖：task-state 模板 / checkpoint 落盘 / 恢复提示词 / checkpoint+state+ledger 消费 / 缺 task.yaml 非零退出 / run 容器兼容
-- 结论边界：以上仍是 **组件级机器断言**；真实 ≥3 块 run 中断后开新会话恢复的 L3 演练尚未执行，不能宣称“真实断点恢复已闭环”
+- **2026-09-23 实证升级（v1.8.13，RUN-20260923-001，bugfix-triage 工作流）**：intake/recon/classify 完成后主会话故意中断（ledger 留 INTERRUPT/SESSION_BREAK 条目、五件套写全），全新零共享上下文恢复会话按协议接续 implement→test→close——L3 演练从“组件级机器断言”升级为“真实断点恢复已实证”，证据逐条落 RUN-20260923-001/evidence.md 与 state.yaml completion_contract C1..C5
 - run 内单活跃角色与串行推进是治理设计，见 `docs/04-roles.md`《单活跃角色与串行推进（设计边界）》；并行只发生在工作包层。
 
-**触发条件**
-- 下一个真实 ≥3 块 run：intake / recon / spec 推进完成后故意中断，中断前写全 state.yaml + task.yaml + checkpoint.yaml + context/*.md + evidence.md，开全新会话执行 `python3 scripts/task_resume.py runs/<RUN-ID>`
+**触发条件（已满足并执行）**
+- 下一个真实 ≥3 块 run：intake / recon / spec 推进完成后故意中断，中断前写全 state.yaml + task.yaml + checkpoint.yaml + context/*.md + evidence.md，开全新会话执行 `python3 scripts/task_resume.py runs/<RUN-ID>`（本 run 无 spec 块，classify 的分支决策即规格级决策点，映射记录于 current.md#Classify）
 
-**验收条件（五条全过，L3 才升级为"真实断点恢复已实证”）**
-- [ ] 恢复提示词包含已完成块列表
-- [ ] run_flow frontier 不再选择已完成块
-- [ ] 新会话 G1 真读 context 文件
-- [ ] ledger / state 可追溯中断前历史
-- [ ] 恢复会话首个动作是读 ledger/checkpoint 确认已提交物；已 completed 块的外部副作用（migration/commit/push）零重复执行
+**验收条件（五条全过，L3 才升级为”真实断点恢复已实证”）——2026-09-23 全部通过**
+- [x] 恢复提示词包含已完成块列表（task_resume.py 输出 `**Completed blocks**: intake, recon, classify`）
+- [x] run_flow frontier 不再选择已完成块（`--advance` 报告 remaining_blocks=[env_note, doc_fix, implement, test, close] 与 frontier 动作均不含 intake/recon/classify；engine_gap 归因的实际路由分支为 implement，env_note/doc_fix 为未选分支、随后按 skipped 收口）
+- [x] 新会话 G1 真读 context 文件（恢复会话实读 project-aiworkflow.md / risk-register.md / decisions.md 并引用版本事实与护栏纪律）
+- [x] ledger / state 可追溯中断前历史（round=1 HANDOFF(intake) 与 round=3 INTERRUPT(classify, SESSION_BREAK) 条目在恢复会话中可读）
+- [x] 恢复会话首个动作是读 ledger/checkpoint 确认已提交物；已 completed 块的外部副作用（migration/commit/push）零重复执行（首动作读 checkpoint.yaml+state.yaml ledger 并 `git log` 核对 HEAD=db854aa 无任务提交；恢复会话的第一个提交即候选提交）
 
-**声明边界**
-- `task_resume.py` 的 checkpoint 消费能力已落地；但这不等于“checkpoint 恢复已实战验证”
-- 在 F1-R 五条验收全部通过前，只能声明“恢复组件可用且有自检”，不能声明“真实断点恢复已实证”
+**声明边界（2026-09-23 起生效）**
+- `task_resume.py` 的 checkpoint 消费能力已落地，且已经 RUN-20260923-001 真实断点演练实证——「单点断点恢复（≥3 块中断→新会话接续）」可宣称“真实断点恢复已实证”
+- 仍不宣称：多天 Session×Run 级联（12 Session×6h 协议上限的端到端实战，见 `docs/30` §九诚实边界）——单点演练通过不等于多天级联闭环
 
 ---
 

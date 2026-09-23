@@ -212,6 +212,37 @@ def execute_commands(commands, repo_root):
     return results, failed_any
 
 
+# ---------------------------------------------------------------------------
+# 受限条件文法（v1.8.13，DEFECT-001 修复）
+# bugfix-triage 的三条分支都用 criteria_type: expression，而 cmd_evaluate_conditional
+# 曾只实现分支级 equals 匹配——expression 条件被静默忽略，无论归因结果如何都落
+# 默认分支。现在运行期求值与作者期护栏（validate_workflow.inert_conditional）共用
+# 这一份文法子集：
+#   true                    恒真（语义上只允许 is_default 分支使用）
+#   <ident> == '<literal>'  对 state.conditions 求值的等值比较
+# 文法之外：定义期拒绝；运行期（历史冻结定义）显式 FAIL，不静默落默认分支。
+# ---------------------------------------------------------------------------
+EXPRESSION_GRAMMAR = "`true` 或 `<ident> == '<literal>'`"
+
+
+def parse_conditional_expression(text):
+    """解析受限表达式，返回 (kind, payload)。
+
+    kind: "true"（payload 为 None）| "eq"（payload 为 (ident, literal)）| None（文法之外）。
+    引擎求值（run_flow）与作者期护栏（validate_workflow.inert_conditional）共用本函数，
+    两边文法不允许漂移。
+    """
+    if not isinstance(text, str):
+        return None, None
+    stripped = text.strip()
+    if stripped == "true":
+        return "true", None
+    m = re.match(r"^([A-Za-z_][A-Za-z0-9_]*)\s*==\s*'([^']*)'$", stripped)
+    if m:
+        return "eq", (m.group(1), m.group(2))
+    return None, None
+
+
 def cmd_evaluate_conditional(run_state, blocks, label, condition_key):
     """评估 conditional 块，输出应走的分支。"""
     block = next((b for b in blocks if b.get("label") == label), None)
@@ -234,18 +265,57 @@ def cmd_evaluate_conditional(run_state, blocks, label, condition_key):
         if br.get("is_default"):
             default_branch = br
             continue
-        # 匹配条件
+        # 匹配条件形态 ①：分支级 condition_key + equals（既有形态）
         match_key = br.get("condition_key") or condition_key
         match_value = br.get("equals")
-        if match_value is not None and str(value) == str(match_value):
-            print(json.dumps({
-                "label": label,
-                "condition_key": condition_key,
-                "value": value,
-                "matched_branch": br.get("next_block_label"),
-                "match_type": "equals",
-            }, ensure_ascii=False, indent=2))
-            return 0
+        if match_value is not None:
+            if str(value) == str(match_value):
+                print(json.dumps({
+                    "label": label,
+                    "condition_key": condition_key,
+                    "value": value,
+                    "matched_branch": br.get("next_block_label"),
+                    "match_type": "equals",
+                }, ensure_ascii=False, indent=2))
+                return 0
+            continue
+        # 匹配条件形态 ②：criteria.criteria_type == expression（v1.8.13，DEFECT-001）
+        criteria = br.get("criteria")
+        if isinstance(criteria, dict) and criteria.get("criteria_type") == "expression":
+            kind, payload = parse_conditional_expression(criteria.get("expression"))
+            if kind is None:
+                print(f"FAIL: [AIW_INERT_CONDITIONAL] conditional 块 {label!r} 分支表达式"
+                      f"不在支持文法内: {criteria.get('expression')!r}"
+                      f"（支持子集：{EXPRESSION_GRAMMAR}）；拒绝求值，不静默落默认分支")
+                return 1
+            if kind == "true":
+                print(json.dumps({
+                    "label": label,
+                    "condition_key": condition_key,
+                    "value": value,
+                    "matched_branch": br.get("next_block_label"),
+                    "match_type": "expression_true",
+                }, ensure_ascii=False, indent=2))
+                return 0
+            ident, literal = payload
+            cond_value = conditions.get(ident)
+            if str(cond_value) == literal:
+                print(json.dumps({
+                    "label": label,
+                    "condition_key": condition_key,
+                    "value": value,
+                    "matched_branch": br.get("next_block_label"),
+                    "match_type": "expression",
+                    "expression": criteria.get("expression"),
+                }, ensure_ascii=False, indent=2))
+                return 0
+            continue
+        # 非默认分支既无 equals 也无可求值 criteria：运行期永远不可命中（惰性条件），
+        # 与文法外表达式同罪——显式 FAIL，不允许静默跳过。
+        print(f"FAIL: [AIW_INERT_CONDITIONAL] conditional 块 {label!r} 存在既无 equals 也无"
+              f"可求值 criteria 的非默认分支（next_block_label={br.get('next_block_label')!r}）；"
+              f"该分支运行期永远不可命中，拒绝评估")
+        return 1
 
     # 没有匹配，走默认分支
     if default_branch:

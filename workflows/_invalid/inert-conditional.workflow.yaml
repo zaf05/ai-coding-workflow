@@ -1,0 +1,37 @@
+schema_version: 1
+name: "反例：条件负载不可求值（惰性 conditional）"
+workflow_id: "inert-conditional-invalid"
+description: "必须被拒绝：expression 文法（!=）不在引擎支持子集内，运行期不可求值"
+error_code_mapping: {}
+finally_block_label: close
+blocks:
+  - label: classify
+    block_type: conditional
+    role: planner
+    goal: "按 category 归因"
+    complete_criterion: "命中唯一默认分支"
+    branch_conditions:
+      - criteria: {criteria_type: expression, expression: "category != 'engine_gap'"}
+        next_block_label: env_note
+        description: "文法之外的表达式：定义期必须拒绝，不允许运行期静默落默认"
+      - criteria: {criteria_type: expression, expression: "true"}
+        next_block_label: close
+        description: "默认兜底"
+        is_default: true
+
+  - label: env_note
+    block_type: notify
+    next_block_label: "close"
+    role: planner
+    goal: "记录复现命令与陈旧环境事实"
+    complete_criterion: "记录完成且未写生产代码"
+    evidence: ["evidence.md"]
+
+  - label: close
+    block_type: close
+    next_block_label: null
+    role: planner
+    gate: G10
+    goal: "关闭并记录归因"
+    complete_criterion: "completion_contract 逐条通过"
+    evidence: ["state.yaml"]

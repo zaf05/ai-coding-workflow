@@ -17,6 +17,10 @@ try:
 except Exception:
     from _yaml_min import loads as _load
 
+# 受限条件文法与引擎共用同一实现（定义期/运行期文法不允许漂移）；
+# 校验器 import 引擎单向依赖，与 validate_run 复用 run_flow.build_graph 同方向。
+from run_flow import parse_conditional_expression  # noqa: E402
+
 BLOCK_TYPES = {
     # 交付主链
     "intake", "recon", "spec", "decision", "approve", "plan",
@@ -48,6 +52,8 @@ GUARDRAIL_IDS = frozenset({
     "unsafe_command",      # 破坏性且不可回滚的命令
     "evidence_free_gate",  # 门禁未绑定证据
     "bad_loop_control",    # loop_control 数值非法（max_rounds=0 曾致引擎崩溃）
+    "inert_conditional",   # 条件分支负载不可求值（v1.8.13，DEFECT-001：expression
+                           # 分支被引擎静默忽略、永远落默认——定义期拒绝）
 })
 
 # 有界重试硬上限。运行期由 run_flow.py 强制 attempts 不得超过块的 max_attempts；
@@ -206,6 +212,35 @@ def main(path):
                         nb = x.get("next_block_label")
                         if nb is not None and nb not in label_set:
                             errors.add(f"{bp} ({label}): 分支 next_block_label {nb!r} 未定义")
+                        # 护栏 inert_conditional（v1.8.13，DEFECT-001）：条件负载必须是
+                        # 引擎可求值形态——分支级 condition_key+equals，或
+                        # criteria_type: expression 且文法在支持子集内（true /
+                        # <ident> == '<literal>'；true 仅限 is_default 分支）。
+                        # 动机：bugfix-triage 三条 expression 分支曾被引擎静默忽略、
+                        # 无论归因如何都落默认 implement；不可求值的条件在定义期拒绝，
+                        # 不留到运行期变成"看似有分支、实际恒走默认"的惰性条件。
+                        is_default_br = x.get("is_default") is True
+                        criteria = x.get("criteria")
+                        if x.get("equals") is not None:
+                            continue  # 分支级 equals：引擎既有可求值形态
+                        if isinstance(criteria, dict) and criteria.get("criteria_type") == "expression":
+                            kind, _payload = parse_conditional_expression(criteria.get("expression"))
+                            if kind is None:
+                                errors.add(
+                                    f"{bp} ({label}): 分支表达式 {criteria.get('expression')!r} "
+                                    f"不在引擎支持文法内（支持子集：true / <ident> == '<literal>'），"
+                                    f"运行期不可求值", "inert_conditional")
+                            elif kind == "true" and not is_default_br:
+                                errors.add(
+                                    f"{bp} ({label}): 恒真表达式 'true' 只允许用于 is_default 分支"
+                                    f"（非默认分支恒真会使后续分支与默认分支不可达）",
+                                    "inert_conditional")
+                            continue
+                        if not is_default_br:
+                            errors.add(
+                                f"{bp} ({label}): 非默认分支缺少可求值条件负载"
+                                f"（需 condition_key+equals 或 criteria_type: expression），"
+                                f"运行期永远不可命中", "inert_conditional")
 
         # next_block_label 引用
         nxt = b.get("next_block_label")

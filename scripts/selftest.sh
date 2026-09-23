@@ -1029,6 +1029,101 @@ else
   echo "FAIL 条件分支评估"; echo "$cond_out"; fail=$((fail+1))
 fi
 
+# 7a-bis. expression 条件求值（v1.8.13，DEFECT-001）：真实出厂工作流 bugfix-triage
+#        的三条 criteria_type: expression 分支曾只被 equals 逻辑匹配、全部静默落
+#        默认 implement；修复后受限文法（true / <ident> == '<literal>'）必须对
+#        state.conditions 正确求值路由。
+mkdir -p "$tmpd/run-expr"
+cat > "$tmpd/run-expr/state.yaml" <<'YAML'
+schema_version: 1
+run:
+  id: SELFTEST-EXPR
+  workflow: bugfix-triage
+  workflow_path: "../../workflows/bugfix-triage.workflow.yaml"
+  status: running
+  current_block_label: classify
+repository:
+  root: /tmp
+blocks:
+  - {label: intake, status: completed, attempts: 1}
+  - {label: recon, status: completed, attempts: 1}
+  - {label: classify, status: pending, attempts: 0}
+  - {label: env_note, status: pending, attempts: 0}
+  - {label: doc_fix, status: pending, attempts: 0}
+  - {label: implement, status: pending, attempts: 0}
+  - {label: test, status: pending, attempts: 0}
+  - {label: close, status: pending, attempts: 0}
+conditions:
+  category: operator_usage_gap
+YAML
+expr_ok=1
+expr1=$(python3 scripts/run_flow.py workflows/bugfix-triage.workflow.yaml "$tmpd/run-expr" --evaluate-conditional classify category 2>&1) || expr_ok=0
+echo "$expr1" | grep -q '"matched_branch": "doc_fix"' && echo "$expr1" | grep -q '"match_type": "expression"' || expr_ok=0
+sed -i 's/category: operator_usage_gap/category: environment_stale_state/' "$tmpd/run-expr/state.yaml"
+expr2=$(python3 scripts/run_flow.py workflows/bugfix-triage.workflow.yaml "$tmpd/run-expr" --evaluate-conditional classify category 2>&1) || expr_ok=0
+echo "$expr2" | grep -q '"matched_branch": "env_note"' || expr_ok=0
+if [ "$expr_ok" -eq 1 ]; then
+  echo "PASS expression 条件求值（operator_usage_gap→doc_fix / environment_stale_state→env_note，不再静默落默认）"; pass=$((pass+1))
+else
+  echo "FAIL expression 条件求值"; echo "$expr1"; echo "$expr2"; fail=$((fail+1))
+fi
+
+# 7a-ter. expression 文法负例：文法之外的表达式必须显式 FAIL（AIW_INERT_CONDITIONAL），
+#        不允许静默落默认分支（惰性条件 = 看似有分支、实际恒走默认）。
+cat > "$tmpd/inert-wf.yaml" <<'YAML'
+schema_version: 1
+name: "惰性条件负例"
+workflow_id: "selftest-inert-expr"
+error_code_mapping: {}
+blocks:
+  - label: classify
+    block_type: conditional
+    role: planner
+    goal: "g"
+    complete_criterion: "c"
+    branch_conditions:
+      - criteria: {criteria_type: expression, expression: "category != 'engine_gap'"}
+        next_block_label: path_b
+      - is_default: true
+        next_block_label: path_a
+  - label: path_a
+    block_type: notify
+    next_block_label: null
+    role: planner
+    goal: "g"
+    complete_criterion: "c"
+  - label: path_b
+    block_type: notify
+    next_block_label: null
+    role: planner
+    goal: "g"
+    complete_criterion: "c"
+YAML
+mkdir -p "$tmpd/run-inert"
+cat > "$tmpd/run-inert/state.yaml" <<'YAML'
+schema_version: 1
+run:
+  id: SELFTEST-INERT
+  workflow: selftest-inert-expr
+  status: running
+  current_block_label: classify
+repository:
+  root: /tmp
+blocks:
+  - {label: classify, status: pending, attempts: 0}
+  - {label: path_a, status: pending, attempts: 0}
+  - {label: path_b, status: pending, attempts: 0}
+conditions:
+  category: engine_gap
+YAML
+inert_out=$(python3 scripts/run_flow.py "$tmpd/inert-wf.yaml" "$tmpd/run-inert" --evaluate-conditional classify category 2>&1); inert_rc=$?
+if [ $inert_rc -ne 0 ] && echo "$inert_out" | grep -q "AIW_INERT_CONDITIONAL" \
+   && ! echo "$inert_out" | grep -q '"match_type"'; then
+  echo "PASS expression 文法负例拒绝（不支持的文法显式 FAIL，不静默落默认）"; pass=$((pass+1))
+else
+  echo "FAIL expression 文法负例未被拒绝或静默落了默认"; echo "rc=$inert_rc"; echo "$inert_out"; fail=$((fail+1))
+fi
+
 # 7b. 重试
 mkdir -p "$tmpd/run-retry"
 cat > "$tmpd/run-retry/state.yaml" <<'YAML'
@@ -1388,7 +1483,8 @@ for pair in \
   "unbounded_retry:unbounded-retry" \
   "secret_inline:secret-inline" \
   "unsafe_command:unsafe-command" \
-  "evidence_free_gate:evidence-free-gate" ; do
+  "evidence_free_gate:evidence-free-gate" \
+  "inert_conditional:inert-conditional" ; do
   gid=${pair%%:*}; wf=${pair##*:}
   gout=$(python3 scripts/validate_workflow.py "workflows/_invalid/$wf.workflow.yaml" 2>&1)
   grc=$?
