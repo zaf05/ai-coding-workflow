@@ -744,7 +744,7 @@ YAML
 printf '# Evidence\n\n## IMPL-001\n' > "$k_dir/run-order/evidence.md"
 python3 scripts/run_flow.py "$k_dir/wf-order.yaml" "$k_dir/run-order" >/dev/null 2>&1
 python3 scripts/run_flow.py "$k_dir/wf-order.yaml" "$k_dir/run-order" \
-  --mark-done only --head-sha 0123456789abcdef0123456789abcdef01234567 --status skipped >/dev/null 2>&1
+  --mark-done only --head-sha 0123456789abcdef0123456789abcdef01234567 --status skipped --skip-reason "参数顺序回归（v1.8.15 起补凭据）" >/dev/null 2>&1
 if python3 -c '
 import sys, yaml
 st = yaml.safe_load(open(sys.argv[1], encoding="utf-8"))
@@ -1904,7 +1904,79 @@ fi
 python3 -c 'import shutil,sys;shutil.rmtree(sys.argv[1],ignore_errors=True)' "$cc_dir"
 
 echo ""
-echo "== 15. count_sync（README/HTML 计数与实际总数机器联动，不计数只守门；必须位于全部计数断言之后） =="
+echo "== 15. 引擎 CLI 契约（v1.8.15）：未知参数显式 FAIL + skipped 写时凭据 + standalone execute-check 告警 =="
+cli_dir="$(mktemp -d "${TMPDIR:-/tmp}/aiw-cli.XXXXXX")"
+mkdir -p "$cli_dir/runs"
+cat > "$cli_dir/wf.yaml" <<'YAML'
+schema_version: 1
+name: "CLI 契约测试"
+workflow_id: selftest-cli-contract
+error_code_mapping: {}
+finally_block_label: close
+blocks:
+  - {label: intake, block_type: intake, next_block_label: "close", role: planner, goal: "g", complete_criterion: "c", evidence: ["current.md#Intake"]}
+  - {label: close, block_type: close, next_block_label: null, role: planner, goal: "g", complete_criterion: "c", evidence: ["state.yaml"]}
+YAML
+python3 scripts/run_flow.py "$cli_dir/wf.yaml" "$cli_dir/runs/RUN-19700122-998" --init >/dev/null 2>&1
+
+# 15-1 未知参数显式 FAIL（v1.8.15 前被静默吞掉——RUN-20260923-002 实测事故源）
+uf_out="$(python3 scripts/run_flow.py "$cli_dir/wf.yaml" "$cli_dir/runs/RUN-19700122-998" --definitely-not-a-flag 2>&1 || true)"
+if echo "$uf_out" | grep -q "AIW_UNKNOWN_FLAG"; then
+  echo "PASS 未知参数显式 FAIL（AIW_UNKNOWN_FLAG）"; pass=$((pass+1))
+else
+  echo "FAIL 未知参数被静默忽略"; fail=$((fail+1))
+fi
+python3 scripts/run_flow.py "$cli_dir/wf.yaml" "$cli_dir/runs/RUN-19700122-998" --definitely-not-a-flag >/dev/null 2>&1
+if [ $? -ne 0 ]; then
+  echo "PASS 未知参数非零退出"; pass=$((pass+1))
+else
+  echo "FAIL 未知参数退出码为 0"; fail=$((fail+1))
+fi
+
+# 15-2 skipped 无凭据：写时挡（此前只能在 validate_run R-1 验时暴露，需手改 state.yaml 补救）
+nsc_out="$(python3 scripts/run_flow.py "$cli_dir/wf.yaml" "$cli_dir/runs/RUN-19700122-998" --mark-done intake --status skipped 2>&1 || true)"
+if echo "$nsc_out" | grep -q "AIW_SKIP_CREDENTIAL_MISSING"; then
+  echo "PASS skipped 无凭据写时拒绝（AIW_SKIP_CREDENTIAL_MISSING）"; pass=$((pass+1))
+else
+  echo "FAIL skipped 无凭据被放行"; fail=$((fail+1))
+fi
+
+# 15-3 凭据参数误用：意图非 skipped 时先报参数错（不被证据门禁遮蔽）
+mis_out="$(python3 scripts/run_flow.py "$cli_dir/wf.yaml" "$cli_dir/runs/RUN-19700122-998" --mark-done intake --status completed --skip-reason x 2>&1 || true)"
+if echo "$mis_out" | grep -q "仅在 --status skipped 时有效"; then
+  echo "PASS skip-reason 误用于 completed 被拒且优先报参数错"; pass=$((pass+1))
+else
+  echo "FAIL skip-reason 误用未被参数校验拦截"; fail=$((fail+1))
+fi
+
+# 15-4 skipped+skip-reason：凭据落块注册表且 validate_run 直接过（替代手改 state.yaml 的旧路径）
+python3 scripts/run_flow.py "$cli_dir/wf.yaml" "$cli_dir/runs/RUN-19700122-998" --mark-done intake --status skipped --skip-reason "selftest v1.8.15 契约" >/dev/null 2>&1
+if grep -q "BRANCH_NOT_TAKEN" "$cli_dir/runs/RUN-19700122-998/state.yaml" && grep -q "skip_reason: selftest v1.8.15 契约" "$cli_dir/runs/RUN-19700122-998/state.yaml"; then
+  echo "PASS skipped 凭据（error_codes 默认 BRANCH_NOT_TAKEN + skip_reason）写入注册表"; pass=$((pass+1))
+else
+  echo "FAIL skipped 凭据未写入注册表"; fail=$((fail+1))
+fi
+if python3 scripts/validate_run.py "$cli_dir/runs/RUN-19700122-998" 2>&1 | grep -q "^PASS"; then
+  echo "PASS 带凭据 skipped 直接通过 validate_run（无需手改）"; pass=$((pass+1))
+else
+  echo "FAIL 带凭据 skipped 未通过 validate_run"; fail=$((fail+1))
+fi
+
+# 15-5 standalone --execute-check：执行并报告但不落状态，必须可见告警（RUN-20260923-003 实测陷阱）
+warn_out="$(python3 scripts/run_flow.py "$cli_dir/wf.yaml" "$cli_dir/runs/RUN-19700122-998" --execute-check 2>&1 >/dev/null || true)"
+if echo "$warn_out" | grep -q "WARN: standalone --execute-check"; then
+  echo "PASS standalone --execute-check 告警可见（不改变块状态）"; pass=$((pass+1))
+else
+  echo "FAIL standalone --execute-check 无告警"; fail=$((fail+1))
+fi
+if grep -A1 "^- label: close" "$cli_dir/runs/RUN-19700122-998/state.yaml" | grep -q "status: pending"; then
+  echo "PASS standalone 执行后块状态不变（close 仍 pending）"; pass=$((pass+1))
+else
+  echo "FAIL standalone 执行意外改变块状态"; fail=$((fail+1))
+fi
+python3 -c 'import shutil,sys;shutil.rmtree(sys.argv[1],ignore_errors=True)' "$cli_dir"
+
+echo "== 16. count_sync（README/HTML 计数与实际总数机器联动，不计数只守门；必须位于全部计数断言之后） =="
 total=$((pass+fail+site_offline))
 cs_fail=0
 if grep -q "在线全跑 ${total}/${total}" README.md && grep -q "${total}/${total}" aiworflow-full-flow.html; then

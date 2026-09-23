@@ -31,6 +31,8 @@
                         块集合与角色与新定义完全一致时，把冻结 SHA 迁移到当前定义并
                         记 ledger；结构变更（增删块/改角色）仍拒绝，需新建 run
   --mark-done <block_label> [--status completed|failed|skipped] [--head-sha <sha>]
+                        [--skip-reason <text>] [--error-codes <A,B>]
+                        （skipped 必须携带跳过凭据，写时挡而非验时挡，v1.8.15）
                         将指定块标记为完成/失败/跳过（Planner 用）。completed 必须通过
                         证据锚点门禁；implement 块还必须绑定候选提交 --head-sha
   --advance             自动推进所有可确定性推进的块（check/script 自动执行，
@@ -569,10 +571,23 @@ def verify_block_evidence(block_def, run_dir):
     return problems
 
 
-def cmd_mark_status(run_state_path, run_state, blocks, label, new_status, run_dir, head_sha=None):
-    """将指定块标记为指定状态（completed 必须过证据门禁与 implement head_sha 门禁）。"""
+def cmd_mark_status(run_state_path, run_state, blocks, label, new_status, run_dir, head_sha=None,
+                    skip_reason=None, error_codes=None):
+    """将指定块标记为指定状态（completed 必须过证据门禁与 implement head_sha 门禁）。
+
+    v1.8.15：skipped 必须携带跳过凭据（--skip-reason 和/或 --error-codes），
+    与 validate_run R-1 同语义但写时挡——RUN-20260923-002 实测无凭据 skipped
+    只能事后手改 state.yaml 补救，账本一旦被下游引用就无法干净回填。
+    """
     if new_status not in VALID_BLOCK_STATUS:
         print(f"FAIL: 非法状态 {new_status!r}，合法值: {sorted(VALID_BLOCK_STATUS)}")
+        return 1
+
+    # v1.8.15：跳过凭据参数与意图状态先做一致性校验——先于任何块查找/门禁/写入，
+    # 保证「参数用错」永远报参数错，不会被证据门禁抢先遮蔽。
+    if ((skip_reason or "").strip() or (error_codes or "").strip()) and new_status != "skipped":
+        print(f"FAIL: --skip-reason/--error-codes 仅在 --status skipped 时有效"
+              f"（当前意图 --status {new_status!r}），本命令未写入任何内容")
         return 1
 
     block_st = find_block_state(run_state, label)
@@ -609,6 +624,22 @@ def cmd_mark_status(run_state_path, run_state, blocks, label, new_status, run_di
                 block_st["head_sha"] = str(head_sha).strip()
 
     old_status = block_st.get("status", "pending")
+
+    if new_status == "skipped":
+        codes = [c.strip() for c in (error_codes or "").split(",") if c.strip()]
+        reason = (skip_reason or "").strip()
+        if not codes and not reason:
+            print(f"FAIL: [AIW_SKIP_CREDENTIAL_MISSING] 块 {label!r} skipped 必须携带跳过凭据："
+                  f"--skip-reason <text> 和/或 --error-codes <A,B>（validate_run R-1 同语义，"
+                  f"本命令未写入任何内容）")
+            return 1
+        # 只给 reason 未给 codes 时默认 BRANCH_NOT_TAKEN（分支未走到的标准凭据）；
+        # 显式 codes 优先，便于表达 ENV_BLOCKED / BUSINESS_CLOSED_ELSEWHERE 等。
+        if not codes:
+            codes = ["BRANCH_NOT_TAKEN"]
+        block_st["skip_reason"] = reason
+        block_st["error_codes"] = codes
+
     block_st["status"] = new_status
     # attempts = 完成尝试次数，只在终态类迁移时 +1；
     # --mark-running 是开始而非一次尝试，避免 running+done 双计数。
@@ -962,11 +993,14 @@ def main(argv):
     mark_done = None
     mark_done_status = "completed"
     mark_done_head_sha = None
+    mark_done_skip_reason = None
+    mark_done_error_codes = None
     refreeze_reason = None
     do_init = False
     advance = False
 
     i = 0
+    unknown_flags = []
     while i < len(rest):
         arg = rest[i]
         if arg == "--append-ledger" and i + 1 < len(rest):
@@ -987,14 +1021,18 @@ def main(argv):
         elif arg == "--mark-done" and i + 1 < len(rest):
             mark_done = rest[i + 1]
             i += 2
-            # --status / --head-sha 可任意顺序跟在块名后（v1.8.12 修复：
-            # 原顺序解析会静默丢弃先出现的 --head-sha 之后的 --status，
-            # 导致意图 skipped 却被标 completed）。
-            while i + 1 < len(rest) and rest[i] in ("--status", "--head-sha"):
+            # --status / --head-sha / --skip-reason / --error-codes 可任意顺序跟在
+            # 块名后（v1.8.12 修复：原顺序解析会静默丢弃先出现的 --head-sha 之后的
+            # --status，导致意图 skipped 却被标 completed；v1.8.15 增补跳过凭据参数）。
+            while i + 1 < len(rest) and rest[i] in ("--status", "--head-sha", "--skip-reason", "--error-codes"):
                 if rest[i] == "--status":
                     mark_done_status = rest[i + 1]
-                else:
+                elif rest[i] == "--head-sha":
                     mark_done_head_sha = rest[i + 1]
+                elif rest[i] == "--skip-reason":
+                    mark_done_skip_reason = rest[i + 1]
+                else:
+                    mark_done_error_codes = rest[i + 1]
                 i += 2
         elif arg == "--init":
             do_init = True
@@ -1005,8 +1043,20 @@ def main(argv):
         elif arg == "--advance":
             advance = True
             i += 1
-        else:
+        elif arg == "--execute-check":
             i += 1
+        else:
+            # v1.8.15：未知参数显式 FAIL，不再静默忽略——RUN-20260923-002 实测
+            # --error-codes 被吞导致 skipped 凭据丢失、只能手改 state.yaml 补救。
+            unknown_flags.append(arg)
+            i += 1
+
+    if unknown_flags:
+        print(f"FAIL: [AIW_UNKNOWN_FLAG] 未知参数: {unknown_flags}——本命令未执行任何状态变更。"
+              f"合法参数见文件头 usage（--mark-done/--status/--head-sha/--skip-reason/"
+              f"--error-codes/--advance/--execute-check/--init/--retry/--mark-running/"
+              f"--append-ledger/--session-meta/--evaluate-conditional/--refreeze-workflow）")
+        return 2
 
     if not wf_path.exists():
         print(f"FAIL: 工作流不存在: {wf_path}")
@@ -1099,7 +1149,8 @@ def main(argv):
 
     if mark_done:
         return cmd_mark_status(run_state_path, run_state, blocks, mark_done, mark_done_status,
-                                run_dir, mark_done_head_sha)
+                                run_dir, mark_done_head_sha,
+                                mark_done_skip_reason, mark_done_error_codes)
 
     if advance:
         cycles = find_cycles(succ, labels, conditional_labels)
@@ -1173,6 +1224,14 @@ def main(argv):
         report["frontier"].append(action)
 
     # 默认路径：根据 frontier 动作计算 loop_control
+    if execute:
+        # v1.8.15：standalone --execute-check 只执行并报告，不落块状态——
+        # RUN-20260923-003 实测此处无提示导致 check 块滞留 pending、下游被误标，
+        # 直到 validate_run R-1 才暴露。check/script 块唯一完成路径是
+        # --advance --execute-check。
+        print("WARN: standalone --execute-check 只执行并报告 frontier 检查命令，不改变任何块状态；"
+              "check/script 块的唯一完成路径是 --advance --execute-check（v1.8.15）",
+              file=sys.stderr)
     if not ready:
         lc = "DONE"
     elif any(a.get("action") == "STAR" for a in report["frontier"]):

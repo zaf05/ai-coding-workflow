@@ -4,8 +4,9 @@
 
 ## 架构概要
 
-- 当前版本：v1.8.14。
+- 当前版本：v1.8.15。
 - v1.8.14 并发写保护（RUN-20260923-002，bugfix-triage）：state.yaml 全部 9 处写点收口 `load_run_state()`/`save_run_state()`——加载记字节指纹（运行时键不落盘）、保存前重读比对、冲突 `AIW_STATE_CONFLICT` 拒绝且不覆盖、temp+原子替换、同命令多次保存自动刷新指纹；同包修 R-1（advance 缺 task.yaml WARN）与 R-2（--init 相对 workflow_path）。count_sync 从 §14 移至 §15（必须位于全部计数断言之后——此前 Codex 放非末尾，新增节会让它在计数完成前校验而误报漂移）。selftest 95→99。
+- v1.8.15 引擎 CLI 契约收口（RUN-20260923-004，bugfix-triage）：未知参数 `[AIW_UNKNOWN_FLAG]` 显式 FAIL（退出 2 零变更）；`--mark-done --status skipped` 写时凭据 `--skip-reason`/`--error-codes`（缺凭据 `AIW_SKIP_CREDENTIAL_MISSING`，reason 默认 `BRANCH_NOT_TAKEN`，误用先报参数错不被证据门禁遮蔽）；standalone `--execute-check` 必 WARN（check/script 块唯一完成路径 `--advance --execute-check`）。selftest 99→107（§15 CLI 契约 8 断言），count_sync 移 §16。
 - v1.8.13 真实断点恢复实证 + 条件求值修复：RUN-20260923-001（bugfix-triage）在 intake/recon/classify 完成后故意中断（ledger INTERRUPT + 五件套写全），全新零共享上下文恢复会话经 `task_resume.py` 接续 implement→test→close，F1-R 五条验收 C1..C5 全 PASS——L3 从"组件级机器断言"升级为"真实断点恢复已实证"（docs/29；多天 Session×Run 级联仍协议层）。同包修复 DEFECT-001：`--evaluate-conditional` 此前只实现 `equals`、expression 分支被静默忽略恒落 default；现为受限文法求值（`true` / `ident == 'literal'`，文法外 `AIW_INERT_CONDITIONAL` 显式 FAIL）+ 编写期护栏 `inert_conditional`（引擎与校验器共用 `parse_conditional_expression`，零文法漂移）。
 - v1.8.12 引擎完整性加固（Codex）：workflow SHA 首触冻结 + `AIW_WORKFLOW_DRIFT` 拦截、mark-done 证据锚点门、implement 块强制 `--head-sha`、check/script 块禁止手工完成、全块终态自动收口（finally 被跳过时拒绝）、`--refreeze-workflow` 受控迁移；selftest 70→88。
 - v1.8.11 参考收编：微信《Loop engineering》（淘天·苏雄）对照批入附录 124→130（`docs/35`）；五组件印证既有设计，automations 心跳层登记 `docs/13` 未实现表（触发条件绑定，不预写代码）。
@@ -50,3 +51,4 @@ python3 scripts/check_all.py
 - RUN-20260921-001：v1.8.10 依据——真实 G3 人工门评审 run 的事故与处方（fan-out 错域重试、skip 凭据、test-plan N/A、亲签出处落位）。
 - RUN-20260923-001：v1.8.13 依据——L3 断点演练五条取证（C1..C5）、DEFECT-001 复现/修复/护栏反例全链证据；候选 b84a7b4。
 - RUN-20260923-002：v1.8.14 依据——P1 并发写保护九写点收口 + R-1/R-2 复核发现修复；容器由修复后 --init 创建。
+- RUN-20260923-004：v1.8.15 依据——引擎 CLI 契约收口（docs/13 两项登记缺口的修复载体）；env_note/doc_fix 分支用新参数 --skip-reason 原生跳过（dogfood）。

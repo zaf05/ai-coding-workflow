@@ -344,3 +344,15 @@ python3 scripts/metrics_summary.py --runs runs/ --output metrics-report.yaml
   - **F-02** PROTECTED_PATHS 对 `.ai_worflow` 仅符号性生效（本目录非 git 仓库，其 runs/ 不会出现在被审 diff）→ 判定为设计边界而非缺陷，已作为纵深防御说明落 `docs/30` §十二（拦截对象是主仓 diff 中同名路径）。
   - **F-03** secret 告警回显命中串前 8 字符（含密钥材料，告警本身泄密）→ 改为仅回显规则类别（sk-key / bearer-token / key-assignment），selftest §7d-quatro 增加「密钥材料不回显」断言。
   - **F-04** v1.8.7 实施期存在未申报的措辞统一（「0 外部依赖」→「不新增外部依赖（当前运行环境已有 PyYAML）」，波及 docs/29/31/33、scripts/README 表述）→ 变更本身正确（docs/21 引用的外部原文 untouched），属流程申报缺失，本节补记声明。
+
+## F7 · 引擎 CLI 契约收口（2026-09-23 已落地 v1.8.15，RUN-20260923-004）
+
+来源：docs/13 两项登记缺口（RUN-20260923-002 实测 skipped 无凭据参数 + 未知 flag 静默忽略；
+RUN-20260923-003 实测 standalone `--execute-check` 不落状态无告警）。
+
+- [x] 未知参数 `[AIW_UNKNOWN_FLAG]` 显式 FAIL（退出码 2，不做任何状态变更）
+- [x] `--status skipped` 写时凭据 `--skip-reason <text>` / `--error-codes <A,B>`（缺凭据
+      `AIW_SKIP_CREDENTIAL_MISSING`；只给 reason 默认 `BRANCH_NOT_TAKEN`；误用于非 skipped
+      意图先报参数错，不被证据门禁遮蔽）
+- [x] standalone `--execute-check` 必 WARN（check/script 块唯一完成路径 `--advance --execute-check`）
+- [x] selftest 99→107（§15 八断言全为「护栏证明会开火」负例/正例；count_sync 移 §16）

@@ -21,6 +21,7 @@
 | 候选 DAG 全链路文档 | `docs/18-dag-pipeline.md`：意图层 → 编译层 → 冻结层 → 执行层完整说明 |
 | 包版本管理与版本锁定（v1.2.0 起，当前 v1.6.0） | `VERSION`（semver 单一事实源）+ 独立 Git 仓库 tag `v1.4.1`（132 文件，`references/` 不入库）；`install_skills.py` 写安装收据 `aiworflow-install-receipt.json`（来源版本/整包指纹/逐文件 SHA256），`--check` 检出目标漂移，`--upgrade` 备份→替换→失败回滚且不触碰收据未登记文件，**存在冲突即拒绝部分安装（零落地、零收据、非 0 退出）**；`selftest.sh` §8 九项断言（含认领已装好但无收据的环境、外来目标拒绝部分安装）+ §9 八项护栏断言，全量 48/48 通过 |
 | `runs/` 容器一致性护栏（v1.4.1） | `validate_package.py` 第 10 步：每个 `runs/<ID>` 要么通过 `validate_run.py`，要么在 `runs/README.md` 显式登记为占位；第三种状态（半清理的 run 恒定 FAIL）被拒。理由：恒定 FAIL 会让人和 Agent 习惯性忽略 FAIL，护栏一旦被当噪音就等于没有。`selftest.sh` §3b 用临时负例目录证明它真的会开火，用完即清理 |
+| 引擎 CLI 契约（v1.8.15）：未知参数显式 FAIL + skipped 写时凭据 + standalone execute-check 告警 | `scripts/run_flow.py`：`[AIW_UNKNOWN_FLAG]`（退出 2 零变更）；`--skip-reason`/`--error-codes` 写时凭据（`AIW_SKIP_CREDENTIAL_MISSING`，reason 默认 `BRANCH_NOT_TAKEN`，误用先报参数错）；standalone `--execute-check` 必 WARN；selftest §15 八断言 + 3k-3 回归测试随契约更新（载体 RUN-20260923-004） |
 | 运行期闸门（pre-commit，v1.4.0） | `scripts/hooks/pre-commit` + `scripts/install_hooks.py`（`--dry-run/--apply/--check/--uninstall`，原子替换、外来 hook 先备份、按标记+SHA 双确认才卸载）；`selftest.sh` §10 七项断言（本体合法、dry-run 不写盘、未装不得谎报、装后 check 通过且幂等、篡改一字节即报漂移、外来 hook 备份/恢复、本副本闸门在位）。端到端实测：干净改动放行；`gate` 缺 `evidence` / `commands` 含 `rm -rf` 的提交被拒且 HEAD 不前进，终端直接给出 `[evidence_free_gate]`、`[unsafe_command]` 与修复建议；补 evidence 后同一提交放行 |
 
 ## 未实现（不要用现在时态描述它们）
@@ -38,8 +39,6 @@
 | **CI 侧再挂一次 `selftest.sh`** | pre-commit 闸门已于 v1.4.0 落地（`install_hooks.py`），但 `git commit --no-verify` 可绕过任何本地 hook，且换机器/新克隆时闸门需重新 `--apply` 才生效 | 在 CI job 里跑 `bash scripts/selftest.sh` + `python3 scripts/install_hooks.py --check`，失败即阻断合并；这样「绕过本地 hook」不再等于「绕过检查」 |
 | **evals / 场景用例库** | 参考工程有 `evals/*.md` 场景用例，我这里还没有 | 每次真实 run 后补一条"可观察决策"用例，不比对精确措辞 |
 | **触发/心跳层（automations，2026-09-21 登记，docs/35 §三）** | 循环本体（`run_flow --advance`）与循环驱动（谁唤醒下一轮）目前是同一宿主会话；无定时/宿主调度触发 `task_resume` 链路的无人值守路径 | 触发条件（二者齐备才动）：①出现首个「无人值守自动跟进」真实需求（如夜间 `check_all` 后自动处置停滞 run）；②宿主原生调度可用（Codex automations / Claude Code 定时任务）。形态先做唤醒 prompt 模板（前馈约束+反馈传感器+先读状态，docs/35 §四①），**不做守护进程**——守住 instruction-only 与 0 新增依赖边界 |
-| **standalone `--execute-check` 执行命令但不落块状态（2026-09-23 登记，RUN-20260923-003 实测）** | check 块命令照跑、结果照报，但块保持 pending 且无 WARN；后续块被误标 completed 后 validate_run R-1 才暴露，只能靠 `--advance --execute-check` 补救 | 给 standalone `--execute-check` 加「本命令不改变块状态」WARN，或直接拒绝非 current 块执行；文档写明 check 块唯一完成路径是 `--advance --execute-check` |
-| **`--mark-done --status skipped` 无 CLI 跳过凭据参数（2026-09-23 登记，RUN-20260923-002 实测）** | 引擎不接受 `--error-codes`/`--skip-reason`，未知 flag 被静默忽略——skipped 块只能靠 Planner 事后手改 state.yaml 补凭据，否则 `validate_run` R-1 FAIL（本 run 实测踩中） | 下次触碰 run_flow.py 时补 `--skip-reason <text>`（自动记 `BRANCH_NOT_TAKEN` 或显式 error_codes），并对未知 flag 改为显式 FAIL 而非静默忽略；过渡期 Planner 按 RUN-20260923-002 先例手补凭据 |
 
 ## 演进顺序（建议）
 
