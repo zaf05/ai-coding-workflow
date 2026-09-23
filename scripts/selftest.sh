@@ -786,6 +786,43 @@ if python3 scripts/run_flow.py "$lc_dir/wf.yaml" "$lc_dir/run" --advance 2>&1 | 
 else
   echo "FAIL 引擎 0 轮输入仍崩溃"; fail=$((fail+1))
 fi
+
+# 3k-5 终态收口护栏：finally 被 skipped 时引擎不得代写 completed
+#     （R-2 要求 finally 必须 completed；引擎曾写出自己的校验器都拒绝的状态）
+sf_dir="$(mktemp -d "${TMPDIR:-/tmp}/aiw-skip-finally.XXXXXX")"
+mkdir -p "$sf_dir/run"
+cat > "$sf_dir/wf.yaml" <<'YAML'
+schema_version: 1
+name: "skip finally"
+workflow_id: selftest-skip-finally
+error_code_mapping: {}
+finally_block_label: close
+blocks:
+  - {label: only, block_type: intake, next_block_label: close, role: planner, goal: "g", complete_criterion: "c", evidence: ["evidence.md#A1"]}
+  - {label: close, block_type: close, next_block_label: null, role: planner, goal: "g", complete_criterion: "c", evidence: ["evidence.md#A1"]}
+YAML
+cat > "$sf_dir/run/state.yaml" <<'YAML'
+schema_version: 1
+run: {id: RUN-19700121-999, workflow: selftest-skip-finally, status: running, current_block_label: null, finally_block_label: close}
+repository: {root: /tmp}
+blocks:
+  - {label: only, status: completed, role: planner, gate: null, base_sha: null, head_sha: null, tested_sha: null, attempts: 1, error_codes: []}
+  - {label: close, status: skipped, role: planner, gate: null, base_sha: null, head_sha: null, tested_sha: null, attempts: 1, error_codes: [NOT_APPLICABLE]}
+YAML
+printf '## A1\n' > "$sf_dir/run/evidence.md"
+python3 scripts/run_flow.py "$sf_dir/wf.yaml" "$sf_dir/run" >/dev/null 2>&1
+python3 scripts/run_flow.py "$sf_dir/wf.yaml" "$sf_dir/run" --advance >/dev/null 2>&1
+if python3 -c '
+import sys, yaml
+st = yaml.safe_load(open(sys.argv[1], encoding="utf-8"))
+assert st["run"]["status"] == "running", st["run"]
+' "$sf_dir/run/state.yaml" 2>/dev/null; then
+  echo "PASS finally=skipped 不代收口（引擎不产出 R-2 必拒状态）"; pass=$((pass+1))
+else
+  echo "FAIL finally=skipped 仍被代写成 completed"; fail=$((fail+1))
+fi
+python3 -c 'import shutil,sys;shutil.rmtree(sys.argv[1],ignore_errors=True)' "$sf_dir"
+
 python3 -c 'import shutil,sys;shutil.rmtree(sys.argv[1],ignore_errors=True)' "$lc_dir"
 
 python3 -c 'import shutil,sys;shutil.rmtree(sys.argv[1],ignore_errors=True)' "$k_dir"

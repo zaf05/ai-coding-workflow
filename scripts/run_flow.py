@@ -756,8 +756,13 @@ def cmd_advance(wf, run_state, run_state_path, blocks, succ, pred, labels, condi
         # （frontier 空但存在 failed/pending）不代写终态，交 Planner 归因。
         if not remaining:
             fin = wf.get("finally_block_label")
+            fin_status = status.get(fin) if fin else None
             run_cfg = run_state.get("run")
-            if isinstance(run_cfg, dict) and run_cfg.get("status") not in RUN_TERMINAL:
+            # finally 被 skipped 时不代写终态：R-2 要求 finally 必须 completed，
+            # 引擎不得产出一个自己的校验器都会拒绝的状态（交 Planner 归因/补做）。
+            if (isinstance(run_cfg, dict)
+                    and run_cfg.get("status") not in RUN_TERMINAL
+                    and (fin is None or fin_status == "completed")):
                 run_cfg["status"] = "completed"
                 if fin:
                     run_cfg["current_block_label"] = fin
