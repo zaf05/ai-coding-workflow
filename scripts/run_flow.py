@@ -641,9 +641,12 @@ def cmd_advance(wf, run_state, run_state_path, blocks, succ, pred, labels, condi
     loop_cfg = wf.get("loop_control") or {}
     configured_max = loop_cfg.get("max_rounds")
     if configured_max is not None:
-        max_rounds = min(int(configured_max), 200)
+        # 运行期防御：编写时校验器拒绝 <1，这里再钳到 >=1，
+        # 未经验证的输入也不允许 0 轮 CONTINUE 假信号。
+        max_rounds = max(1, min(int(configured_max), 200))
     else:
         max_rounds = len(labels) + 5  # 安全上限
+    round_num = -1  # max_rounds 可能为 0（循环体不执行），total_rounds 报 0 而非崩溃
     for round_num in range(max_rounds):
         status = load_statuses(run_state, labels)
         ready = compute_frontier(succ, pred, labels, status)
@@ -804,11 +807,14 @@ def main(argv):
         elif arg == "--mark-done" and i + 1 < len(rest):
             mark_done = rest[i + 1]
             i += 2
-            if i < len(rest) and rest[i] == "--status" and i + 1 < len(rest):
-                mark_done_status = rest[i + 1]
-                i += 2
-            if i < len(rest) and rest[i] == "--head-sha" and i + 1 < len(rest):
-                mark_done_head_sha = rest[i + 1]
+            # --status / --head-sha 可任意顺序跟在块名后（v1.8.12 修复：
+            # 原顺序解析会静默丢弃先出现的 --head-sha 之后的 --status，
+            # 导致意图 skipped 却被标 completed）。
+            while i + 1 < len(rest) and rest[i] in ("--status", "--head-sha"):
+                if rest[i] == "--status":
+                    mark_done_status = rest[i + 1]
+                else:
+                    mark_done_head_sha = rest[i + 1]
                 i += 2
         elif arg == "--refreeze-workflow" and i + 1 < len(rest):
             refreeze_reason = rest[i + 1]

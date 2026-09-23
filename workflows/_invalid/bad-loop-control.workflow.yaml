@@ -1,0 +1,15 @@
+schema_version: 1
+name: "反例：loop_control 非法数值"
+workflow_id: invalid-bad-loop-control
+error_code_mapping: {}
+loop_control:
+  max_rounds: 0
+  checkpoint_interval: -1
+blocks:
+  - label: only
+    block_type: intake
+    next_block_label: null
+    role: planner
+    goal: "g"
+    complete_criterion: "c"
+    evidence: ["current.md#Intake"]

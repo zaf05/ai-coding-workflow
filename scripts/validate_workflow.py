@@ -47,6 +47,7 @@ GUARDRAIL_IDS = frozenset({
     "secret_inline",       # 凭据内联进可提交定义
     "unsafe_command",      # 破坏性且不可回滚的命令
     "evidence_free_gate",  # 门禁未绑定证据
+    "bad_loop_control",    # loop_control 数值非法（max_rounds=0 曾致引擎崩溃）
 })
 
 # 有界重试硬上限。运行期由 run_flow.py 强制 attempts 不得超过块的 max_attempts；
@@ -121,6 +122,20 @@ def main(path):
     mapping = data.get("error_code_mapping", {})
     if not isinstance(mapping, dict):
         errors.add("error_code_mapping 必须是 map")
+
+    # loop_control 护栏（v1.8.12）：max_rounds=0 曾让 run_flow --advance
+    # 以 UnboundLocalError 崩溃且编写时无任何拦截（§3k-4 回归）。
+    loop_cfg = data.get("loop_control", {})
+    if not isinstance(loop_cfg, dict):
+        errors.add("loop_control 必须是 map", "bad_loop_control")
+    else:
+        mr = loop_cfg.get("max_rounds")
+        if mr is not None and (not isinstance(mr, int) or isinstance(mr, bool)
+                               or not (1 <= mr <= 200)):
+            errors.add(f"loop_control.max_rounds 非法: {mr!r}（必须 1..200 整数）", "bad_loop_control")
+        ci = loop_cfg.get("checkpoint_interval")
+        if ci is not None and (not isinstance(ci, int) or isinstance(ci, bool) or ci < 0):
+            errors.add(f"loop_control.checkpoint_interval 非法: {ci!r}（必须 >=0 整数）", "bad_loop_control")
 
     try:
         all_blocks = collect_blocks(blocks_raw)

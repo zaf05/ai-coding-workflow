@@ -718,6 +718,76 @@ else
   echo "FAIL attempts 双计数或状态异常"; fail=$((fail+1))
 fi
 
+# 3k-3 参数顺序回归：--head-sha 在前 --status 在后不得被静默丢弃
+mkdir -p "$k_dir/run-order"
+cat > "$k_dir/wf-order.yaml" <<'YAML'
+schema_version: 1
+name: "参数顺序"
+workflow_id: selftest-flag-order
+error_code_mapping: {}
+blocks:
+  - {label: only, block_type: intake, next_block_label: null, role: planner, goal: "g", complete_criterion: "c", evidence: ["evidence.md#IMPL-001"]}
+YAML
+cat > "$k_dir/run-order/state.yaml" <<'YAML'
+schema_version: 1
+run:
+  id: RUN-19700116-999
+  workflow: selftest-flag-order
+  status: running
+  current_block_label: null
+  finally_block_label: null
+repository:
+  root: /tmp
+blocks:
+  - {label: only, status: pending, role: planner, gate: null, base_sha: null, head_sha: null, tested_sha: null, attempts: 0, error_codes: []}
+YAML
+printf '# Evidence\n\n## IMPL-001\n' > "$k_dir/run-order/evidence.md"
+python3 scripts/run_flow.py "$k_dir/wf-order.yaml" "$k_dir/run-order" >/dev/null 2>&1
+python3 scripts/run_flow.py "$k_dir/wf-order.yaml" "$k_dir/run-order" \
+  --mark-done only --head-sha 0123456789abcdef0123456789abcdef01234567 --status skipped >/dev/null 2>&1
+if python3 -c '
+import sys, yaml
+st = yaml.safe_load(open(sys.argv[1], encoding="utf-8"))
+b = next(b for b in st["blocks"] if b["label"] == "only")
+assert b["status"] == "skipped", f"意图 skipped 却被标 {b[chr(34)+chr(115)+chr(116)+chr(97)+chr(116)+chr(117)+chr(115)+chr(34)]}"
+' "$k_dir/run-order/state.yaml" 2>/dev/null; then
+  echo "PASS mark-done 参数顺序无关（--head-sha 在前不丢 --status）"; pass=$((pass+1))
+else
+  echo "FAIL mark-done 参数顺序仍然敏感"; fail=$((fail+1))
+fi
+
+# 3k-4 loop_control 数值双层拦截：编写时拒绝 + 引擎 0 轮不崩溃不假信号
+if ! python3 scripts/validate_workflow.py workflows/_invalid/bad-loop-control.workflow.yaml >/tmp/aiw-lc.out 2>&1 \
+   && grep -q "bad_loop_control" /tmp/aiw-lc.out; then
+  echo "PASS loop_control 编写时拦截（max_rounds=0 / interval=-1 被拒且护栏 ID 可读）"; pass=$((pass+1))
+else
+  echo "FAIL loop_control 非法数值未被编写时拦截"; cat /tmp/aiw-lc.out; fail=$((fail+1))
+fi
+lc_dir="$(mktemp -d "${TMPDIR:-/tmp}/aiw-loop-zero.XXXXXX")"
+cat > "$lc_dir/wf.yaml" <<'YAML'
+schema_version: 1
+name: "zero rounds"
+workflow_id: selftest-zero-rounds
+error_code_mapping: {}
+loop_control: {max_rounds: 0, checkpoint_interval: 0}
+blocks:
+  - {label: only, block_type: intake, next_block_label: null, role: planner, goal: "g", complete_criterion: "c"}
+YAML
+mkdir -p "$lc_dir/run"
+cat > "$lc_dir/run/state.yaml" <<'YAML'
+schema_version: 1
+run: {id: RUN-19700117-999, workflow: selftest-zero-rounds, status: running}
+repository: {root: /tmp}
+blocks:
+  - {label: only, status: pending, role: planner, gate: null, base_sha: null, head_sha: null, tested_sha: null, attempts: 0, error_codes: []}
+YAML
+if python3 scripts/run_flow.py "$lc_dir/wf.yaml" "$lc_dir/run" --advance 2>&1 | grep -q '"total_rounds"'; then
+  echo "PASS 引擎 0 轮输入不崩溃（运行期钳制 >=1，total_rounds 可报告）"; pass=$((pass+1))
+else
+  echo "FAIL 引擎 0 轮输入仍崩溃"; fail=$((fail+1))
+fi
+python3 -c 'import shutil,sys;shutil.rmtree(sys.argv[1],ignore_errors=True)' "$lc_dir"
+
 python3 -c 'import shutil,sys;shutil.rmtree(sys.argv[1],ignore_errors=True)' "$k_dir"
 
 echo "== 4. 安装器本机锁定（本机收据属于本副本时应 PASS，否则 SKIP） =="
