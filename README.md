@@ -316,7 +316,7 @@ AIWorflow 是一套**纯文件驱动的 AI 研发控制层**。它不提供浏�
 | 总代码行（脚本） | 5,603 行 Python + Shell（wc -l 实测 2026-09-23） |
 | 总文档行 | 6,168 行 Markdown（docs 5,440 + 根 README 728，wc -l 实测 2026-09-23） |
 | 外部依赖 | 0 新增（Python 3 + bash + 当前环境已有 PyYAML；不引入数据库/消息队列/npm 依赖） |
-| 宿主加载 | Codex 与 Claude Code 双宿主已实测加载（2026-09-20 只读探针：Codex exec 会话与 Claude Code `-p` 嵌套会话各自发现/注册并实读 skill；两宿主收据 1.8.12 指纹一致，2026-09-23 升级后复核） |
+| 宿主加载 | Codex 与 Claude Code 双宿主已实测加载（2026-09-20 只读探针：Codex exec 会话与 Claude Code `-p` 嵌套会话各自发现/注册并实读 skill；两宿主收据 1.8.12 指纹一致；2026-09-23 v1.8.12 升级后复核，并实测 Claude Code 嵌套会话 `claude -p` 真实列出全部 5 个 aiworflow* skill、Codex 会话内 5 个 skill 可读） |
 
 ### 三层防护体系
 
