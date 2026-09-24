@@ -28,7 +28,9 @@ description: 把一次"让 AI 干活"的请求路由到正确的 AIWorflow 工�
 runs/<RUN-ID>/    RUN-ID = RUN-YYYYMMDD-NNN（当天序号，不重复）
 ```
 
-从 `../_shared/templates/` 复制 `run-state.yaml` → `state.yaml`，按需创建 `current.md` / `test-plan.md` / `evidence.md`。**按进度创建，不预建空文件**。规则见 `../../docs/05-state-and-evidence.md`。
+从 `../_shared/templates/` 复制 `run-state.yaml` → `state.yaml`（或用引擎 `--init` 创建即校验冻结），按需创建 `current.md` / `test-plan.md` / `evidence.md`。**按进度创建，不预建空文件**。规则见 `../../docs/05-state-and-evidence.md`。
+
+> **跨工程**：本工作流全局一份、服务任意工程。其他工程开任务三步走：`--init` 建 run → `state.yaml` 的 `repository.root` 填目标工程绝对路径 → 正常推进。摩擦点与证据归属约定见 `../../docs/10-wango-adapter.md` §跨工程使用。
 
 在 WanGoPlatform 内工作时先读 `../../docs/10-wango-adapter.md`：`.ai_worflow/` 被仓库忽略，仓库工作包证据必须写入交付报告与 `docs/plan/`。
 

@@ -37,7 +37,7 @@ runs/<RUN-ID>/
 - `.ai_worflow` **是独立 Git 仓库**（历史：v1.8.2 自建 → v1.8.3 撤销 → **2026-09-20 21:02 重新自建**，init import 提交 `d551273`，分支 `main`，remote `git@github.com:zaf05/ai-coding-workflow.git`；2026-09-21 用户确认保留并适配）。
 - 主仓 `.git/info/exclude` 仍排除 `/.ai_worflow/`，本目录内容不进入父仓库历史；pre-commit hook v3 **双布局在位**：主仓 `.git/hooks/` 与本仓 `.git/hooks/` 各一份（本仓一份为 2026-09-21 `install_hooks.py --apply` 装入，布局 B 生效，`--check` PASS）。
 - `runs/` 因此升级为版本化过程索引；在 WanGoPlatform 内交付时验收证据来源不变（以 `docs/plan/` 的交付报告和计划正文为准），`runs/` 的机器护栏仍是 `validate_run`/`validate_transition`/`check_all`，不因入库而放松。
-- **发布注意**：`runs/` 与 `context/` 含个人过程记录与项目画像，推远端前由用户确认仓库可见性（建议私有）。
+- **可见性现状（2026-09-24 实测）**：远端 `zaf05/ai-coding-workflow` 为 **public**（匿名 API 返回 private=false）。`runs/RUN-*/` 已被 .gitignore 排除未上云；但 `runs/README.md` 与 `context/*.md` 已入库公开，含内部项目描述。**用户需决策**：转私有，或接受公开并评估 context/runs-README 中的业务细节是否需要脱敏。runs 证据归档方案必须在此决策之后才能执行（归档到 public 仓会暴露过程证据）。
 
 ## 已登记的占位目录
 

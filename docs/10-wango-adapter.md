@@ -19,7 +19,7 @@
 |---|---|---|
 | 主仓当前分支 | `develop`（2026-09-23 复核） | `git branch --show-current` |
 | `.ai_worflow/` 与主仓关系 | 被主仓 `.git/info/exclude:12` 排除（**本地排除文件，未版本化**，不是 `.gitignore`） | `git check-ignore -v .ai_worflow` |
-| `.ai_worflow/` 自身 | 2026-09-20 起为独立 Git 仓库（`main`，remote 私有），工作流定义/脚本/文档版本化，`runs/RUN-*/` 运行细节仍被本仓 `.gitignore` 排除、仅 `runs/README.md` 入库 | `git -C .ai_worflow log --oneline -3`；`.ai_worflow/.gitignore` |
+| `.ai_worflow/` 自身 | 2026-09-20 起为独立 Git 仓库（`main`，remote **public**：`zaf05/ai-coding-workflow`，2026-09-24 匿名 API 实测 `private=false`），工作流定义/脚本/文档版本化，`runs/RUN-*/` 运行细节仍被本仓 `.gitignore` 排除、仅 `runs/README.md` 入库 | `git -C .ai_worflow log --oneline -3`；`.ai_worflow/.gitignore` |
 | 交付协议版本 | v0.6，创建 2026-08-10，最后修订 2026-08-18 | `docs/develop/agent-delivery-protocol.md` 头部 |
 | 项目 Skill | `.agents/skills/wango-delivery/SKILL.md`（20 行摘要）+ `agents/openai.yaml` | 目录实测 |
 | 宿主目录 | `.codex/`、`.claude/skills/wango-delivery`（软链）、`.agents/skills/` | 目录实测 |
@@ -92,3 +92,37 @@ mkdir -p .ai_worflow/runs/$RUN
 cp .ai_worflow/skills/_shared/templates/run-state.yaml .ai_worflow/runs/$RUN/state.yaml
 # 3) 按 skills/aiworflow/SKILL.md 选工作流，Planner 填 current.md，证据同时写入仓库交付报告
 ```
+
+
+## 跨工程使用（v1.8.18 起，引擎原生支持、文档补齐）
+
+引擎从设计上就是全局一份、服务任意工程；其他工程**零安装、零代码改动**即可使用。
+
+### 三步开任务
+
+```bash
+# ① 用全局引擎初始化 run（目录可放全局池或任意路径）
+python3 /path/to/.ai_worflow/scripts/run_flow.py \
+  /path/to/.ai_worflow/workflows/feature-delivery.workflow.yaml \
+  /path/to/runs/RUN-YYYYMMDD-NNN --init
+
+# ② 把 state.yaml 的 repository.root 填成目标工程绝对路径
+# ③ 正常推进——check/测试命令自动在目标工程目录里执行
+```
+
+### 三个已知摩擦点（使用前必读）
+
+| 摩擦点 | 影响 | 处置 |
+|---|---|---|
+| feature-delivery 的 check 写死 `origin/develop...HEAD` | 目标工程主干叫 `main` 时 check 失败 | 用自定义 DAG（candidate-dag.md 生成，改 check 命令），或给该工程建适配分支约定 |
+| `repository.root` 为空时回落到 `ROOT.parent`（即 WanGoPlatform） | 忘填会把 check 打到错误仓库 | **务必填绝对路径**；后续引擎版本可加空值 WARN |
+| 本 docs/10 的适配规则（数据库/交付协议/Git 基线）仅适用于 WanGoPlatform | 其他工程不能照搬 | 目标工程以**自己的 AGENTS.md/README** 为最高上下文，本工作流只加严不放宽 |
+
+### 证据归属约定
+
+- **默认全局池**（`.ai_worflow/runs/`）：享受 validate_package / check_all / 墓碑白名单等全部机器护栏，`list_runs.py` 跨工程总览。
+- 工程内目录（如 `<project>/.ai_worflow-runs/`）：仅当需要证据随 PR 可见时用；**代价是护栏不覆盖**（validate_package 只扫全局池），需自建校验。
+
+### 其他工程的提交闸门
+
+**不装本工作流的 pre-commit hook**——selftest 测的是工作流包自身（引擎/文档/技能），与业务工程的提交内容无关，装了是无关开销。工作流完整性由本仓自己的 CI + pre-commit 保护；业务工程用自己的测试/CI 保护自己。
