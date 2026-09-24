@@ -875,6 +875,59 @@ fi
 
 python3 -c 'import shutil,sys;shutil.rmtree(sys.argv[1],ignore_errors=True)' "$il_dir"
 
+# 3m 并发锁回归（v1.8.19）：真同时 mark-done 零静默丢写。
+#     v1.8.14 指纹检查在真并发下有 TOCTOU 竞态（5/5 稳定复现丢写）；
+#     v1.8.19 用 flock 关闭窗口。正确行为 = 双写成功（锁内顺序化）
+#     或一方被明确拒绝（可重试），绝不允许静默丢写。
+cm_dir="$(mktemp -d "${TMPDIR:-/tmp}/aiw-concurrent.XXXXXX")"
+cat > "$cm_dir/wf.yaml" <<'YAML'
+schema_version: 1
+name: t
+workflow_id: selftest-concurrent-lock
+error_code_mapping: {}
+blocks:
+  - {label: b1, block_type: intake, next_block_label: null, role: planner, goal: g, complete_criterion: c, evidence: ["current.md#A"]}
+  - {label: b2, block_type: intake, next_block_label: null, role: planner, goal: g, complete_criterion: c, evidence: ["current.md#A"]}
+YAML
+mkdir -p "$cm_dir/run/RUN-19700123-999"
+printf '## A\n' > "$cm_dir/run/RUN-19700123-999/current.md"
+python3 scripts/run_flow.py "$cm_dir/wf.yaml" "$cm_dir/run/RUN-19700123-999" --init >/dev/null 2>&1
+
+# 5 轮并发（每轮重新 init 重置状态）
+silent_loss=0
+for round in 1 2 3 4 5; do
+  python3 - "$cm_dir" <<'PY'
+import sys, yaml
+from pathlib import Path
+d = Path(sys.argv[1])
+st = yaml.safe_load((d/'run/RUN-19700123-999/state.yaml').read_text())
+for b in st['blocks']: b['status'] = 'pending'; b['attempts'] = 0
+(d/'run/RUN-19700123-999/state.yaml').write_text(yaml.safe_dump(st, sort_keys=False))
+PY
+  (python3 scripts/run_flow.py "$cm_dir/wf.yaml" "$cm_dir/run/RUN-19700123-999" --mark-done b1 > "$cm_dir/a.out" 2>&1) &
+  (python3 scripts/run_flow.py "$cm_dir/wf.yaml" "$cm_dir/run/RUN-19700123-999" --mark-done b2 > "$cm_dir/b.out" 2>&1) &
+  wait
+  if python3 - "$cm_dir" <<'PY'
+import sys, yaml, sys
+d = sys.argv[1]
+st = yaml.safe_load(open(f'{d}/run/RUN-19700123-999/state.yaml'))
+s = {b['label']: b['status'] for b in st['blocks']}
+a_ok = '"new_status": "completed"' in open(f'{d}/a.out').read()
+b_ok = '"new_status": "completed"' in open(f'{d}/b.out').read()
+silent = (a_ok and s.get('b1') != 'completed') or (b_ok and s.get('b2') != 'completed')
+sys.exit(1 if silent else 0)
+PY
+  then : # 无静默丢写
+  else silent_loss=$((silent_loss+1)); fi
+done
+
+if [ "$silent_loss" -eq 0 ]; then
+  echo "PASS 并发锁回归（5 轮真同时 mark-done，零静默丢写）"; pass=$((pass+1))
+else
+  echo "FAIL 并发锁回归（$silent_loss 轮静默丢写）"; fail=$((fail+1))
+fi
+python3 -c 'import shutil,sys;shutil.rmtree(sys.argv[1],ignore_errors=True)' "$cm_dir"
+
 echo "== 4. 安装器本机锁定（本机收据属于本副本时应 PASS，否则 SKIP） =="
 # 静默失败是 bug 的藏身处：任何一项失败都必须打印 FAIL。
 # 可移植性（实测教训）：安装目标若属于**另一个来源根**（换机器 / 克隆到别处 /

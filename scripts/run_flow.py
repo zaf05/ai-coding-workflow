@@ -42,6 +42,7 @@
 """
 from __future__ import annotations
 
+import fcntl
 import hashlib
 import json
 import os
@@ -100,27 +101,41 @@ def load_run_state(path: Path):
 
 
 def save_run_state(path: Path, state) -> bool:
-    """带并发写保护的 state 保存。
+    """带并发写保护的 state 保存（v1.8.19：flock 关闭 TOCTOU 竞态窗口）。
+
+    v1.8.14 的指纹检查在"读→比对→写"之间存在微秒级窗口：两宿主同时通过
+    指纹检查后写同一个 .tmp 文件，后写者覆盖前写者（实测 5/5 稳定复现，
+    一方写入静默丢失且双方都报成功）。修复：指纹检查+临时文件写入+原子
+    替换全部在排他锁内完成，锁文件 = state.yaml.lock（自动创建/清理）。
 
     返回 True=已写入；False=检测到并发修改（AIW_STATE_CONFLICT），未写入任何
     内容，调用方必须中止本命令。同一命令内多次保存：成功后刷新指纹，后续
     保存与磁盘新内容比对而非与最初快照比对。
     """
     loaded_fp = state.pop(LOADED_FP_KEY, None) if isinstance(state, dict) else None
-    if loaded_fp is not None and path.exists():
-        current_fp = hashlib.sha256(path.read_bytes()).hexdigest()
-        if current_fp != loaded_fp:
-            print(f"FAIL: [AIW_STATE_CONFLICT] state.yaml 在本次操作期间被其他写入者修改"
-                  f"（加载时 {loaded_fp[:12]}…，现在 {current_fp[:12]}…）。"
-                  f"本命令未写入任何内容；请重新读取 state.yaml 后重试。")
-            return False
-    text = dump_yaml(state)
-    tmp = path.with_name(path.name + ".tmp")
-    tmp.write_text(text, encoding="utf-8")
-    os.replace(tmp, path)
-    if isinstance(state, dict):
-        state[LOADED_FP_KEY] = hashlib.sha256(text.encode("utf-8")).hexdigest()
-    return True
+    lock_path = path.with_name(path.name + ".lock")
+    lock_path.touch(exist_ok=True)
+    with open(lock_path, "w") as lock_fd:
+        fcntl.flock(lock_fd, fcntl.LOCK_EX)
+        try:
+            if loaded_fp is not None and path.exists():
+                current_fp = hashlib.sha256(path.read_bytes()).hexdigest()
+                if current_fp != loaded_fp:
+                    print(f"FAIL: [AIW_STATE_CONFLICT] state.yaml 在本次操作期间被其他写入者修改"
+                          f"（加载时 {loaded_fp[:12]}…，现在 {current_fp[:12]}…）。"
+                          f"本命令未写入任何内容；请重新读取 state.yaml 后重试。")
+                    return False
+            text = dump_yaml(state)
+            tmp = path.with_name(path.name + f".tmp.{os.getpid()}")
+            tmp.write_text(text, encoding="utf-8")
+            os.replace(tmp, path)
+            if isinstance(state, dict):
+                state[LOADED_FP_KEY] = hashlib.sha256(text.encode("utf-8")).hexdigest()
+            return True
+        finally:
+            fcntl.flock(lock_fd, fcntl.LOCK_UN)
+    # 锁文件保留不删：删除瞬间另一进程可能已持有旧 inode 的锁，
+    # 第三进程会新建文件获得不同 inode，破坏互斥。空文件成本可忽略。
 
 
 def collect_top_blocks(blocks):

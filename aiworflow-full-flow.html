@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>AIWorflow 全流程（v1.8.18）· 我的 AI 工作流</title>
+  <title>AIWorflow 全流程（v1.8.19）· 我的 AI 工作流</title>
   <style>
     :root {
       --bg: #f6f7f9;
@@ -182,7 +182,7 @@
   <div class="stat"><div class="stat-num">5+1</div><div class="stat-label">Skill 包</div></div>
   <div class="stat"><div class="stat-num">11</div><div class="stat-label">工作流 (4正+7反)</div></div>
   <div class="stat"><div class="stat-num">17</div><div class="stat-label">确定性代码脚本</div></div>
-  <div class="stat"><div class="stat-num">112/112</div><div class="stat-label">selftest PASS（在线口径）</div></div>
+  <div class="stat"><div class="stat-num">113/113</div><div class="stat-label">selftest PASS（在线口径）</div></div>
   <div class="stat"><div class="stat-num">0 新增</div><div class="stat-label">外部依赖（已有 PyYAML）</div></div>
   <div class="stat"><div class="stat-num">130</div><div class="stat-label">文章+项目吸收 (001–130)</div></div>
 </div>
@@ -358,7 +358,7 @@
     </tr>
     <tr>
       <td><strong>selftest</strong></td>
-      <td><span class="tag tag-green">✅ <strong>112/112 PASS（在线口径）</strong></span></td>
+      <td><span class="tag tag-green">✅ <strong>113/113 PASS（在线口径）</strong></span></td>
       <td><span class="tag tag-yellow">⚠️ pytest不测Skill</span></td>
       <td><span class="tag tag-yellow">❌ 无</span></td>
       <td><span class="tag tag-yellow">⚠️ 有CI</span></td>
@@ -428,7 +428,7 @@
     </tr>
   </table></div>
 
-  <p style="margin-top:16px;font-weight:600;color:var(--accent)">一句话：AIWorflow v1.8.18 = 在「个人使用、除当前环境已有 PyYAML 外零新增依赖」约束下做到大厂级流程完备（已知缺口 100% 登记在册并有触发条件，无「不知道自己不知道」项，复盘结论见 docs/33），对标 Anthropic Workflow-first、美团人人对齐→人机对齐、快手 Context Assembly+Evidence Grounding、字节 DeerFlow 编排+记忆。130 条外部来源（10 个批次：核心方法论 + 开源项目 + 蚂蚁/阿里等 L1 全文 + 2026-09 各批扫描 + 2026-09-20 全网检索批 + 2026-09-21 Loop Engineering 收编批；001–086 归属判定见 docs/33、087–124 见 docs/34、125–130 见 docs/35）+ hongtao2agent 上下文工程/DSH插件/Agentic SRE/Pi Compaction + 黄迅/GoPS 环系统，去掉浏览器面和重型基础设施，加上 selftest 确定性自检、版本锁定分发、三层护栏下沉、环间接口规范、ledger 轮次日志与长周期任务恢复链，以及 v1.8.12 的引擎完整性硬门禁（证据锚点/候选提交/命令事实/定义冻结四类事实缺一不可，refreeze 保证双宿主协同）和 v1.8.13 的条件分支真实求值（expression 受限文法 + inert_conditional 编写期护栏）与 L3 断点演练实证（RUN-20260923-001：中断→新会话经 task_resume 接续，五条验收全过），以及 v1.8.14 的 state.yaml 并发写保护（九写点收口：指纹比对 AIW_STATE_CONFLICT 拒绝覆盖 + 原子写，双宿主并发不再静默丢数据），以及 v1.8.15 的引擎 CLI 契约收口（未知参数显式 FAIL、skipped 写时凭据 --skip-reason/--error-codes、standalone --execute-check 不落状态必告警）、CI 门禁上线（v1.8.16）、只读度量基线（v1.8.17，docs/37）、跨工程使用文档（v1.8.18，docs/10）——在"最小可验证"前提下做到最完整。</p>
+  <p style="margin-top:16px;font-weight:600;color:var(--accent)">一句话：AIWorflow v1.8.19 = 在「个人使用、除当前环境已有 PyYAML 外零新增依赖」约束下做到大厂级流程完备（已知缺口 100% 登记在册并有触发条件，无「不知道自己不知道」项，复盘结论见 docs/33），对标 Anthropic Workflow-first、美团人人对齐→人机对齐、快手 Context Assembly+Evidence Grounding、字节 DeerFlow 编排+记忆。130 条外部来源（10 个批次：核心方法论 + 开源项目 + 蚂蚁/阿里等 L1 全文 + 2026-09 各批扫描 + 2026-09-20 全网检索批 + 2026-09-21 Loop Engineering 收编批；001–086 归属判定见 docs/33、087–124 见 docs/34、125–130 见 docs/35）+ hongtao2agent 上下文工程/DSH插件/Agentic SRE/Pi Compaction + 黄迅/GoPS 环系统，去掉浏览器面和重型基础设施，加上 selftest 确定性自检、版本锁定分发、三层护栏下沉、环间接口规范、ledger 轮次日志与长周期任务恢复链，以及 v1.8.12 的引擎完整性硬门禁（证据锚点/候选提交/命令事实/定义冻结四类事实缺一不可，refreeze 保证双宿主协同）和 v1.8.13 的条件分支真实求值（expression 受限文法 + inert_conditional 编写期护栏）与 L3 断点演练实证（RUN-20260923-001：中断→新会话经 task_resume 接续，五条验收全过），以及 v1.8.14 的 state.yaml 并发写保护（九写点收口：指纹比对 AIW_STATE_CONFLICT 拒绝覆盖 + 原子写，双宿主并发不再静默丢数据），以及 v1.8.15 的引擎 CLI 契约收口（未知参数显式 FAIL、skipped 写时凭据 --skip-reason/--error-codes、standalone --execute-check 不落状态必告警）、CI 门禁上线（v1.8.16）、只读度量基线（v1.8.17，docs/37）、跨工程使用文档（v1.8.18，docs/10）——在"最小可验证"前提下做到最完整。</p>
 </div>
 
 <!-- ====== 核心资产清单 ====== -->
@@ -506,9 +506,10 @@ python3 scripts/run_flow.py workflows/feature-delivery.workflow.yaml runs/RUN-ID
 <h2 id="s-version">📜 版本演进</h2>
 
 <div class="card">
-  <p style="margin:0 0 12px;border-left:3px solid var(--accent);padding-left:10px;font-size:0.9em">📌 版本状态：本页原为 v1.7.8 全流程快照，2026-09-20 全量校准并持续同步至当前 <strong>v1.8.18</strong>；版本唯一事实源是 <code>VERSION</code>（README 头部与之对齐）。v1.8.x 相对快照新增：写入时校验 T-01..T-04、DAG 语义一致性 R-1/R-2/R-3、check_all 全系统日检、规则生命周期 Add/Thin 与任务后能力观察、pre-commit hook v3 双布局、长周期任务恢复链自检覆盖、报告契约统一与账本可观测（v1.8.6）、会话归因与 Reviewer 确定性前置检查（v1.8.7，66→69）、checkpoint/state/ledger 消费与串行治理边界（v1.8.8，69→70）、4 条 P3 收口与当日全网检索批 087–124 入附录（v1.8.9）、首个真实 G3 门评审 run 的收尾规则固化（v1.8.10，docs/05·07）、Loop Engineering 收编与心跳层缺口登记（v1.8.11，docs/35·13）、引擎完整性硬门禁与 refreeze 受控迁移（v1.8.12，R-4/R-5）、conditional expression 受限文法求值 + inert_conditional 护栏 + F1-R L3 断点演练实证（v1.8.13，RUN-20260923-001）、并发写保护（v1.8.14）、引擎 CLI 契约收口（v1.8.15）、CI 门禁上线（v1.8.16）、只读 run 聚合与首批度量基线（v1.8.17，docs/37）、跨工程使用文档与可见性事实修正（v1.8.18，docs/10），明细见下表最新 10 行。</p>
+  <p style="margin:0 0 12px;border-left:3px solid var(--accent);padding-left:10px;font-size:0.9em">📌 版本状态：本页原为 v1.7.8 全流程快照，2026-09-20 全量校准并持续同步至当前 <strong>v1.8.19</strong>；版本唯一事实源是 <code>VERSION</code>（README 头部与之对齐）。v1.8.x 相对快照新增：写入时校验 T-01..T-04、DAG 语义一致性 R-1/R-2/R-3、check_all 全系统日检、规则生命周期 Add/Thin 与任务后能力观察、pre-commit hook v3 双布局、长周期任务恢复链自检覆盖、报告契约统一与账本可观测（v1.8.6）、会话归因与 Reviewer 确定性前置检查（v1.8.7，66→69）、checkpoint/state/ledger 消费与串行治理边界（v1.8.8，69→70）、4 条 P3 收口与当日全网检索批 087–124 入附录（v1.8.9）、首个真实 G3 门评审 run 的收尾规则固化（v1.8.10，docs/05·07）、Loop Engineering 收编与心跳层缺口登记（v1.8.11，docs/35·13）、引擎完整性硬门禁与 refreeze 受控迁移（v1.8.12，R-4/R-5）、conditional expression 受限文法求值 + inert_conditional 护栏 + F1-R L3 断点演练实证（v1.8.13，RUN-20260923-001）、并发写保护（v1.8.14）、引擎 CLI 契约收口（v1.8.15）、CI 门禁上线（v1.8.16）、只读 run 聚合与首批度量基线（v1.8.17，docs/37）、跨工程使用文档与可见性事实修正（v1.8.18，docs/10），明细见下表最新 10 行。</p>
   <div class="tbl-wrap"><table>
     <tr><th>版本</th><th>日期</th><th>核心变更</th></tr>
+    <tr><td>v1.8.19</td><td>2026-09-25</td><td>并发写保护 flock 修复：关闭 v1.8.14 指纹检查的 TOCTOU 竞态窗口（真并发 5/5 丢写→10 轮 0 丢写）</td></tr>
     <tr><td>v1.8.18</td><td>2026-09-24</td><td>跨工程文档 + 可见性事实修正（纯文档）：docs/10 修正远端为 public（实测）；新增跨工程使用章节（新工程三步、三个摩擦点、证据归属约定、业务工程不装 hook）；runs/README 可见性现状更新</td></tr>
     <tr><td>v1.8.17</td><td>2026-09-24</td><td>只读 run 聚合视图 + 首批度量基线（Codex 交叉建议 4/5）：新增 scripts/list_runs.py（逐 run 状态/轮次/返修/跨度 + 固定 key=value 汇总，_yaml_min fallback，纯只读）；docs/37 落档 28 个历史 run 实测基线——一次通过 15/16（93.8%）、总返修 5、总轮次 72、中位跨度 159.6 分钟；AI 初稿采纳率明确不可算（runs gitignored 无版本历史，不伪造）；selftest §15b 五断言（fixture 环境无关），107→112</td></tr>
     <tr><td>v1.8.16</td><td>2026-09-24</td><td>count_sync 可移植性修复 + CI 门禁上线：首次 GitHub Actions 运行（selftest + install_hooks apply→check + validate_package）即抓到真缺陷——全新 clone（异根、无站点）下 §4/§10.7 按设计 SKIP，count_sync 拿实际 total 对 README 的 107 口径必 FAIL；修复为环境性 SKIP（env_skip）与 site_offline 一并计入 total，任何环境裸跑 exit 0 且对齐 107 口径，不放宽任何断言</td></tr>
@@ -691,7 +692,7 @@ python3 scripts/run_flow.py workflows/feature-delivery.workflow.yaml runs/RUN-ID
 </div>
 
 <p style="text-align:center;color:var(--muted);font-size:0.85em;margin-top:32px">
-  AIWorflow v1.8.18 · 纯文件驱动 · 除已有 PyYAML 外 0 新增依赖 · selftest 112/112 PASS（在线口径） · 7 工程对比 · 131 外部来源吸收（001–086 全量核验 + 087–124 全网检索批 + 125–130 Loop Engineering 批 + 131 AI Native 范式批）<br>
+  AIWorflow v1.8.19 · 纯文件驱动 · 除已有 PyYAML 外 0 新增依赖 · selftest 113/113 PASS（在线口径） · 7 工程对比 · 131 外部来源吸收（001–086 全量核验 + 087–124 全网检索批 + 125–130 Loop Engineering 批 + 131 AI Native 范式批）<br>
   📁 源文档位于 <code>.ai_worflow/</code> · <code>README.md</code> / <code>docs/00-overview.md</code> / <code>docs/03-gates.md</code> / <code>docs/22-wechat-latest-scan.md</code>
 </p>
 
