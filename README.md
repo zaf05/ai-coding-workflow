@@ -2,7 +2,7 @@
 
 版本：v1.8.18（单一事实源 `VERSION`） · `schema_version: 1` · 更新日期：2026-09-24
 
-这是属于我自己的 AI 原生研发工作流系统（当前 v1.8.17，131 个外部参考来源，覆盖 13 家一二线大厂：国内 9——阿里/腾讯/字节/美团/快手/华为/京东/网易有道/货拉拉，国际 4——OpenAI/Anthropic/AWS/Google）。它把一次“让 AI 干活”的请求，升级成一条**可编排（块 DAG）、可分权（四角色）、可验证（门禁 + 证据）、可自动推进（loop_control 信号驱动循环）、可接管（状态与账本）**的交付链路。当前状态：v1.8.17，selftest **112/112 PASS**（站点在线时；离线 111/111 + 1 SKIP），validate_package **全部通过**。近期演进：v1.8.17 新增 `scripts/list_runs.py` 只读 run 聚合视图并产出首批度量基线（docs/37：28 个历史 run 实测——一次通过 15/16、总返修 5、中位跨度 159.6 分钟；AI 初稿采纳率不可算已诚实登记）。近期演进：v1.8.5 修复长周期恢复链三个真 bug；v1.8.6 统一 `--advance` 报告契约并让账本写失败可观测；v1.8.7 落地会话归因与 Reviewer 确定性前置检查；v1.8.8 让 `task_resume` 消费 checkpoint/state/ledger、声明 run 内串行治理边界、补人类摘要与模型替换复检；v1.8.9 收口独立检查的 4 条 P3（REVIEW_SIZE 口径统一 / secret 告警不回显密钥 / PROTECTED_PATHS 边界说明 / 依赖措辞统一补申报），并把当日全网检索批（087–124，`docs/34`）全部编入 HTML 附录索引；v1.8.10 用首个真实任务驱动的 G3 人工门评审 run（RUN-20260921-001：六功能域只读评审、用户亲签接受、评审-only 合法收尾）沉淀三条运行规则——侦察 fan-out 启动清单、评审-only Run 收尾处方、star 块亲签出处落位；v1.8.11 收编淘天《Loop engineering》对照批（`docs/35`，附录 124→130）：五组件印证既有设计、automations 心跳层登记为缺口（docs/13）、三条候选做法记录在案；v1.8.12 引擎完整性加固（RUN-20260916-001 审计驱动）：workflow SHA 冻结+漂移硬拦截、mark-done 证据锚点门禁、implement completed 必绑 head_sha、check 块禁人工完成、终态引擎自动收口，新增 R-4/R-5 校验与 9 项 selftest 负例/正例断言；v1.8.13（RUN-20260923-001）修复 conditional expression 惰性缺陷（DEFECT-001：`--evaluate-conditional` 只实现 equals，bugfix-triage 三条 expression 分支被静默忽略、无论归因如何都落默认 implement；现支持受限文法 `true` / `<ident> == '<literal>'` 对 state.conditions 求值，新增 `inert_conditional` 编写期护栏 + `_invalid` 反例 + 文法外运行期显式 FAIL），并以该真实 run 执行 F1-R L3 断点演练（intake/recon/classify 完成后故意中断，全新零共享上下文会话经 `task_resume.py` 接续 implement→test→close，五条验收逐条取证通过）；v1.8.14（RUN-20260923-002）并发写保护：state.yaml 九处写点统一收口 `save_run_state()`——加载记字节指纹、保存前重读比对，被并发修改即 `AIW_STATE_CONFLICT` 拒绝且绝不覆盖，写入走 temp+原子替换，同命令多次保存自动刷新指纹；附带修复独立复核发现的 R-1（`--advance` 缺 task.yaml 告警，堵「合法推进但不可恢复」断缝）与 R-2（`--init` 改存相对 workflow_path，删死代码）。诚实边界：L3 单点断点恢复已实证（`docs/29` F1-R）；Session×Run 多天级联仍属协议层（`docs/30`），不随单点演练通过而宣称多天实战闭环。
+这是属于我自己的 AI 原生研发工作流系统（当前 v1.8.18，131 个外部参考来源，覆盖 13 家一二线大厂：国内 9——阿里/腾讯/字节/美团/快手/华为/京东/网易有道/货拉拉，国际 4——OpenAI/Anthropic/AWS/Google）。它把一次“让 AI 干活”的请求，升级成一条**可编排（块 DAG）、可分权（四角色）、可验证（门禁 + 证据）、可自动推进（loop_control 信号驱动循环）、可接管（状态与账本）**的交付链路。当前状态：v1.8.18，selftest **112/112 PASS**（站点在线时；离线 111/111 + 1 SKIP），validate_package **全部通过**。近期演进：v1.8.18 补齐跨工程使用文档并修正远端可见性事实（docs/10 新增 §跨工程使用：三步开任务 + 三个摩擦点 + 证据归属约定；runs/README 可见性现状改为实测 public；纯文档零代码变更）。近期演进：v1.8.17 新增 `scripts/list_runs.py` 只读 run 聚合视图并产出首批度量基线（docs/37：28 个历史 run 实测——一次通过 15/16、总返修 5、中位跨度 159.6 分钟；AI 初稿采纳率不可算已诚实登记）。近期演进：v1.8.5 修复长周期恢复链三个真 bug；v1.8.6 统一 `--advance` 报告契约并让账本写失败可观测；v1.8.7 落地会话归因与 Reviewer 确定性前置检查；v1.8.8 让 `task_resume` 消费 checkpoint/state/ledger、声明 run 内串行治理边界、补人类摘要与模型替换复检；v1.8.9 收口独立检查的 4 条 P3（REVIEW_SIZE 口径统一 / secret 告警不回显密钥 / PROTECTED_PATHS 边界说明 / 依赖措辞统一补申报），并把当日全网检索批（087–124，`docs/34`）全部编入 HTML 附录索引；v1.8.10 用首个真实任务驱动的 G3 人工门评审 run（RUN-20260921-001：六功能域只读评审、用户亲签接受、评审-only 合法收尾）沉淀三条运行规则——侦察 fan-out 启动清单、评审-only Run 收尾处方、star 块亲签出处落位；v1.8.11 收编淘天《Loop engineering》对照批（`docs/35`，附录 124→130）：五组件印证既有设计、automations 心跳层登记为缺口（docs/13）、三条候选做法记录在案；v1.8.12 引擎完整性加固（RUN-20260916-001 审计驱动）：workflow SHA 冻结+漂移硬拦截、mark-done 证据锚点门禁、implement completed 必绑 head_sha、check 块禁人工完成、终态引擎自动收口，新增 R-4/R-5 校验与 9 项 selftest 负例/正例断言；v1.8.13（RUN-20260923-001）修复 conditional expression 惰性缺陷（DEFECT-001：`--evaluate-conditional` 只实现 equals，bugfix-triage 三条 expression 分支被静默忽略、无论归因如何都落默认 implement；现支持受限文法 `true` / `<ident> == '<literal>'` 对 state.conditions 求值，新增 `inert_conditional` 编写期护栏 + `_invalid` 反例 + 文法外运行期显式 FAIL），并以该真实 run 执行 F1-R L3 断点演练（intake/recon/classify 完成后故意中断，全新零共享上下文会话经 `task_resume.py` 接续 implement→test→close，五条验收逐条取证通过）；v1.8.14（RUN-20260923-002）并发写保护：state.yaml 九处写点统一收口 `save_run_state()`——加载记字节指纹、保存前重读比对，被并发修改即 `AIW_STATE_CONFLICT` 拒绝且绝不覆盖，写入走 temp+原子替换，同命令多次保存自动刷新指纹；附带修复独立复核发现的 R-1（`--advance` 缺 task.yaml 告警，堵「合法推进但不可恢复」断缝）与 R-2（`--init` 改存相对 workflow_path，删死代码）。诚实边界：L3 单点断点恢复已实证（`docs/29` F1-R）；Session×Run 多天级联仍属协议层（`docs/30`），不随单点演练通过而宣称多天实战闭环。
 
 ## 血缘与来源
 
@@ -47,7 +47,7 @@ Evidence 层 runs/<RUN-ID>/             —— state.yaml / current.md / test-pl
 ```text
 .ai_worflow/
 ├── README.md                  本文件：权威入口
-├── docs/                      规则与设计（36 篇 + README）
+├── docs/                      规则与设计（38 篇 + README）
 ├── skills/                    可被 Codex / Claude Code / ZCode 发现的 Skill 包
 │   ├── aiworflow/             入口与 Flow 引擎语义（不是第五角色）
 │   ├── aiworflow-planner/     规划、状态、协调、合并
@@ -229,7 +229,7 @@ timeout 180 codex exec   --ephemeral --skip-git-repo-check   -C /home/feifz/work
 7. 目标与来源存在漂移时**拒绝认领**，不写收据并非零退出；
 8. `--dry-run` 认领只预览、不落盘。
 
-全量自检（`bash scripts/selftest.sh`，当前 70/70 通过；§12 站点在线时计入，离线 69/69 + 1 SKIP）。
+全量自检（`bash scripts/selftest.sh`，当前 112/112 通过；环境性差异项——§4 安装锁定 / §10.7 本副本闸门 / §12 站点一致性——按设计显式 SKIP 并计入总数口径，任何环境裸跑 exit 0）。
 
 ### 运行期闸门（v1.4.0 起 · v1.8.2 双布局）
 
@@ -265,12 +265,12 @@ python3 scripts/install_hooks.py --check
 | 能力 | 状态 | 证据 |
 |---|---|---|
 | 参考工程 clone ×3 | 已完成 | `references/skyvern`（5496 文件，commit `35cb497c99dc940472023e682692613e1014e51f`）、`references/ric-dev-workflow-skills`（95 文件，commit `84954fbda3d1d8c47ef2a5ee9fb43e18ab4a3c4a`）、`references/jakubkrehel-skills`（11 个 Skill 目录，commit `267330e`，2026-09-16 入库，见 `docs/12-reference-scan.md` §E） |
-| 规则与设计文档 | 已完成 | `docs/`（35 篇 + README；本仓库内相对链接全部可解析，由 `scripts/validate_package.py` 校验） |
+| 规则与设计文档 | 已完成 | `docs/`（38 篇 + README；本仓库内相对链接全部可解析，由 `scripts/validate_package.py` 校验） |
 | Skill 包（5 入口 + `_shared`） | 已完成 | `skills/`，frontmatter 与链接由 `scripts/validate_package.py` 校验 |
 | 工作流定义（4 正例 + 7 反例） | 已完成 | `workflows/`，由 `scripts/validate_workflow.py` 校验；7 个反例各对应一条 author-time 硬护栏 |
-| 校验器 / 安装器 / 自检 | 已完成 | `scripts/`，`python3 scripts/validate_package.py` 与 `bash scripts/selftest.sh` 70/70 PASS |
+| 校验器 / 安装器 / 自检 | 已完成 | `scripts/`，`python3 scripts/validate_package.py` 与 `bash scripts/selftest.sh` 112/112 PASS |
 | 版本管理与分发 | 已完成（v1.4.1） | `VERSION` + 安装收据/漂移检测/原子升级/认领已装环境/拒绝部分安装（见 §版本管理与分发） |
-| 版本锁定行为自测 | 已完成 | `scripts/selftest.sh` §8 九项断言（含外来目标拒绝部分安装）；全量 70/70 通过 |
+| 版本锁定行为自测 | 已完成 | `scripts/selftest.sh` §8 九项断言（含外来目标拒绝部分安装）；全量 112/112 通过 |
 | `runs/` 容器一致性护栏 | 已完成（v1.4.1） | `validate_package.py` 第 10 步：非法 run 必须清理或登记为占位；`selftest.sh` §3b 负例证明护栏开火 |
 | 运行期闸门（pre-commit） | 已完成（v1.4.0） | `scripts/hooks/pre-commit` + `scripts/install_hooks.py`；`selftest.sh` §10 七项断言；端到端实测破坏被拦、修复后放行 |
 | 2025–2026 主流实践调研 | 已完成（网页证据） | `docs/14-current-practices.md`：8 条一手/官方来源、与三层模型对照、5 项应吸收修正 |
@@ -308,19 +308,19 @@ AIWorflow 是一套**纯文件驱动的 AI 研发控制层**。它不提供浏�
   → G10 close（lessons/change-summary 写回供下一环复用）
 ```
 
-### 核心数字（2026-09-24，v1.8.17）
+### 核心数字（2026-09-24，v1.8.18）
 
 | 指标 | 数值 |
 |---|---|
-| 规则文档 | 36 篇 + docs/README |
+| 规则文档 | 38 篇 + docs/README |
 | 共享契约 | 9 份（角色/门禁/证据/状态/变更/Git/交接/规则生命周期/产物；护栏注册表在 `docs/09` 与脚本 `GUARDRAIL_IDS`，非独立契约文件） |
 | Skill 入口 | 5 个（入口+四角色）+ 1 个 `_shared` 共享底座 |
 | 工作流定义 | 4 正例 + 8 反例（每个反例对一条 hard guardrail 开火；v1.8.13 新增 `inert-conditional` 对 `inert_conditional` 开火） |
 | Prompt 模板 | 7 个（intake/spec/implement/review/test/candidate-dag + 1 示例） |
 | 确定性脚本 | 17 个代码脚本 + pre-commit hook（校验×7：workflow/package/run/transition/consistency/content-quality/site-consistency；引擎×8：compile_dag/run_flow/check_all/task_resume/review_preflight/list_runs/install×2；selftest + _yaml_min；Python 3 + bash + 已有 PyYAML） |
 | selftest | 112 项（同根+站点在线全跑 112/112；环境性差异项——§4 安装锁定 / §10.7 本副本闸门 / §12 站点一致性——按设计显式 SKIP 并计入总数口径，任何环境裸跑 exit 0 且 count_sync 对齐 112），分组覆盖包结构→反例→transition→DAG语义→引擎完整性→refreeze→交付缺陷回归→创建守门→日检→安装→编译→执行→版本锁定→闸门→站点一致性→长周期恢复链→并发写保护→引擎 CLI 契约→只读聚合→计数联动 |
-| 总代码行（脚本） | 6,820 行 Python + Shell（scripts/ 下 wc -l 实测 2026-09-24，v1.8.17） |
-| 总文档行 | 6,284 行 Markdown（docs + 根 README，wc -l 实测 2026-09-24，v1.8.17；docs/37 基线报告待登记后计入） |
+| 总代码行（脚本） | 6,820 行 Python + Shell（scripts/*.py + *.sh，wc -l 实测 2026-09-24，v1.8.18） |
+| 总文档行 | 6,388 行 Markdown（docs/*.md + 根 README，wc -l 实测 2026-09-24，v1.8.18；含 docs/37 基线报告与 docs/10 跨工程章节） |
 | 外部依赖 | 0 新增（Python 3 + bash + 当前环境已有 PyYAML；不引入数据库/消息队列/npm 依赖） |
 | 宿主加载 | Codex 与 Claude Code 双宿主已实测加载（2026-09-20 只读探针：Codex exec 会话与 Claude Code `-p` 嵌套会话各自发现/注册并实读 skill；2026-09-23 v1.8.13 升级后 `--check` 复核指纹一致，并实测 Claude Code 嵌套会话 `claude -p` 真实列出全部 5 个 aiworflow* skill、Codex 会话内 5 个 skill 可读） |
 
@@ -358,7 +358,7 @@ python3 scripts/install_skills.py --target ~/.codex/skills --upgrade --apply  # 
 | **DAG 执行** | ✅ run_flow.py | ✅ 完整引擎 | ❌ 无 | ❌ 无 | ✅ aidlc CLI | ✅ Python后端 | ✅ ccg CLI | ❌ 无 |
 | **护栏系统** | ✅ 三层全自动 | ✅ author+review | ⚠️ 语义定义 | ❌ 无 | ✅ approval gate | ⚠️ 平台层 | ❌ 未明确 | ❌ 无 |
 | **版本管理** | ✅ VERSION+SHA256 | ❌ 无 | ❌ 无 | ❌ 无 | ✅ GitHub Release | ✅ PyPI | ✅ npm | ❌ 无 |
-| **selftest** | ✅ **70/70 PASS** | ⚠️ pytest不测Skill | ❌ 无 | ❌ 无 | ⚠️ 有CI | ⚠️ 有pytest | ⚠️ CI+codecov | ❌ 无 |
+| **selftest** | ✅ **112/112 PASS** | ⚠️ pytest不测Skill | ❌ 无 | ❌ 无 | ⚠️ 有CI | ⚠️ 有pytest | ⚠️ CI+codecov | ❌ 无 |
 | **多宿主** | Codex/Claude/ZCode | 自建平台 | Codex/Claude/ZCode | 无 | **7宿主** | Web UI | Claude+Codex+Gemini | **14+宿主** |
 | **证据系统** | ✅ 只追加账本+ledger | DB记录 | Compact四文件 | 无 | ❌ 未明确 | ❌ 运行日志 | ❌ 未明确 | ❌ 无 |
 | **环系统建模** | ✅ 显式+环间接口 | 隐式 | 未建模 | 隐式 | 隐式(13段) | 隐式(流程) | 未建模 | 未建模 |
@@ -369,7 +369,7 @@ python3 scripts/install_skills.py --target ~/.codex/skills --upgrade --apply  # 
 
 ### 我们的优势（七工程中独有或更深）
 
-1. **确定性自检体系（selftest 70/70）**：七工程中唯一把包结构、反例护栏开火、版本锁定、DAG 编译、钩子安装、长周期恢复链全部写成确定性断言并换机器可跑的。Skyvern 有 pytest 但不测 Skill 包一致性；Langflow/CCG 有 CI 但无 workflow 工作流级 selftest。
+1. **确定性自检体系（selftest 112/112）**：七工程中唯一把包结构、反例护栏开火、版本锁定、DAG 编译、钩子安装、长周期恢复链全部写成确定性断言并换机器可跑的。Skyvern 有 pytest 但不测 Skill 包一致性；Langflow/CCG 有 CI 但无 workflow 工作流级 selftest。
 
 2. **除当前环境已有 PyYAML 外零新增依赖**：Skyvern 需 PG+Redis+CDP+200+包；Langflow 需 Python+React+DB；AI-DLC/CCG 需 Node.js。我们 Python 3 + bash，仅复用当前环境已有 PyYAML；本版本未新增 pip/npm/数据库依赖。
 
@@ -613,7 +613,7 @@ python3 scripts/install_skills.py --target ~/.codex/skills --upgrade --apply  # 
 
 | 文章六支柱 | 控制问题 | 本工作流对应 | 覆盖状态 |
 |---|---|---|---|
-| 看什么（上下文） | 信息输入 | AGENTS.md 索引 + 35 篇 docs + 渐进式披露 | ✅ 已覆盖 |
+| 看什么（上下文） | 信息输入 | AGENTS.md 索引 + 38 篇 docs + 渐进式披露 | ✅ 已覆盖 |
 | 能触达什么（工具） | 能力面 | MCP / Skills / 知识库（WanGo 层 connector + skill） | ✅ 已覆盖 |
 | 按什么顺序（编排） | 执行顺序 | 块 DAG + G0–G10 门禁 + 四角色交接 | ✅ 已覆盖且更深 |
 | 记住什么（记忆） | 状态持久化 | `state.yaml` + `current.md` + `evidence.md` 只追加账本 | ✅ 已覆盖 |
