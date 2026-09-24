@@ -1978,6 +1978,66 @@ else
 fi
 python3 -c 'import shutil,sys;shutil.rmtree(sys.argv[1],ignore_errors=True)' "$cli_dir"
 
+echo "== 15b. list_runs 只读聚合（fixture 驱动，环境无关；CI clone 无 RUN-* 目录也必须可验） =="
+lr_dir="$(mktemp -d /tmp/aiw-listruns-XXXXXX)"
+mkdir -p "$lr_dir/RUN-20990101-001" "$lr_dir/RUN-20990101-002"
+cat > "$lr_dir/RUN-20990101-001/state.yaml" <<'LRFIX'
+schema_version: 1
+run:
+  id: RUN-20990101-001
+  workflow: 缺陷归因
+  status: completed
+  planner_owner: claude-code
+blocks:
+  - label: intake
+    status: completed
+    attempts: 1
+  - label: classify
+    status: completed
+    attempts: 2
+ledger:
+  - round: 1
+    timestamp: "2099-01-01T01:00:00+00:00"
+    block: intake
+    action: CHECK
+    signal: CONTINUE
+  - round: 2
+    timestamp: "2099-01-01T01:30:00+00:00"
+    block: classify
+    action: CHECK
+    signal: DONE
+LRFIX
+# RUN-20990101-002 不放 state.yaml → 占位形态（runs/README 白名单同型）
+lr_out="$(python3 scripts/list_runs.py --runs-dir "$lr_dir" 2>&1)"; lr_rc=$?
+if [ $lr_rc -eq 0 ] && echo "$lr_out" | grep -q "RUN-20990101-001" && echo "$lr_out" | grep -q "缺陷归因"; then
+  echo "PASS list_runs 逐 run 行（RUN-ID + workflow 中文名）"; pass=$((pass+1))
+else
+  echo "FAIL list_runs 未输出预期 run 行（rc=$lr_rc）"; fail=$((fail+1))
+fi
+if echo "$lr_out" | grep -q "runs_total=2 parsed=1 placeholder=1"; then
+  echo "PASS list_runs 汇总：2 run 且占位 1 正确归类"; pass=$((pass+1))
+else
+  echo "FAIL list_runs 汇总 runs_total/placeholder 口径错"; fail=$((fail+1))
+fi
+if echo "$lr_out" | grep -q "total_rounds=2 total_retries=1" && echo "$lr_out" | grep -q "first_pass=0/1" && echo "$lr_out" | grep -q "median_span_min=30.0"; then
+  echo "PASS list_runs 指标：轮次/返修/一次通过/中位跨度（attempts 2→返修 1，零返修才算 first_pass，30 分钟跨度）"; pass=$((pass+1))
+else
+  echo "FAIL list_runs 指标口径错（rounds/retries/first_pass/span）"; fail=$((fail+1))
+fi
+# 空目录 exit 0；缺目录 exit 2（用法错误不得伪装成功）
+mkdir -p "$lr_dir/empty"
+if python3 scripts/list_runs.py --runs-dir "$lr_dir/empty" >/dev/null 2>&1; then
+  echo "PASS list_runs 空目录 exit 0"; pass=$((pass+1))
+else
+  echo "FAIL list_runs 空目录非零退出"; fail=$((fail+1))
+fi
+if python3 scripts/list_runs.py --runs-dir "$lr_dir/definitely-missing" >/dev/null 2>&1; then
+  echo "FAIL list_runs 缺目录伪成功（exit 0）"; fail=$((fail+1))
+else
+  echo "PASS list_runs 缺目录 exit 2"; pass=$((pass+1))
+fi
+python3 -c 'import shutil,sys;shutil.rmtree(sys.argv[1],ignore_errors=True)' "$lr_dir"
+
 echo "== 16. count_sync（README/HTML 计数与实际总数机器联动，不计数只守门；必须位于全部计数断言之后） =="
 total=$((pass+fail+site_offline+env_skip))
 cs_fail=0

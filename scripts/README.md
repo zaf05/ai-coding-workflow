@@ -18,10 +18,11 @@
 | `review_preflight.py` | CODE/RELEASE Review 前置确定性检查：secret、禁改区、破坏性命令、规模 | `python3 scripts/review_preflight.py <run-dir>` |
 | `task_resume.py` | 生成 task+checkpoint+state+ledger 恢复提示词 | `python3 scripts/task_resume.py <run-dir>` |
 | `check_all.py` | 全系统日检：逐 run、陈旧 run、收据与 hook 汇总 | `python3 scripts/check_all.py` |
+| `list_runs.py` | 只读 run 聚合视图：逐 run 状态/轮次/返修/跨度 + 汇总基线（`_yaml_min` fallback，不写任何文件） | `python3 scripts/list_runs.py [--runs-dir runs]` |
 | `install_skills.py` | 双宿主 Skill 安装、收据、漂移检测与原子升级 | `python3 scripts/install_skills.py --check` |
 | `install_hooks.py` | pre-commit 安装、校验、备份与卸载 | `python3 scripts/install_hooks.py --check` |
 | `hooks/pre-commit` | 提交闸门，selftest 失败即拒绝提交 | 由 `install_hooks.py` 安装 |
-| `selftest.sh` | 全量自检；当前站点在线 70/70，离线 69/69 + 1 SKIP | `bash scripts/selftest.sh` |
+| `selftest.sh` | 全量自检；当前站点在线 112/112，离线 111/111 + 1 SKIP | `bash scripts/selftest.sh` |
 | `_yaml_min.py` | 最小 YAML 读取 fallback | 被脚本 import |
 
 ## run_flow.py 选项

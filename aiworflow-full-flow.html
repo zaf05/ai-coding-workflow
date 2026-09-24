@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>AIWorflow 全流程（v1.8.16）· 我的 AI 工作流</title>
+  <title>AIWorflow 全流程（v1.8.17）· 我的 AI 工作流</title>
   <style>
     :root {
       --bg: #f6f7f9;
@@ -181,8 +181,8 @@
   <div class="stat"><div class="stat-num">9</div><div class="stat-label">共享契约</div></div>
   <div class="stat"><div class="stat-num">5+1</div><div class="stat-label">Skill 包</div></div>
   <div class="stat"><div class="stat-num">11</div><div class="stat-label">工作流 (4正+7反)</div></div>
-  <div class="stat"><div class="stat-num">16</div><div class="stat-label">确定性代码脚本</div></div>
-  <div class="stat"><div class="stat-num">107/107</div><div class="stat-label">selftest PASS（在线口径）</div></div>
+  <div class="stat"><div class="stat-num">17</div><div class="stat-label">确定性代码脚本</div></div>
+  <div class="stat"><div class="stat-num">112/112</div><div class="stat-label">selftest PASS（在线口径）</div></div>
   <div class="stat"><div class="stat-num">0 新增</div><div class="stat-label">外部依赖（已有 PyYAML）</div></div>
   <div class="stat"><div class="stat-num">130</div><div class="stat-label">文章+项目吸收 (001–130)</div></div>
 </div>
@@ -358,7 +358,7 @@
     </tr>
     <tr>
       <td><strong>selftest</strong></td>
-      <td><span class="tag tag-green">✅ <strong>107/107 PASS（在线口径）</strong></span></td>
+      <td><span class="tag tag-green">✅ <strong>112/112 PASS（在线口径）</strong></span></td>
       <td><span class="tag tag-yellow">⚠️ pytest不测Skill</span></td>
       <td><span class="tag tag-yellow">❌ 无</span></td>
       <td><span class="tag tag-yellow">⚠️ 有CI</span></td>
@@ -442,7 +442,7 @@
     <tr><td>Skill 包</td><td>5 + 1</td><td>入口(aiworflow) + 四角色(planner/implementer/reviewer/tester) + 共享底座(_shared)</td><td>validate_package.py 校验 frontmatter/链接</td></tr>
     <tr><td>工作流</td><td>4 正 + 8 反</td><td>功能交付/缺陷归因/重构迁移/页面验证 + 8 条 guardrail 反例（含 v1.8.13 惰性条件反例）+ 条件分支示例</td><td>validate_workflow.py + selftest §2/§9</td></tr>
     <tr><td>Prompt 模板</td><td>7 个</td><td>intake/spec/implement/review/test/candidate-dag + 示例</td><td>validate_package.py 校验分段</td></tr>
-    <tr><td>确定性脚本</td><td>16 个代码脚本 + hook</td><td>校验×7：validate_workflow/validate_package/validate_run/validate_transition/validate_consistency/validate_content_quality/validate_site_consistency；引擎×7：compile_dag/run_flow/check_all/task_resume/review_preflight/install_skills/install_hooks；selftest + _yaml_min；另 pre-commit hook v3</td><td>selftest 95 项全覆盖；§3i/§3j/§3k 验证引擎完整性门禁开火与出厂兼容，§7a-bis/§7a-ter 验证 expression 求值与文法负例，§7d-ter 验证 session-meta，§7d-quatro 验证 preflight 正负例</td></tr>
+    <tr><td>确定性脚本</td><td>17 个代码脚本 + hook</td><td>校验×7：validate_workflow/validate_package/validate_run/validate_transition/validate_consistency/validate_content_quality/validate_site_consistency；引擎×8：compile_dag/run_flow/check_all/task_resume/review_preflight/list_runs/install_skills/install_hooks；selftest + _yaml_min；另 pre-commit hook v3</td><td>selftest 112 项全覆盖；§3i/§3j/§3k 验证引擎完整性门禁开火与出厂兼容，§7a-bis/§7a-ter 验证 expression 求值与文法负例，§7d-ter 验证 session-meta，§7d-quatro 验证 preflight 正负例，§15b 验证只读聚合</td></tr>
     <tr><td>运行期容器</td><td>16 个 run</td><td>RUN-20260914-001（skill-tool-tag，已合入 develop）/ RUN-20260917-006（中型优化 TDD）/ RUN-20260920-001（运行期强制执行落地）/ RUN-20260920-002（页面验证）/ RUN-20260920-003（首个 Claude Code 完整 run）+ 11 个 2026-09-20 按快照协议收口的历史 run</td><td>validate_run.py + runs/README.md 白名单</td></tr>
     <tr><td>参考文章</td><td>131 个 (001–131)</td><td>20篇AI Coding/Harness/SDD/OPC/环系统 + 10个开源项目（含BMAD/MoAI-ADK/CEK/how-claude-code-works/flow-next/oddyssey）+ 4篇hongtao深度解读 + 2篇微信/阿里云最新文章（蚂蚁数科Harness、阿里AACR-Bench）+ 后续批次扫描（docs/23/24/26/28/32）+ 086 腾讯云三支柱（2026-09-20 L1）+ 全网检索批（docs/34：GitHub 周榜直抓 15 仓 + 12 组主题检索，087–124 共 38 条，L3 快照级为主）+ Loop Engineering 收编批（docs/35：125 淘天 L1 webReader + 126/127 Addy/MF 原文可达补录 + 128–130 转引 L3）+ AI Native 范式批（docs/36：131 淘天海外 L1 webReader）</td><td>curl+MicroMessenger/移动UA+GitHub API 逐个核验；110行访问核验表：001–086 批次 63行可访问、2行诚实标注不可用、086 即 row 65（webReader L1 全文核验，docs/32）；row 66–103 为 2026-09-20 全网检索批（周榜直抓 L1 / 检索快照 L3，逐条标注，docs/34）；row 104–109 为 2026-09-21 Loop Engineering 批（docs/35）；row 110 为 2026-09-24 AI Native 范式批（webReader L1 全文，docs/36）</td></tr>
     <tr><td>上下文目录</td><td>9 文件</td><td>project/area/decisions/risk-register 四类知识 + 模板与实例（aiworkflow / agentwan / open-platform-docs / consistency）+ README；G1 读入 + G10 写出跨 Run 知识</td><td>validate_package.py</td></tr>
@@ -506,9 +506,10 @@ python3 scripts/run_flow.py workflows/feature-delivery.workflow.yaml runs/RUN-ID
 <h2 id="s-version">📜 版本演进</h2>
 
 <div class="card">
-  <p style="margin:0 0 12px;border-left:3px solid var(--accent);padding-left:10px;font-size:0.9em">📌 版本状态：本页原为 v1.7.8 全流程快照，2026-09-20 全量校准并持续同步至当前 <strong>v1.8.16</strong>；版本唯一事实源是 <code>VERSION</code>（README 头部与之对齐）。v1.8.x 相对快照新增：写入时校验 T-01..T-04、DAG 语义一致性 R-1/R-2/R-3、check_all 全系统日检、规则生命周期 Add/Thin 与任务后能力观察、pre-commit hook v3 双布局、长周期任务恢复链自检覆盖、报告契约统一与账本可观测（v1.8.6）、会话归因与 Reviewer 确定性前置检查（v1.8.7，66→69）、checkpoint/state/ledger 消费与串行治理边界（v1.8.8，69→70）、4 条 P3 收口与当日全网检索批 087–124 入附录（v1.8.9）、首个真实 G3 门评审 run 的收尾规则固化（v1.8.10，docs/05·07）、Loop Engineering 收编与心跳层缺口登记（v1.8.11，docs/35·13）、引擎完整性硬门禁与 refreeze 受控迁移（v1.8.12，R-4/R-5）、conditional expression 受限文法求值 + inert_conditional 护栏 + F1-R L3 断点演练实证（v1.8.13，RUN-20260923-001），明细见下表最新 10 行。</p>
+  <p style="margin:0 0 12px;border-left:3px solid var(--accent);padding-left:10px;font-size:0.9em">📌 版本状态：本页原为 v1.7.8 全流程快照，2026-09-20 全量校准并持续同步至当前 <strong>v1.8.17</strong>；版本唯一事实源是 <code>VERSION</code>（README 头部与之对齐）。v1.8.x 相对快照新增：写入时校验 T-01..T-04、DAG 语义一致性 R-1/R-2/R-3、check_all 全系统日检、规则生命周期 Add/Thin 与任务后能力观察、pre-commit hook v3 双布局、长周期任务恢复链自检覆盖、报告契约统一与账本可观测（v1.8.6）、会话归因与 Reviewer 确定性前置检查（v1.8.7，66→69）、checkpoint/state/ledger 消费与串行治理边界（v1.8.8，69→70）、4 条 P3 收口与当日全网检索批 087–124 入附录（v1.8.9）、首个真实 G3 门评审 run 的收尾规则固化（v1.8.10，docs/05·07）、Loop Engineering 收编与心跳层缺口登记（v1.8.11，docs/35·13）、引擎完整性硬门禁与 refreeze 受控迁移（v1.8.12，R-4/R-5）、conditional expression 受限文法求值 + inert_conditional 护栏 + F1-R L3 断点演练实证（v1.8.13，RUN-20260923-001）、并发写保护（v1.8.14）、引擎 CLI 契约收口（v1.8.15）、CI 门禁上线（v1.8.16）、只读 run 聚合与首批度量基线（v1.8.17，docs/37），明细见下表最新 10 行。</p>
   <div class="tbl-wrap"><table>
     <tr><th>版本</th><th>日期</th><th>核心变更</th></tr>
+    <tr><td>v1.8.17</td><td>2026-09-24</td><td>只读 run 聚合视图 + 首批度量基线（Codex 交叉建议 4/5）：新增 scripts/list_runs.py（逐 run 状态/轮次/返修/跨度 + 固定 key=value 汇总，_yaml_min fallback，纯只读）；docs/37 落档 28 个历史 run 实测基线——一次通过 15/16（93.8%）、总返修 5、总轮次 72、中位跨度 159.6 分钟；AI 初稿采纳率明确不可算（runs gitignored 无版本历史，不伪造）；selftest §15b 五断言（fixture 环境无关），107→112</td></tr>
     <tr><td>v1.8.16</td><td>2026-09-24</td><td>count_sync 可移植性修复 + CI 门禁上线：首次 GitHub Actions 运行（selftest + install_hooks apply→check + validate_package）即抓到真缺陷——全新 clone（异根、无站点）下 §4/§10.7 按设计 SKIP，count_sync 拿实际 total 对 README 的 107 口径必 FAIL；修复为环境性 SKIP（env_skip）与 site_offline 一并计入 total，任何环境裸跑 exit 0 且对齐 107 口径，不放宽任何断言</td></tr>
     <tr><td>v1.8.15</td><td>2026-09-23</td><td>引擎 CLI 契约收口（RUN-20260923-004）：未知参数 [AIW_UNKNOWN_FLAG] 显式 FAIL 不再静默吞；--status skipped 写时凭据 --skip-reason/--error-codes（AIW_SKIP_CREDENTIAL_MISSING 拒绝缺凭据，reason 默认 BRANCH_NOT_TAKEN，误用先报参数错）；standalone --execute-check 必告警不落状态；selftest 99→107（§15 CLI 契约），count_sync 移至 §16</td></tr>
     <tr><td>v1.8.14</td><td>2026-09-23</td><td>并发写保护 + 复核发现修复（RUN-20260923-002）：state.yaml 九处写点统一收口 load_run_state/save_run_state——加载记字节指纹、保存前重读比对，并发修改即 AIW_STATE_CONFLICT 拒绝且不覆盖，temp+原子替换写入，同命令多次保存自动刷新指纹；R-1：--advance 缺 task.yaml 告警（堵「合法推进但不可恢复」断缝）；R-2：--init 改存相对 workflow_path；selftest 95→99（§14 并发守卫）</td></tr>
@@ -689,7 +690,7 @@ python3 scripts/run_flow.py workflows/feature-delivery.workflow.yaml runs/RUN-ID
 </div>
 
 <p style="text-align:center;color:var(--muted);font-size:0.85em;margin-top:32px">
-  AIWorflow v1.8.16 · 纯文件驱动 · 除已有 PyYAML 外 0 新增依赖 · selftest 107/107 PASS（在线口径） · 7 工程对比 · 131 外部来源吸收（001–086 全量核验 + 087–124 全网检索批 + 125–130 Loop Engineering 批 + 131 AI Native 范式批）<br>
+  AIWorflow v1.8.17 · 纯文件驱动 · 除已有 PyYAML 外 0 新增依赖 · selftest 112/112 PASS（在线口径） · 7 工程对比 · 131 外部来源吸收（001–086 全量核验 + 087–124 全网检索批 + 125–130 Loop Engineering 批 + 131 AI Native 范式批）<br>
   📁 源文档位于 <code>.ai_worflow/</code> · <code>README.md</code> / <code>docs/00-overview.md</code> / <code>docs/03-gates.md</code> / <code>docs/22-wechat-latest-scan.md</code>
 </p>
 
