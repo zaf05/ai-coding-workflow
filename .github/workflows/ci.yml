@@ -1,0 +1,40 @@
+# CI 门禁：本地 pre-commit 可被 `git commit --no-verify` 绕过，CI 是绕不过的最后一堵墙。
+# 设计对齐 docs/13「CI 侧再挂一次 selftest.sh」缺口的既定口径：selftest + 闸门在位 + 包完整性。
+name: ci
+
+on:
+  push:
+    branches: [main, "wp/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # §12 全站一致性依赖本机 8096 静态站；CI 无此站 → 按设计显式 SKIP
+      # （site_offline 计入 total），count_sync 仍校验 README/HTML 的 107 口径，exit 0。
+      # 不在 CI 里起假站冒充在线：探测会 200，但被检页面不存在，反而制造真 FAIL。
+      - name: selftest（离线口径 106 PASS + 1 SKIP）
+        run: bash scripts/selftest.sh
+
+      # 全新 clone 未装 hook，直接 --check 会如实 FAIL（未装不得谎报）；先装后查。
+      - name: pre-commit 闸门在位（先 apply 再 check）
+        run: |
+          python3 scripts/install_hooks.py --apply
+          python3 scripts/install_hooks.py --check
+
+      - name: 包完整性（docs 索引 / skills / 工作流正反例 / runs 容器一致性）
+        run: python3 scripts/validate_package.py
