@@ -39,7 +39,7 @@
 | **Prompt 预算与丢弃优先级** | 模板声明了 `max_context_tokens` / `drop_priority`，但没有测量与执行 | 出现上下文超限的真实案例后再实现，避免为假想问题写代码 |
 | **`validate_run.py` 的语义检查深度** | 当前只查容器结构、状态合法性、证据引用可达、SHA 格式；不判断证据是否"真的支持结论" | 语义判断留给 Reviewer 角色，脚本不越权 |
 | **CI 侧再挂一次 `selftest.sh`** | pre-commit 闸门已于 v1.4.0 落地（`install_hooks.py`），但 `git commit --no-verify` 可绕过任何本地 hook，且换机器/新克隆时闸门需重新 `--apply` 才生效 | 在 CI job 里跑 `bash scripts/selftest.sh` + `python3 scripts/install_hooks.py --check`，失败即阻断合并；这样「绕过本地 hook」不再等于「绕过检查」 |
-| **evals / 场景用例库** | 参考工程有 `evals/*.md` 场景用例，我这里还没有 | 每次真实 run 后补一条"可观察决策"用例，不比对精确措辞 |
+| **evals / 场景用例库** | 参考工程有 `evals/*.md` 场景用例，我这里还没有；度量口径候选已记录（来源 131，docs/36 §三）：AI 初稿采纳率（≥80%，判定=定稿由 AI 初稿迭代演进而非推翻重写）与阶段耗时/人工返工次数成指标（原料 ledger 已含 round/timestamp/attempts，未成指标） | 每次真实 run 后补一条"可观察决策"用例，不比对精确措辞；建库时一并定采纳率与耗时/返工口径 |
 | **触发/心跳层（automations，2026-09-21 登记，docs/35 §三）** | 循环本体（`run_flow --advance`）与循环驱动（谁唤醒下一轮）目前是同一宿主会话；无定时/宿主调度触发 `task_resume` 链路的无人值守路径 | 触发条件（二者齐备才动）：①出现首个「无人值守自动跟进」真实需求（如夜间 `check_all` 后自动处置停滞 run）；②宿主原生调度可用（Codex automations / Claude Code 定时任务）。形态先做唤醒 prompt 模板（前馈约束+反馈传感器+先读状态，docs/35 §四①），**不做守护进程**——守住 instruction-only 与 0 新增依赖边界 |
 
 ## 演进顺序（建议）
