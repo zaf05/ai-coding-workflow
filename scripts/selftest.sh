@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -uo pipefail
 cd "$(dirname "$0")/.."
-pass=0; fail=0
+pass=0; fail=0; env_skip=0
 
 echo "== 1. 正例工作流（应 PASS，含 _examples/） =="
 # _examples/ 一并校验：示例是给人和 Planner 抄的，烂掉比没有更糟。
@@ -897,6 +897,7 @@ if [ "$rec_root" = "$repo_root" ]; then
 else
   echo "SKIP 安装器本机锁定（本机安装目标属于其他来源根或未安装：${rec_root:-无收据}）"
   echo "     环境事实，不判失败；本机若要锁定版本：python3 scripts/install_skills.py --apply"
+  env_skip=$((env_skip+1))  # 环境性跳过计入 total，count_sync 才能在异根机器对齐 README 口径
 fi
 
 echo "== 5. 内置 YAML fallback 自检 =="
@@ -1604,6 +1605,7 @@ if [ "$rec_root" = "$repo_root" ]; then
   fi
 else
   echo "SKIP 本副本闸门在位性（本机安装目标属于其他来源根；python3 scripts/install_hooks.py --apply 可安装）"
+  env_skip=$((env_skip+1))
 fi
 
 echo
@@ -1977,7 +1979,7 @@ fi
 python3 -c 'import shutil,sys;shutil.rmtree(sys.argv[1],ignore_errors=True)' "$cli_dir"
 
 echo "== 16. count_sync（README/HTML 计数与实际总数机器联动，不计数只守门；必须位于全部计数断言之后） =="
-total=$((pass+fail+site_offline))
+total=$((pass+fail+site_offline+env_skip))
 cs_fail=0
 if grep -q "在线全跑 ${total}/${total}" README.md && grep -q "${total}/${total}" aiworflow-full-flow.html; then
   echo "PASS count_sync：README/HTML 均为 ${total}，与本次实际总数一致"

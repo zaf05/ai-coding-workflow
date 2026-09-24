@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>AIWorflow 全流程（v1.8.15）· 我的 AI 工作流</title>
+  <title>AIWorflow 全流程（v1.8.16）· 我的 AI 工作流</title>
   <style>
     :root {
       --bg: #f6f7f9;
@@ -506,9 +506,10 @@ python3 scripts/run_flow.py workflows/feature-delivery.workflow.yaml runs/RUN-ID
 <h2 id="s-version">📜 版本演进</h2>
 
 <div class="card">
-  <p style="margin:0 0 12px;border-left:3px solid var(--accent);padding-left:10px;font-size:0.9em">📌 版本状态：本页原为 v1.7.8 全流程快照，2026-09-20 全量校准并持续同步至当前 <strong>v1.8.15</strong>；版本唯一事实源是 <code>VERSION</code>（README 头部与之对齐）。v1.8.x 相对快照新增：写入时校验 T-01..T-04、DAG 语义一致性 R-1/R-2/R-3、check_all 全系统日检、规则生命周期 Add/Thin 与任务后能力观察、pre-commit hook v3 双布局、长周期任务恢复链自检覆盖、报告契约统一与账本可观测（v1.8.6）、会话归因与 Reviewer 确定性前置检查（v1.8.7，66→69）、checkpoint/state/ledger 消费与串行治理边界（v1.8.8，69→70）、4 条 P3 收口与当日全网检索批 087–124 入附录（v1.8.9）、首个真实 G3 门评审 run 的收尾规则固化（v1.8.10，docs/05·07）、Loop Engineering 收编与心跳层缺口登记（v1.8.11，docs/35·13）、引擎完整性硬门禁与 refreeze 受控迁移（v1.8.12，R-4/R-5）、conditional expression 受限文法求值 + inert_conditional 护栏 + F1-R L3 断点演练实证（v1.8.13，RUN-20260923-001），明细见下表最新 10 行。</p>
+  <p style="margin:0 0 12px;border-left:3px solid var(--accent);padding-left:10px;font-size:0.9em">📌 版本状态：本页原为 v1.7.8 全流程快照，2026-09-20 全量校准并持续同步至当前 <strong>v1.8.16</strong>；版本唯一事实源是 <code>VERSION</code>（README 头部与之对齐）。v1.8.x 相对快照新增：写入时校验 T-01..T-04、DAG 语义一致性 R-1/R-2/R-3、check_all 全系统日检、规则生命周期 Add/Thin 与任务后能力观察、pre-commit hook v3 双布局、长周期任务恢复链自检覆盖、报告契约统一与账本可观测（v1.8.6）、会话归因与 Reviewer 确定性前置检查（v1.8.7，66→69）、checkpoint/state/ledger 消费与串行治理边界（v1.8.8，69→70）、4 条 P3 收口与当日全网检索批 087–124 入附录（v1.8.9）、首个真实 G3 门评审 run 的收尾规则固化（v1.8.10，docs/05·07）、Loop Engineering 收编与心跳层缺口登记（v1.8.11，docs/35·13）、引擎完整性硬门禁与 refreeze 受控迁移（v1.8.12，R-4/R-5）、conditional expression 受限文法求值 + inert_conditional 护栏 + F1-R L3 断点演练实证（v1.8.13，RUN-20260923-001），明细见下表最新 10 行。</p>
   <div class="tbl-wrap"><table>
     <tr><th>版本</th><th>日期</th><th>核心变更</th></tr>
+    <tr><td>v1.8.16</td><td>2026-09-24</td><td>count_sync 可移植性修复 + CI 门禁上线：首次 GitHub Actions 运行（selftest + install_hooks apply→check + validate_package）即抓到真缺陷——全新 clone（异根、无站点）下 §4/§10.7 按设计 SKIP，count_sync 拿实际 total 对 README 的 107 口径必 FAIL；修复为环境性 SKIP（env_skip）与 site_offline 一并计入 total，任何环境裸跑 exit 0 且对齐 107 口径，不放宽任何断言</td></tr>
     <tr><td>v1.8.15</td><td>2026-09-23</td><td>引擎 CLI 契约收口（RUN-20260923-004）：未知参数 [AIW_UNKNOWN_FLAG] 显式 FAIL 不再静默吞；--status skipped 写时凭据 --skip-reason/--error-codes（AIW_SKIP_CREDENTIAL_MISSING 拒绝缺凭据，reason 默认 BRANCH_NOT_TAKEN，误用先报参数错）；standalone --execute-check 必告警不落状态；selftest 99→107（§15 CLI 契约），count_sync 移至 §16</td></tr>
     <tr><td>v1.8.14</td><td>2026-09-23</td><td>并发写保护 + 复核发现修复（RUN-20260923-002）：state.yaml 九处写点统一收口 load_run_state/save_run_state——加载记字节指纹、保存前重读比对，并发修改即 AIW_STATE_CONFLICT 拒绝且不覆盖，temp+原子替换写入，同命令多次保存自动刷新指纹；R-1：--advance 缺 task.yaml 告警（堵「合法推进但不可恢复」断缝）；R-2：--init 改存相对 workflow_path；selftest 95→99（§14 并发守卫）</td></tr>
     <tr><td>v1.8.13</td><td>2026-09-23</td><td>conditional expression 惰性缺陷修复 + F1-R L3 断点演练实证（RUN-20260923-001）：run_flow --evaluate-conditional 支持 criteria_type: expression 的受限文法求值（true / &lt;ident&gt; == '&lt;literal&gt;'，对 state.conditions 求值；文法之外显式 AIW_INERT_CONDITIONAL FAIL 不静默落默认）；validate_workflow 新增 inert_conditional 编写期护栏（注册 GUARDRAIL_IDS）+ _invalid 反例，引擎求值与护栏共用同一文法实现不漂移；以本 run 为载体执行 F1-R L3 断点演练——intake/recon/classify 完成后故意中断，全新零共享上下文会话经 task_resume.py 接续，五条验收（恢复提示词含已完成块/frontier 不选已完成块/新会话真读 context/ledger 可追溯中断历史/首动作读 checkpoint+零重复副作用）逐条取证通过，docs/29 F1-R 升级为「真实断点恢复已实证」；selftest 91→95（§2 反例 +1、§7a-bis expression 正例、§7a-ter 文法负例、§9 inert_conditional 逐条触发）</td></tr>
@@ -688,7 +689,7 @@ python3 scripts/run_flow.py workflows/feature-delivery.workflow.yaml runs/RUN-ID
 </div>
 
 <p style="text-align:center;color:var(--muted);font-size:0.85em;margin-top:32px">
-  AIWorflow v1.8.15 · 纯文件驱动 · 除已有 PyYAML 外 0 新增依赖 · selftest 107/107 PASS（在线口径） · 7 工程对比 · 131 外部来源吸收（001–086 全量核验 + 087–124 全网检索批 + 125–130 Loop Engineering 批 + 131 AI Native 范式批）<br>
+  AIWorflow v1.8.16 · 纯文件驱动 · 除已有 PyYAML 外 0 新增依赖 · selftest 107/107 PASS（在线口径） · 7 工程对比 · 131 外部来源吸收（001–086 全量核验 + 087–124 全网检索批 + 125–130 Loop Engineering 批 + 131 AI Native 范式批）<br>
   📁 源文档位于 <code>.ai_worflow/</code> · <code>README.md</code> / <code>docs/00-overview.md</code> / <code>docs/03-gates.md</code> / <code>docs/22-wechat-latest-scan.md</code>
 </p>
 
