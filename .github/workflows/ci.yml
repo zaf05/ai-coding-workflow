@@ -24,6 +24,12 @@ jobs:
         with:
           python-version: "3.12"
 
+      # run_flow.py 的 state 写入路径需要 PyYAML（内置 fallback 只支持 load 不支持 dump，
+      # run_flow.py 既有设计：无 PyYAML 时 dump 显式 raise）。这是"已有依赖"在换机环境的
+      # 标准安装，不是新增依赖；首跑红的根因即此（50 项 ModuleNotFoundError 连锁）。
+      - name: 安装已有依赖 PyYAML（state 写入路径必需）
+        run: python -m pip install pyyaml
+
       # §12 全站一致性依赖本机 8096 静态站；CI 无此站 → 按设计显式 SKIP
       # （site_offline 计入 total），count_sync 仍校验 README/HTML 的 107 口径，exit 0。
       # 不在 CI 里起假站冒充在线：探测会 200，但被检页面不存在，反而制造真 FAIL。
