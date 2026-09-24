@@ -25,6 +25,7 @@
 | `runs/` 容器一致性护栏（v1.4.1） | `validate_package.py` 第 10 步：每个 `runs/<ID>` 要么通过 `validate_run.py`，要么在 `runs/README.md` 显式登记为占位；第三种状态（半清理的 run 恒定 FAIL）被拒。理由：恒定 FAIL 会让人和 Agent 习惯性忽略 FAIL，护栏一旦被当噪音就等于没有。`selftest.sh` §3b 用临时负例目录证明它真的会开火，用完即清理 |
 | 引擎 CLI 契约（v1.8.15）：未知参数显式 FAIL + skipped 写时凭据 + standalone execute-check 告警 | `scripts/run_flow.py`：`[AIW_UNKNOWN_FLAG]`（退出 2 零变更）；`--skip-reason`/`--error-codes` 写时凭据（`AIW_SKIP_CREDENTIAL_MISSING`，reason 默认 `BRANCH_NOT_TAKEN`，误用先报参数错）；standalone `--execute-check` 必 WARN；selftest §15 八断言 + 3k-3 回归测试随契约更新（载体 RUN-20260923-004） |
 | 运行期闸门（pre-commit，v1.4.0） | `scripts/hooks/pre-commit` + `scripts/install_hooks.py`（`--dry-run/--apply/--check/--uninstall`，原子替换、外来 hook 先备份、按标记+SHA 双确认才卸载）；`selftest.sh` §10 七项断言（本体合法、dry-run 不写盘、未装不得谎报、装后 check 通过且幂等、篡改一字节即报漂移、外来 hook 备份/恢复、本副本闸门在位）。端到端实测：干净改动放行；`gate` 缺 `evidence` / `commands` 含 `rm -rf` 的提交被拒且 HEAD 不前进，终端直接给出 `[evidence_free_gate]`、`[unsafe_command]` 与修复建议；补 evidence 后同一提交放行 |
+| CI 门禁（GitHub Actions，v1.8.16） | `.github/workflows/ci.yml`：selftest（异根/离线走显式 SKIP 并计入总数口径，exit 0）+ `install_hooks.py` 先 apply 后 check + `validate_package.py`；触发 push main/`wp/**` 与手动。首跑即抓到两个真问题并当日修复——count_sync 在异根 clone 上拿实际 total 对 README 107 口径必 FAIL（v1.8.16 `env_skip` 计数修复）、CI 干净 Python 缺 PyYAML 致 run_flow 写路径 50 项连锁 FAIL（`pip install pyyaml`，既有依赖换机安装）；首次绿跑 https://github.com/zaf05/ai-coding-workflow/actions/runs/35961957806（`5abe355`，main，2026-09-24）——`git commit --no-verify` 绕过本地 hook 不再等于绕过检查 |
 
 ## 未实现（不要用现在时态描述它们）
 
@@ -38,7 +39,6 @@
 | **固化（`run_signature`）机制** | `docs/08` 只有规则，没有存固化产物、比对签名、回落 agent 的实现 | 等第一次 run 结束后，把重复出现的 `check` 命令写进工作流定义即可，暂不需要代码 |
 | **Prompt 预算与丢弃优先级** | 模板声明了 `max_context_tokens` / `drop_priority`，但没有测量与执行 | 出现上下文超限的真实案例后再实现，避免为假想问题写代码 |
 | **`validate_run.py` 的语义检查深度** | 当前只查容器结构、状态合法性、证据引用可达、SHA 格式；不判断证据是否"真的支持结论" | 语义判断留给 Reviewer 角色，脚本不越权 |
-| **CI 侧再挂一次 `selftest.sh`** | pre-commit 闸门已于 v1.4.0 落地（`install_hooks.py`），但 `git commit --no-verify` 可绕过任何本地 hook，且换机器/新克隆时闸门需重新 `--apply` 才生效 | 在 CI job 里跑 `bash scripts/selftest.sh` + `python3 scripts/install_hooks.py --check`，失败即阻断合并；这样「绕过本地 hook」不再等于「绕过检查」 |
 | **evals / 场景用例库** | 参考工程有 `evals/*.md` 场景用例，我这里还没有；度量口径候选已记录（来源 131，docs/36 §三）：AI 初稿采纳率（≥80%，判定=定稿由 AI 初稿迭代演进而非推翻重写）与阶段耗时/人工返工次数成指标（原料 ledger 已含 round/timestamp/attempts，未成指标） | 每次真实 run 后补一条"可观察决策"用例，不比对精确措辞；建库时一并定采纳率与耗时/返工口径 |
 | **触发/心跳层（automations，2026-09-21 登记，docs/35 §三）** | 循环本体（`run_flow --advance`）与循环驱动（谁唤醒下一轮）目前是同一宿主会话；无定时/宿主调度触发 `task_resume` 链路的无人值守路径 | 触发条件（二者齐备才动）：①出现首个「无人值守自动跟进」真实需求（如夜间 `check_all` 后自动处置停滞 run）；②宿主原生调度可用（Codex automations / Claude Code 定时任务）。形态先做唤醒 prompt 模板（前馈约束+反馈传感器+先读状态，docs/35 §四①），**不做守护进程**——守住 instruction-only 与 0 新增依赖边界 |
 
