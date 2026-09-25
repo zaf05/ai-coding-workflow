@@ -325,7 +325,7 @@ AIWorflow 是一套**纯文件驱动的 AI 研发控制层**。它不提供浏�
 | 总代码行（脚本） | 6,888 行 Python + Shell（scripts/*.py + *.sh，wc -l 实测 2026-09-25，v1.8.21） |
 | 总文档行 | 6,512 行 Markdown（docs/*.md + 根 README，wc -l 实测 2026-09-25，v1.8.21；含 docs/37 基线报告、docs/10 跨工程章节、docs/38 收编批对照与 docs/04 跨宿主交叉复核规则） |
 | 外部依赖 | 0 新增（Python 3 + bash + 当前环境已有 PyYAML；不引入数据库/消息队列/npm 依赖） |
-| 宿主加载 | Codex 与 Claude Code 双宿主已实测加载（2026-09-20 只读探针：Codex exec 会话与 Claude Code `-p` 嵌套会话各自发现/注册并实读 skill；2026-09-23 v1.8.13 升级后 `--check` 复核指纹一致，并实测 Claude Code 嵌套会话 `claude -p` 真实列出全部 5 个 aiworflow* skill、Codex 会话内 5 个 skill 可读） |
+| 宿主加载 | Codex 与 Claude Code 双宿主已实测加载（2026-09-20 只读探针：Codex exec 会话与 Claude Code `-p` 嵌套会话各自发现/注册并实读 skill；2026-09-23 v1.8.13 升级后 `--check` 复核指纹一致，并实测 Claude Code 嵌套会话 `claude -p` 真实列出全部 5 个 aiworflow* skill、Codex 会话内 5 个 skill 可读；2026-09-25 v1.8.21 升级后双宿主 `--check` 收据指纹一致，并以只读探针实测双宿主会话各自经本宿主 skills 目录符号链接逐字读出 aiworflow-reviewer SKILL.md 新增的「会话宿主与交叉复核（v1.8.21）」节并正确回答其语义——Codex `codex exec -s read-only` 与 Claude Code 嵌套 `claude -p` 各一次） |
 
 ### 三层防护体系
 
