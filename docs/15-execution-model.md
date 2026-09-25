@@ -52,14 +52,16 @@ python3 scripts/validate_run.py runs/RUN-20260920-003
 timeout 180 codex exec \
   --ephemeral --skip-git-repo-check \
   -C /home/feifz/workspace/WanGoPlatform/.ai_worflow \
-  -s danger-full-access \
+  -s workspace-write \
   -c model_reasoning_effort=low \
   -o /tmp/aiworflow-smoke.txt \
   '你是 aiworflow-reviewer。只读审核 RUN-20260920-003 的 verify_ui 块，输出 review.yaml 到对应 run 目录；不要改 state.yaml。'
 ```
 
+> 沙箱取最小权限：本示例只需写工作区内 run 目录，用 `workspace-write`；纯读探针用 `read-only`（2026-09-25 双宿主 v1.8.21 探针实测可用）。不再默认 `danger-full-access`。
+
 ## 当前事实
 
 - 历史冒烟 Run `RUN-20260908-002`（bugfix-triage doc_fix 主径）磁盘已不存在；现行可验证真实 Run 包括 `runs/RUN-20260920-003`（ui-verification 全块 completed，`validate_run.py` PASS）等，见 `runs/README.md`。
-- `~/.codex/skills` 与 `~/.claude/skills` 的 `aiworflow*` 均为符号链接（两宿主收据 1.8.9 指纹一致）；2026-09-20 双宿主只读探针实测：Codex exec 会话与 Claude Code 嵌套会话均能发现并实读 Skill。
+- `~/.codex/skills` 与 `~/.claude/skills` 的 `aiworflow*` 均为符号链接（两宿主收据 1.8.21 指纹一致，2026-09-25 复核）；2026-09-20 双宿主只读探针实测：Codex exec 会话与 Claude Code 嵌套会话均能发现并实读 Skill。
 - Flow 引擎为 `scripts/run_flow.py` 确定性 DAG 实现（instruction-only 边界内的可执行引擎），非独立常驻进程。

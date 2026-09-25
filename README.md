@@ -126,7 +126,7 @@ python3 scripts/run_flow.py workflows/feature-delivery.workflow.yaml runs/<RUN-I
 cd /home/feifz/workspace/WanGoPlatform/.ai_worflow
 python3 scripts/validate_package.py
 python3 scripts/validate_run.py runs/RUN-20260920-003
-timeout 180 codex exec   --ephemeral --skip-git-repo-check   -C /home/feifz/workspace/WanGoPlatform/.ai_worflow   -s danger-full-access   -c model_reasoning_effort=low   -o /tmp/aiworflow-smoke.txt   '你是 aiworflow-reviewer。只读审核 RUN-20260920-003 的 verify_ui 块，输出 review.yaml 到对应 run 目录；不要改 state.yaml。'
+timeout 180 codex exec   --ephemeral --skip-git-repo-check   -C /home/feifz/workspace/WanGoPlatform/.ai_worflow   -s workspace-write   -c model_reasoning_effort=low   -o /tmp/aiworflow-smoke.txt   '你是 aiworflow-reviewer。只读审核 RUN-20260920-003 的 verify_ui 块，输出 review.yaml 到对应 run 目录；不要改 state.yaml。'
 ```
 
 ## 不可妥协的边界
@@ -323,7 +323,7 @@ AIWorflow 是一套**纯文件驱动的 AI 研发控制层**。它不提供浏�
 | 确定性脚本 | 17 个代码脚本 + pre-commit hook（校验×7：workflow/package/run/transition/consistency/content-quality/site-consistency；引擎×8：compile_dag/run_flow/check_all/task_resume/review_preflight/list_runs/install×2；selftest + _yaml_min；Python 3 + bash + 已有 PyYAML） |
 | selftest | 113 项（同根+站点在线全跑 113/113；环境性差异项——§4 安装锁定 / §10.7 本副本闸门 / §12 站点一致性——按设计显式 SKIP 并计入总数口径，任何环境裸跑 exit 0 且 count_sync 对齐 113），分组覆盖包结构→反例→transition→DAG语义→引擎完整性→refreeze→交付缺陷回归→创建守门→日检→安装→编译→执行→版本锁定→闸门→站点一致性→长周期恢复链→并发写保护→引擎 CLI 契约→只读聚合→计数联动 |
 | 总代码行（脚本） | 6,888 行 Python + Shell（scripts/*.py + *.sh，wc -l 实测 2026-09-25，v1.8.21） |
-| 总文档行 | 6,512 行 Markdown（docs/*.md + 根 README，wc -l 实测 2026-09-25，v1.8.21；含 docs/37 基线报告、docs/10 跨工程章节、docs/38 收编批对照与 docs/04 跨宿主交叉复核规则） |
+| 总文档行 | 6,515 行 Markdown（docs/*.md + 根 README，wc -l 实测 2026-09-25，v1.8.21；含 docs/37 基线报告、docs/10 跨工程章节、docs/38 收编批对照、docs/04 跨宿主交叉复核规则与 docs/15 沙箱最小权限示例） |
 | 外部依赖 | 0 新增（Python 3 + bash + 当前环境已有 PyYAML；不引入数据库/消息队列/npm 依赖） |
 | 宿主加载 | Codex 与 Claude Code 双宿主已实测加载（2026-09-20 只读探针：Codex exec 会话与 Claude Code `-p` 嵌套会话各自发现/注册并实读 skill；2026-09-23 v1.8.13 升级后 `--check` 复核指纹一致，并实测 Claude Code 嵌套会话 `claude -p` 真实列出全部 5 个 aiworflow* skill、Codex 会话内 5 个 skill 可读；2026-09-25 v1.8.21 升级后双宿主 `--check` 收据指纹一致，并以只读探针实测双宿主会话各自经本宿主 skills 目录符号链接逐字读出 aiworflow-reviewer SKILL.md 新增的「会话宿主与交叉复核（v1.8.21）」节并正确回答其语义——Codex `codex exec -s read-only` 与 Claude Code 嵌套 `claude -p` 各一次） |
 
