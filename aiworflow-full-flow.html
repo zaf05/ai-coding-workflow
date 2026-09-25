@@ -408,7 +408,7 @@
     </tr>
     <tr>
       <td><strong>文章溯源</strong></td>
-      <td><span class="tag tag-green">✅ 134 外部来源全量吸收（001–086 全量核验 + 087–124 全网检索批 + 125–130 Loop Engineering 批标注收录）</span></td>
+      <td><span class="tag tag-green">✅ 135 外部来源全量吸收（001–086 全量核验 + 087–124 全网检索批 + 125–130 Loop Engineering 批标注收录）</span></td>
       <td>无</td>
       <td>无</td>
       <td>无</td>
@@ -444,7 +444,7 @@
     <tr><td>Prompt 模板</td><td>7 个</td><td>intake/spec/implement/review/test/candidate-dag + 示例</td><td>validate_package.py 校验分段</td></tr>
     <tr><td>确定性脚本</td><td>17 个代码脚本 + hook</td><td>校验×7：validate_workflow/validate_package/validate_run/validate_transition/validate_consistency/validate_content_quality/validate_site_consistency；引擎×8：compile_dag/run_flow/check_all/task_resume/review_preflight/list_runs/install_skills/install_hooks；selftest + _yaml_min；另 pre-commit hook v3</td><td>selftest 112 项全覆盖；§3i/§3j/§3k 验证引擎完整性门禁开火与出厂兼容，§7a-bis/§7a-ter 验证 expression 求值与文法负例，§7d-ter 验证 session-meta，§7d-quatro 验证 preflight 正负例，§15b 验证只读聚合</td></tr>
     <tr><td>运行期容器</td><td>28 个 run</td><td>RUN-20260914-001（skill-tool-tag，已合入 develop）/ RUN-20260917-006（中型优化 TDD）/ RUN-20260920-001（运行期强制执行落地）/ RUN-20260920-002（页面验证）/ RUN-20260920-003（首个 Claude Code 完整 run）/ RUN-20260921-001（六功能域 G3 门评审）+ 11 个 2026-09-20 按快照协议收口的历史 run + 2026-09-21~23 批次（CC 系列功能交付/页面验证、缺陷归因、CLI 契约回归等）</td><td>validate_run.py + runs/README.md 白名单；聚合视图 list_runs.py，度量基线 docs/37</td></tr>
-    <tr><td>参考文章</td><td>134 个 (001–134)</td><td>20篇AI Coding/Harness/SDD/OPC/环系统 + 10个开源项目（含BMAD/MoAI-ADK/CEK/how-claude-code-works/flow-next/oddyssey）+ 4篇hongtao深度解读 + 2篇微信/阿里云最新文章（蚂蚁数科Harness、阿里AACR-Bench）+ 后续批次扫描（docs/23/24/26/28/32）+ 086 腾讯云三支柱（2026-09-20 L1）+ 全网检索批（docs/34：GitHub 周榜直抓 15 仓 + 12 组主题检索，087–124 共 38 条，L3 快照级为主）+ Loop Engineering 收编批（docs/35：125 淘天 L1 webReader + 126/127 Addy/MF 原文可达补录 + 128–130 转引 L3）+ AI Native 范式批（docs/36：131 淘天海外 L1 webReader）</td><td>curl+MicroMessenger/移动UA+GitHub API 逐个核验；110行访问核验表：001–086 批次 63行可访问、2行诚实标注不可用、086 即 row 65（webReader L1 全文核验，docs/32）；row 66–103 为 2026-09-20 全网检索批（周榜直抓 L1 / 检索快照 L3，逐条标注，docs/34）；row 104–109 为 2026-09-21 Loop Engineering 批（docs/35）；row 110 为 2026-09-24 AI Native 范式批；row 111–112 为 2026-09-25 spec-superflow 批（L1，docs/38）（webReader L1 全文，docs/36）</td></tr>
+    <tr><td>参考文章</td><td>135 个 (001–135)</td><td>20篇AI Coding/Harness/SDD/OPC/环系统 + 10个开源项目（含BMAD/MoAI-ADK/CEK/how-claude-code-works/flow-next/oddyssey）+ 4篇hongtao深度解读 + 2篇微信/阿里云最新文章（蚂蚁数科Harness、阿里AACR-Bench）+ 后续批次扫描（docs/23/24/26/28/32）+ 086 腾讯云三支柱（2026-09-20 L1）+ 全网检索批（docs/34：GitHub 周榜直抓 15 仓 + 12 组主题检索，087–124 共 38 条，L3 快照级为主）+ Loop Engineering 收编批（docs/35：125 淘天 L1 webReader + 126/127 Addy/MF 原文可达补录 + 128–130 转引 L3）+ AI Native 范式批（docs/36：131 淘天海外 L1 webReader）</td><td>curl+MicroMessenger/移动UA+GitHub API 逐个核验；110行访问核验表：001–086 批次 63行可访问、2行诚实标注不可用、086 即 row 65（webReader L1 全文核验，docs/32）；row 66–103 为 2026-09-20 全网检索批（周榜直抓 L1 / 检索快照 L3，逐条标注，docs/34）；row 104–109 为 2026-09-21 Loop Engineering 批（docs/35）；row 110 为 2026-09-24 AI Native 范式批；row 111–112 为 2026-09-25 spec-superflow 批（L1，docs/38）（webReader L1 全文，docs/36）</td></tr>
     <tr><td>上下文目录</td><td>9 文件</td><td>project/area/decisions/risk-register 四类知识 + 模板与实例（aiworkflow / agentwan / open-platform-docs / consistency）+ README；G1 读入 + G10 写出跨 Run 知识</td><td>validate_package.py</td></tr>
     <tr><td>参考资产</td><td>4 个</td><td>V4.0 HTML + Skyvern + ric-dev + jakubkrehel-skills（11 Skill 界面质量参考）</td><td>git commit 钉住 + docs/12 扫描报告</td></tr>
   </table></div>
@@ -568,7 +568,7 @@ python3 scripts/run_flow.py workflows/feature-delivery.workflow.yaml runs/RUN-ID
 <tr><td>009</td><td>2026-09-10</td><td>老A</td><td><a href="https://mp.weixin.qq.com/s/T69Yk-kFDiQZBF4ChfHiTQ">团队普及 AI Coding 以后，技术负责人应该怎样重新评估团队产能、安排需求和制定研发排期？</a></td></tr>
 <tr><td>010</td><td>2026-07-30</td><td>丶单向箔</td><td><a href="https://mp.weixin.qq.com/s/P6kwha7fRnQznkrUoAHP7w">番外｜用一个完整需求跑通多天 AI Coding 工作流</a></td></tr>
 <tr><td>011</td><td>2026-09-08</td><td>dialog996</td><td><a href="https://mp.weixin.qq.com/s/EsQIMi0bXCf5f4dQ6CM91g">AI 编程助手正在从"流程叙事"转向"模型 + Harness"</a></td></tr>
-<tr><td>012</td><td>2026-07-27</td><td>Hank</td><td><a href="https://mp.weixin.qq.com/s/E96e9pVj7uak99aa8-4Glg">阿里内部用了两年的open-code-review：一条命令，扫完你 vibe coding 的所有雷</a></td></tr>
+<tr><td>012</td><td>2026-07-27</td><td>Hank</td><td><a href="https://mp.weixin.qq.com/s/E96e9pVj7uak99aa8-4Glg">阿里内部用了两年的open-code-review：一条命令，扫完你 vibe coding 的所有雷</a> · 核心原则「确定性规则引擎先扫硬伤，LLM 只做深层」已完整吸收 → Reviewer 角色 + review_preflight.py；**工具本体已开源 → 135**</td></tr>
 <tr><td>013</td><td>2026-07-22</td><td>张逸少</td><td><a href="https://mp.weixin.qq.com/s/AXgQR5wxKvQXu8zpZIWUfw">SDD工程化落地：双环驱动开发流程</a></td></tr>
 <tr><td>014</td><td>2026-09-03</td><td>孔令飞</td><td><a href="https://mp.weixin.qq.com/s/ESWOKhUzBSJWutPqLSMdiA">Harness AI Coding工程化实践：如何将不同项目的代码一致性提升至 96%</a></td></tr>
 <tr><td>015</td><td>2026-09-10</td><td>The fool ss</td><td><a href="https://mp.weixin.qq.com/s/begqTCRK-6xA9dTJgLr_og">【AI-Native 研发踩坑·下】Harness 会过期：AI 编程的方法论也在迭代</a></td></tr>
@@ -688,14 +688,15 @@ python3 scripts/run_flow.py workflows/feature-delivery.workflow.yaml runs/RUN-ID
 <tr><td>129</td><td>2026-09-21</td><td>arXiv</td><td><a href="https://arxiv.org/abs/2605.10907">AI Workflow Store（2605.10907）</a> 🆕 L3 转引（出口 000）· 生态样本/非规则依据</td></tr>
 <tr><td>130</td><td>2026-09-21</td><td>arXiv</td><td><a href="https://arxiv.org/abs/2606.13662">EurekAgent：E=mc² 框架（2606.13662）</a> 🆕 L3 转引（出口 000）· 生态样本/非规则依据</td></tr>
 <tr><td>131</td><td>2026-09-24</td><td>晴晚 · 淘宝天猫海外技术</td><td><a href="https://mp.weixin.qq.com/s/s_QU7mNFuOXE2by-oZ4J5Q">淘宝天猫海外技术的AI Native研发范式升级实践与思考</a> 🆕 L1 · 对照 docs/36：九条主张印证既有设计（调度权归流程引擎正面同构）+ 两条度量口径候选挂 evals</td></tr><tr><td>132</td><td>2026-09-25</td><td>码哥跳动 · 微信公众号</td><td><a href="https://mp.weixin.qq.com/s/s-N8Ihf5aYkCCLZSBfNLvg">融合了 OpenSpec 与 Superpowers 的这个工作流夯爆了</a> 🆕 L1 · 对照 docs/38：Direct/Planned 双路径与 FAST/STANDARD/HIGH_RISK 同构；delta specs 与 verification fingerprint 为新概念</td></tr>
-<tr><td>133</td><td>2026-09-25</td><td>MageByte-Zero</td><td><a href="https://github.com/MageByte-Zero/spec-superflow">spec-superflow v2.0.1（818⭐）</a> 🆕 L1 · GitHub API + README 全文：OpenSpec 规划 + Superpowers 纪律，19 平台，9 skills，零运行时依赖；11 条设计对照 9 条已有、2 条新概念登记路线图</td></tr><tr><td>134</td><td>2026-09-25</td><td>码哥跳动 · 微信公众号</td><td><a href="https://mp.weixin.qq.com/s/ou3NLE6x5elSy5lehMLm9Q">Git worktree 并行开发实战：多分支、AI 编程任务隔离、冲突合并与安全清理</a> 🆕 L1 · 对照 docs/38 §六：8 条对照 6 条已有、2 条新概念（效率对照实验 + 事故恢复演练）</td></tr>
+<tr><td>133</td><td>2026-09-25</td><td>MageByte-Zero</td><td><a href="https://github.com/MageByte-Zero/spec-superflow">spec-superflow v2.0.1（818⭐）</a> 🆕 L1 · GitHub API + README 全文：OpenSpec 规划 + Superpowers 纪律，19 平台，9 skills，零运行时依赖；11 条设计对照 9 条已有、2 条新概念登记路线图</td></tr><tr><td>134</td><td>2026-09-25</td><td>码哥跳动 · 微信公众号</td><td><a href="https://mp.weixin.qq.com/s/ou3NLE6x5elSy5lehMLm9Q">Git worktree 并行开发实战：多分支、AI 编程任务隔离、冲突合并与安全清理</a> 🆕 L1 · 对照 docs/38 §六：8 条对照 6 条已有、2 条新概念（效率对照实验 + 事故恢复演练）</td></tr><tr><td>135</td><td>2026-09-25</td><td>Alibaba Group</td><td><a href="https://github.com/alibaba/open-code-review">alibaba/open-code-review</a> 🆕 L1 · GitHub API + README 全文 · **40,780⭐** · a12 工具本体开源：CLI `ocr`，确定性工程×Agent 混合架构，npm 安装，支持 Claude Code/Codex/Cursor/Kimi；AACR-Bench 验证 F1 显著高于通用 Agent 且 token 仅 1/9；待评估接入</td></tr>
+
 
 
 </table></div>
 </div>
 
 <p style="text-align:center;color:var(--muted);font-size:0.85em;margin-top:32px">
-  AIWorflow v1.8.19 · 纯文件驱动 · 除已有 PyYAML 外 0 新增依赖 · selftest 113/113 PASS（在线口径） · 7 工程对比 · 134 外部来源吸收（001–086 全量核验 + 087–124 全网检索批 + 125–130 Loop Engineering 批 + 131 AI Native 范式批 + 132–134 spec-superflow + worktree 批）<br>
+  AIWorflow v1.8.19 · 纯文件驱动 · 除已有 PyYAML 外 0 新增依赖 · selftest 113/113 PASS（在线口径） · 7 工程对比 · 135 外部来源吸收（001–086 全量核验 + 087–124 全网检索批 + 125–130 Loop Engineering 批 + 131 AI Native 范式批 + 132–135 spec-superflow + worktree + open-code-review 批）<br>
   📁 源文档位于 <code>.ai_worflow/</code> · <code>README.md</code> / <code>docs/00-overview.md</code> / <code>docs/03-gates.md</code> / <code>docs/22-wechat-latest-scan.md</code>
 </p>
 

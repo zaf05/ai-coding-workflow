@@ -425,7 +425,7 @@ python3 scripts/install_skills.py --target ~/.codex/skills --upgrade --apply  # 
 | a09 | 2026-09-10 | 老A | [团队普及 AI Coding 以后，技术负责人应该怎样重新评估团队产能、安排需求和制定研发排期](https://mp.weixin.qq.com/s/T69Yk-kFDiQZBF4ChfHiTQ) | 团队产能评估、需求排期在 AI Coding 时代的重新思考 |
 | a10 | 2026-07-30 | 丶单向箔 | [番外｜用一个完整需求跑通多天 AI Coding 工作流](https://mp.weixin.qq.com/s/P6kwha7fRnQznkrUoAHP7w) | 用完整需求跑通多天 AI Coding 的端到端实录 |
 | a11 | 2026-09-08 | dialog996 | [AI 编程助手正在从"流程叙事"转向"模型 + Harness"](https://mp.weixin.qq.com/s/EsQIMi0bXCf5f4dQ6CM91g) | 多 Agent ≠ 可控执行；真正重要的是模型路由/执行编排/企业治理 |
-| a12 | 2026-07-27 | Hank | [阿里内部用了两年的 open-code-review：一条命令扫完 vibe coding 的所有雷](https://mp.weixin.qq.com/s/E96e9pVj7uak99aa8-4Glg) | 两层审查：确定性规则引擎先扫硬伤（零误报），LLM 只做深层；每条规则来自几十万真实 bug |
+| a12 | 2026-07-27 | Hank | [阿里内部用了两年的 open-code-review：一条命令扫完 vibe coding 的所有雷](https://mp.weixin.qq.com/s/E96e9pVj7uak99aa8-4Glg) | 两层审查：确定性规则引擎先扫硬伤（零误报），LLM 只做深层；每条规则来自几十万真实 bug；**工具本体已开源 → 附录 135（40K⭐，CLI `ocr`）** |
 | a13 | 2026-07-22 | 张逸少 | [SDD 工程化落地：双环驱动开发流程](https://mp.weixin.qq.com/s/AXgQR5wxKvQXu8zpZIWUfw) | SDD 双环驱动：规约环（Spec→Clarify→Plan）与实现环（Tasks→Implement→Verify） |
 | a14 | 2026-09-03 | 孔令飞 | [Harness AI Coding 工程化实践：如何将不同项目的代码一致性提升至 96%](https://mp.weixin.qq.com/s/ESWOKhUzBSJWutPqLSMdiA) | 规范工具化（46 个 MCP Tool 覆盖 Go 全生命周期）；高质量数据是 AI 代码一致性的核心 |
 | a15 | 2026-09-10 | The fool ss | [【AI-Native 研发踩坑·下】Harness 会过期：AI 编程的方法论也在迭代](https://mp.weixin.qq.com/s/begqTCRK-6xA9dTJgLr_og) | Harness 会过期：删旧规则同写新规则一样重要；权限边界+验证闭环+规则编码是新增重点 |
