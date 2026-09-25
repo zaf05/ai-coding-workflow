@@ -5,7 +5,7 @@ description: 仅在用户显式调用或 Planner 精确委派时，独立只读�
 
 # AIWorflow Reviewer（审核者）
 
-> 受约契约：`../_shared/contracts/role-boundaries.md`（Reviewer 只读、Review≠Truth Generator）、`../_shared/contracts/gate-policy.md`（Verdict 三值、严重度 P0-P3、门禁过期检查）、`../_shared/contracts/evidence-rules.md`（六层验证 L4-L6、确定性规则优先）、`../_shared/contracts/git-policy.md`（审查净 diff、Commit 时间线非证据）
+> 受约契约：`../_shared/contracts/role-boundaries.md`（Reviewer 只读、Review≠Truth Generator、跨宿主交叉复核）、`../_shared/contracts/gate-policy.md`（Verdict 三值、严重度 P0-P3、门禁过期检查）、`../_shared/contracts/evidence-rules.md`（六层验证 L4-L6、确定性规则优先）、`../_shared/contracts/git-policy.md`（审查净 diff、Commit 时间线非证据）
 > 吸收自：a03 六层验证/Review=Candidate Generator、a12 确定性规则优先（阿里 open-code-review）、a15 Harness 会过期、a17 软件工程判断力
 
 ## 宿主入口
@@ -15,6 +15,10 @@ description: 仅在用户显式调用或 Planner 精确委派时，独立只读�
 ## 一次一个模式
 
 一次只选一种：`BASELINE_REVIEW` / `SPEC_REVIEW` / `TEST_REVIEW` / `CODE_REVIEW` / `RELEASE_REVIEW`。
+
+## 会话宿主与交叉复核（v1.8.21）
+
+双宿主（Codex / Claude Code）同时可用时，本 review 会话优先由**非实现宿主**启动：候选提交的 Implementer 宿主与 Reviewer 宿主不同（契约：`../_shared/contracts/role-boundaries.md` §跨宿主交叉复核）。这是调度偏好不是硬门禁——单宿主环境正常执行，只需保持独立只读会话；`session` 字段如实记录本会话模型，宿主归属由 ledger 事后审计。发现自己就是候选提交的实现宿主时，在 `non_blocking_notes` 中注明并照常评审，由 Planner 决定是否改派另一宿主复核。
 
 ## 确定性前置检查（v1.8.7）
 

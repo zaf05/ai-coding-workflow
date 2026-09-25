@@ -71,6 +71,13 @@ frontier 可以同时出现多个 ready 块，但 `run_flow.py --advance` 每轮
 - Advisory 级意见默认转后续技术债，不进入返修循环。
 - 一轮 Findings 默认由**一个**修复会话统一处理；超出任务包规模时才按共享根因拆最少批次。
 
+## 跨宿主交叉复核（双宿主调度偏好）
+
+- 双宿主（Codex / Claude Code）同时可用时，CODE_REVIEW / RELEASE_REVIEW 等审核类工作**优先由非实现宿主的会话执行**：候选提交的 Implementer 宿主与 Reviewer 宿主不同，降低同源上下文偏差与「自己写、自己过」的风险。
+- 来源：flow-next「adversarial cross-model reviews」（附录 029，`docs/21` §a29）+ 2026-09-25 四问题对账确认——v1.8.18–v1.8.20 三个版本的候选提交事实上均经另一宿主逐行复核后才推 main，本节把该既有实践成文为规则，不是新增能力。
+- 这是**调度偏好不是硬门禁**：单宿主环境退化为「Reviewer 必须是独立只读会话」，不阻塞流程；引擎不校验宿主归属，可由 ledger 的 owner/model 字段事后审计。
+- 不放宽既有边界：即使跨宿主，「任何角色不得批准自己创建或修改的产物」、Verdict 绑定 SHA/命令输出等规则全部照常生效。
+
 ## 影响面范围（Blast Radius）
 
 > 依据：`23-reference-scan-20260916.md` C1/C4（来源 a2 code-review-graph + r4 context-mode）。

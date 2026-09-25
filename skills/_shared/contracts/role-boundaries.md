@@ -51,6 +51,12 @@
 - 块内步骤不是新审批对象。
 - 宿主主会话只转发，不是第二个 Planner。
 
+## 跨宿主交叉复核（吸收自 029 flow-next）
+
+> flow-next「adversarial cross-model reviews」：对抗式跨模型审查。2026-09-25 成文（v1.8.21）；此前 v1.8.18–v1.8.20 已是事实实践。
+
+规则：双宿主（Codex / Claude Code）同时可用时，review 类工作优先由**非实现宿主**的会话执行——候选提交的 Implementer 宿主与 Reviewer 宿主不同。这是调度偏好不是硬门禁：单宿主环境退化为独立只读 Reviewer 会话，不阻塞；不放宽「不得批准自己产出的结论」等既有边界。权威定义见 `../../../docs/04-roles.md` §跨宿主交叉复核。
+
 ## Reviewer 审核不替代编码规范检查（吸收自 a12）
 
 > a12 Hank「阿里 open-code-review」：确定性规则引擎先扫硬伤，LLM 只做深层判断。
