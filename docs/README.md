@@ -42,7 +42,7 @@
 | `35-wechat-loop-engineering-20260921.md` | 2026-09-21 微信《Loop engineering》（淘天·苏雄）对照收编：六组件对照（五条印证既有设计 + automations 心跳层真缺口登记 docs/13）、六动作循环与 `--advance` 信号模型同构、六条失败模式全有既有答案、三条候选做法记录在案；附录 125–130 逐条归属判定与证据分级（L1/L3 转引纪律） | 追问该文对本工作流的价值、心跳层缺口的触发条件或 125–130 收录去向时 |
 | `36-wechat-ai-native-paradigm-20260924.md` | 2026-09-24 微信《AI Native 研发范式升级》（晴晚·淘天海外技术）对照收编：九条主张印证既有设计（调度权归流程引擎与 `--advance` 正面同构、Spec 冻结、人决策卡点、客观门禁+风险分级、留痕/交叉评审、自检前置、数据回流、度量转向端到端），零真缺口；两条度量口径候选（AI 初稿采纳率 ≥80% 判定口径、阶段耗时/返工 ledger 原料成指标）挂 docs/13 evals；数字员工概念佐证心跳层缺口登记；附录 131 L1 直读 | 追问该文对本工作流的价值、AI 初稿采纳率口径或 131 收录去向时 |
 | `37-run-metrics-baseline-20260924.md` | 首批运行度量基线（list_runs.py 对 28 个历史 run 实测）：一次通过 15/16（93.8%）、总返修 5、总轮次 72、中位跨度 159.6 分钟；口径随工具固化（一次通过 = completed 且有 ledger 且零返修）；AI 初稿采纳率明确不可算（runs gitignored 无版本历史，不伪造）；诚实边界：跨度含人工门等待、ledger 有 v1.7.2 前代际断层、样本小不同质 | 追问「任务拆了几个 run、返修多不多、一次通过率多少」或度量口径定义时 |
-- [spec-superflow 对照扫描](38-spec-superflow-scan-20260925.md)：132/133 来源入附录，11 条设计对照（9 已有 + 2 新概念：delta specs / verification fingerprint）
+- [spec-superflow 对照扫描](38-spec-superflow-scan-20260925.md)：132/133 来源入附录，11 条设计对照（9 已有 + 2 新概念：delta specs / verification fingerprint）；134 Git worktree 并行开发实战（8 条对照 6 已有 + 2 新概念：效率对照实验 / 事故恢复演练）
 
 ## 阅读顺序
 
