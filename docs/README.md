@@ -42,7 +42,7 @@
 | `35-wechat-loop-engineering-20260921.md` | 2026-09-21 微信《Loop engineering》（淘天·苏雄）对照收编：六组件对照（五条印证既有设计 + automations 心跳层真缺口登记 docs/13）、六动作循环与 `--advance` 信号模型同构、六条失败模式全有既有答案、三条候选做法记录在案；附录 125–130 逐条归属判定与证据分级（L1/L3 转引纪律） | 追问该文对本工作流的价值、心跳层缺口的触发条件或 125–130 收录去向时 |
 | `36-wechat-ai-native-paradigm-20260924.md` | 2026-09-24 微信《AI Native 研发范式升级》（晴晚·淘天海外技术）对照收编：九条主张印证既有设计（调度权归流程引擎与 `--advance` 正面同构、Spec 冻结、人决策卡点、客观门禁+风险分级、留痕/交叉评审、自检前置、数据回流、度量转向端到端），零真缺口；两条度量口径候选（AI 初稿采纳率 ≥80% 判定口径、阶段耗时/返工 ledger 原料成指标）挂 docs/13 evals；数字员工概念佐证心跳层缺口登记；附录 131 L1 直读 | 追问该文对本工作流的价值、AI 初稿采纳率口径或 131 收录去向时 |
 | `37-run-metrics-baseline-20260924.md` | 首批运行度量基线（list_runs.py 对 28 个历史 run 实测）：一次通过 15/16（93.8%）、总返修 5、总轮次 72、中位跨度 159.6 分钟；口径随工具固化（一次通过 = completed 且有 ledger 且零返修）；AI 初稿采纳率明确不可算（runs gitignored 无版本历史，不伪造）；诚实边界：跨度含人工门等待、ledger 有 v1.7.2 前代际断层、样本小不同质 | 追问「任务拆了几个 run、返修多不多、一次通过率多少」或度量口径定义时 |
-- [spec-superflow 对照扫描](38-spec-superflow-scan-20260925.md)：132/133 来源入附录，11 条设计对照（9 已有 + 2 新概念：delta specs / verification fingerprint）；134 Git worktree 并行开发实战（8 条对照 6 已有 + 2 新概念：效率对照实验 / 事故恢复演练）
+| `38-spec-superflow-scan-20260925.md` | 2026-09-25 spec-superflow + worktree + open-code-review 对照收编：132/133 spec-superflow 11 条设计对照（9 已有 + 2 新概念 delta specs / verification fingerprint）；134 Git worktree 实战 8 条对照（6 已有 + 2 新概念：效率对照实验 / 事故恢复演练）；135 alibaba/open-code-review 开源（a12 工具本体，40,782⭐ Apache-2.0，待评估接入） | 追问 spec-superflow/worktree/open-code-review 三条链接的价值或 132–135 收录去向时 |
 
 ## 阅读顺序
 
@@ -59,7 +59,7 @@
 
 ## 来源总数
 
-截至 2026-09-24，全系统共收录 **131 个唯一外部来源**（唯一编号以 HTML 附录 001–131 为准；README 附录 a01–a37 是 001–086 中 37 条的子集视图，各批扫描文档另保留批次编号 a/b/E）：
+截至 2026-09-25，全系统共收录 **135 个唯一外部来源**（唯一编号以 HTML 附录 001–135 为准；README 附录 a01–a37 是 001–086 中 37 条的子集视图，各批扫描文档另保留批次编号 a/b/E）：
 
 | 批次 | 数量 | 编号 | 扫描/核验文档 |
 |---|---|---|---|
@@ -74,7 +74,8 @@
 | docs/34 全网检索批（2026-09-20） | 38 | 087–124 | docs/34（周榜直抓 L1×11 + 检索快照 L3×27，核验表 row 66–103） |
 | docs/35 Loop Engineering 批（2026-09-21） | 6 | 125–130 | docs/35（125 L1 webReader + 126/127 curl 200 可达补录 + 128–130 转引 L3，核验表 row 104–109） |
 | docs/36 AI Native 范式批（2026-09-24） | 1 | 131 | docs/36（131 淘天海外 L1 webReader，核验表 row 110） |
-| **合计** | **131** | 001–131 | 001–086 归属复盘见 `33-appendix-full-review-20260920.md`；087–124 见 `34-web-scan-20260920.md` §八；125–130 见 `35-wechat-loop-engineering-20260921.md` §五；131 见 `36-wechat-ai-native-paradigm-20260924.md` §四 |
+| docs/38 spec-superflow + worktree + open-code-review 批（2026-09-25） | 4 | 132–135 | docs/38（132/134 微信 L1 webReader + 133/135 GitHub API L1，核验表 row 111–114） |
+| **合计** | **135** | 001–135 | 001–086 归属复盘见 `33-appendix-full-review-20260920.md`；087–124 见 `34-web-scan-20260920.md` §八；125–130 见 `35-wechat-loop-engineering-20260921.md` §五；131 见 `36-wechat-ai-native-paradigm-20260924.md` §四；132–135 见 `38-spec-superflow-scan-20260925.md` |
 
-验证命令：`grep -oE '<tr><td>[0-9]{3}</td>' aiworflow-full-flow.html | wc -l` → 131（与 HTML 附录计数一致；逐条归属判定 docs/33 + docs/34 + docs/35 + docs/36）
+验证命令：`grep -oE '<tr><td>[0-9]{3}</td>' aiworflow-full-flow.html | wc -l` → 135（与 HTML 附录计数一致；逐条归属判定 docs/33 + docs/34 + docs/35 + docs/36 + docs/38）
 
