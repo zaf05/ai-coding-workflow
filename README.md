@@ -1,8 +1,8 @@
 # AIWorflow · 我的 AI 工作流
 
-版本：v1.8.21（单一事实源 `VERSION`） · `schema_version: 1` · 更新日期：2026-09-25
+版本：v1.8.22（单一事实源 `VERSION`） · `schema_version: 1` · 更新日期：2026-09-29
 
-这是属于我自己的 AI 原生研发工作流系统（当前 v1.8.21，135 个外部参考来源，覆盖 13 家一二线大厂：国内 9——阿里/腾讯/字节/美团/快手/华为/京东/网易有道/货拉拉，国际 4——OpenAI/Anthropic/AWS/Google）。它把一次“让 AI 干活”的请求，升级成一条**可编排（块 DAG）、可分权（四角色）、可验证（门禁 + 证据）、可自动推进（loop_control 信号驱动循环）、可接管（状态与账本）**的交付链路。当前状态：v1.8.21，selftest **113/113 PASS**（站点在线时；离线 112/112 + 1 SKIP），validate_package **全部通过**。近期演进：v1.8.21 将双宿主交叉复核成文为规则（docs/04 新增权威节 + role-boundaries 契约摘要 + Reviewer SKILL 三处接线，纯规则零脚本变更——双宿主可用时 review 优先由非实现宿主会话执行，单宿主退化为独立只读会话不阻塞；v1.8.18–v1.8.20 三版候选提交事实上均经另一宿主逐行复核后推 main，本条把既有实践固化为规则，来源含 flow-next 附录 029 与 2026-09-25 四问题对账）。近期演进：v1.8.20 收编 spec-superflow + Git worktree + open-code-review 批（附录 132–135，docs/38）并全量对齐 README/HTML/docs 计数与附录行格式（拆开粘连行、核验表补 row 111–114）；v1.8.19 将并发写保护的指纹检查 + PID 唯一临时文件 + 原子替换全部纳入 flock 排他锁，关闭 TOCTOU 竞态窗口（真并发 5/5 丢写 → 10 轮 0 静默丢写）。近期演进：v1.8.18 补齐跨工程使用文档并修正远端可见性事实（docs/10 新增 §跨工程使用：三步开任务 + 三个摩擦点 + 证据归属约定；runs/README 可见性现状改为实测 public；纯文档零代码变更）。近期演进：v1.8.17 新增 `scripts/list_runs.py` 只读 run 聚合视图并产出首批度量基线（docs/37：28 个历史 run 实测——一次通过 15/16、总返修 5、中位跨度 159.6 分钟；AI 初稿采纳率不可算已诚实登记）。近期演进：v1.8.5 修复长周期恢复链三个真 bug；v1.8.6 统一 `--advance` 报告契约并让账本写失败可观测；v1.8.7 落地会话归因与 Reviewer 确定性前置检查；v1.8.8 让 `task_resume` 消费 checkpoint/state/ledger、声明 run 内串行治理边界、补人类摘要与模型替换复检；v1.8.9 收口独立检查的 4 条 P3（REVIEW_SIZE 口径统一 / secret 告警不回显密钥 / PROTECTED_PATHS 边界说明 / 依赖措辞统一补申报），并把当日全网检索批（087–124，`docs/34`）全部编入 HTML 附录索引；v1.8.10 用首个真实任务驱动的 G3 人工门评审 run（RUN-20260921-001：六功能域只读评审、用户亲签接受、评审-only 合法收尾）沉淀三条运行规则——侦察 fan-out 启动清单、评审-only Run 收尾处方、star 块亲签出处落位；v1.8.11 收编淘天《Loop engineering》对照批（`docs/35`，附录 124→130）：五组件印证既有设计、automations 心跳层登记为缺口（docs/13）、三条候选做法记录在案；v1.8.12 引擎完整性加固（RUN-20260916-001 审计驱动）：workflow SHA 冻结+漂移硬拦截、mark-done 证据锚点门禁、implement completed 必绑 head_sha、check 块禁人工完成、终态引擎自动收口，新增 R-4/R-5 校验与 9 项 selftest 负例/正例断言；v1.8.13（RUN-20260923-001）修复 conditional expression 惰性缺陷（DEFECT-001：`--evaluate-conditional` 只实现 equals，bugfix-triage 三条 expression 分支被静默忽略、无论归因如何都落默认 implement；现支持受限文法 `true` / `<ident> == '<literal>'` 对 state.conditions 求值，新增 `inert_conditional` 编写期护栏 + `_invalid` 反例 + 文法外运行期显式 FAIL），并以该真实 run 执行 F1-R L3 断点演练（intake/recon/classify 完成后故意中断，全新零共享上下文会话经 `task_resume.py` 接续 implement→test→close，五条验收逐条取证通过）；v1.8.14（RUN-20260923-002）并发写保护：state.yaml 九处写点统一收口 `save_run_state()`——加载记字节指纹、保存前重读比对，被并发修改即 `AIW_STATE_CONFLICT` 拒绝且绝不覆盖，写入走 temp+原子替换，同命令多次保存自动刷新指纹；附带修复独立复核发现的 R-1（`--advance` 缺 task.yaml 告警，堵「合法推进但不可恢复」断缝）与 R-2（`--init` 改存相对 workflow_path，删死代码）。诚实边界：L3 单点断点恢复已实证（`docs/29` F1-R）；Session×Run 多天级联仍属协议层（`docs/30`），不随单点演练通过而宣称多天实战闭环。
+这是属于我自己的 AI 原生研发工作流系统（当前 v1.8.22，137 个外部参考来源，覆盖 13 家一二线大厂：国内 9——阿里/腾讯/字节/美团/快手/华为/京东/网易有道/货拉拉，国际 4——OpenAI/Anthropic/AWS/Google）。它把一次“让 AI 干活”的请求，升级成一条**可编排（块 DAG）、可分权（四角色）、可验证（门禁 + 证据）、可自动推进（loop_control 信号驱动循环）、可接管（状态与账本）**的交付链路。当前状态：v1.8.21，selftest **113/113 PASS**（站点在线时；离线 112/112 + 1 SKIP），validate_package **全部通过**。近期演进：v1.8.22 收编技能图谱 + 阿里手册批（附录 136–137，docs/39）：136 Andrew Ng《AI Engineering Skills Map: Using coding agents》X 帖（2026-09-04，L1 全文直读）——五技能/三阶段九成印证既有设计（G0–G10、Reviewer+跨宿主交叉复核、环境定制、Add/Thin、跨会话状态、G10 复盘、熔断），evals 与部署后监控为已登记缺口的独立强化信号（docs/13 F5 / automations 心跳层），不重复立项；137 阿里《AI Native 研发范式实践手册》68 页（L1 视觉转写：Web 应用为 JS 查看器壳，从壳 HTML 挖出版本化 PDF 正本直链下载，纯图片型 PDF 经 110DPI 渲染 + 视觉转读 11 个关键页，取证管线沉淀 docs/39 §一）——核心主张（模型即引擎 Harness 即底盘、上下文治理四层次、Net Anchor、Prompt→Skill→Hook→Permission 四层护栏、Ledger 不可篡改）与 a19/a20/a31/a32/a36 及 docs/36 批大面积重叠，判定全景参照；唯一真新概念 Agent 身份三元组 + Delegation Chain 为企业数字员工平台侧问题，归 docs/13 团队化议题补充视角不立项；零代码零规则变更，selftest 维持 113。近期演进：v1.8.21 将双宿主交叉复核成文为规则（docs/04 新增权威节 + role-boundaries 契约摘要 + Reviewer SKILL 三处接线，纯规则零脚本变更——双宿主可用时 review 优先由非实现宿主会话执行，单宿主退化为独立只读会话不阻塞；v1.8.18–v1.8.20 三版候选提交事实上均经另一宿主逐行复核后推 main，本条把既有实践固化为规则，来源含 flow-next 附录 029 与 2026-09-25 四问题对账）。近期演进：v1.8.20 收编 spec-superflow + Git worktree + open-code-review 批（附录 132–135，docs/38）并全量对齐 README/HTML/docs 计数与附录行格式（拆开粘连行、核验表补 row 111–114）；v1.8.19 将并发写保护的指纹检查 + PID 唯一临时文件 + 原子替换全部纳入 flock 排他锁，关闭 TOCTOU 竞态窗口（真并发 5/5 丢写 → 10 轮 0 静默丢写）。近期演进：v1.8.18 补齐跨工程使用文档并修正远端可见性事实（docs/10 新增 §跨工程使用：三步开任务 + 三个摩擦点 + 证据归属约定；runs/README 可见性现状改为实测 public；纯文档零代码变更）。近期演进：v1.8.17 新增 `scripts/list_runs.py` 只读 run 聚合视图并产出首批度量基线（docs/37：28 个历史 run 实测——一次通过 15/16、总返修 5、中位跨度 159.6 分钟；AI 初稿采纳率不可算已诚实登记）。近期演进：v1.8.5 修复长周期恢复链三个真 bug；v1.8.6 统一 `--advance` 报告契约并让账本写失败可观测；v1.8.7 落地会话归因与 Reviewer 确定性前置检查；v1.8.8 让 `task_resume` 消费 checkpoint/state/ledger、声明 run 内串行治理边界、补人类摘要与模型替换复检；v1.8.9 收口独立检查的 4 条 P3（REVIEW_SIZE 口径统一 / secret 告警不回显密钥 / PROTECTED_PATHS 边界说明 / 依赖措辞统一补申报），并把当日全网检索批（087–124，`docs/34`）全部编入 HTML 附录索引；v1.8.10 用首个真实任务驱动的 G3 人工门评审 run（RUN-20260921-001：六功能域只读评审、用户亲签接受、评审-only 合法收尾）沉淀三条运行规则——侦察 fan-out 启动清单、评审-only Run 收尾处方、star 块亲签出处落位；v1.8.11 收编淘天《Loop engineering》对照批（`docs/35`，附录 124→130）：五组件印证既有设计、automations 心跳层登记为缺口（docs/13）、三条候选做法记录在案；v1.8.12 引擎完整性加固（RUN-20260916-001 审计驱动）：workflow SHA 冻结+漂移硬拦截、mark-done 证据锚点门禁、implement completed 必绑 head_sha、check 块禁人工完成、终态引擎自动收口，新增 R-4/R-5 校验与 9 项 selftest 负例/正例断言；v1.8.13（RUN-20260923-001）修复 conditional expression 惰性缺陷（DEFECT-001：`--evaluate-conditional` 只实现 equals，bugfix-triage 三条 expression 分支被静默忽略、无论归因如何都落默认 implement；现支持受限文法 `true` / `<ident> == '<literal>'` 对 state.conditions 求值，新增 `inert_conditional` 编写期护栏 + `_invalid` 反例 + 文法外运行期显式 FAIL），并以该真实 run 执行 F1-R L3 断点演练（intake/recon/classify 完成后故意中断，全新零共享上下文会话经 `task_resume.py` 接续 implement→test→close，五条验收逐条取证通过）；v1.8.14（RUN-20260923-002）并发写保护：state.yaml 九处写点统一收口 `save_run_state()`——加载记字节指纹、保存前重读比对，被并发修改即 `AIW_STATE_CONFLICT` 拒绝且绝不覆盖，写入走 temp+原子替换，同命令多次保存自动刷新指纹；附带修复独立复核发现的 R-1（`--advance` 缺 task.yaml 告警，堵「合法推进但不可恢复」断缝）与 R-2（`--init` 改存相对 workflow_path，删死代码）。诚实边界：L3 单点断点恢复已实证（`docs/29` F1-R）；Session×Run 多天级联仍属协议层（`docs/30`），不随单点演练通过而宣称多天实战闭环。
 
 ## 血缘与来源
 
@@ -47,7 +47,7 @@ Evidence 层 runs/<RUN-ID>/             —— state.yaml / current.md / test-pl
 ```text
 .ai_worflow/
 ├── README.md                  本文件：权威入口
-├── docs/                      规则与设计（38 篇 + README）
+├── docs/                      规则与设计（39 篇 + README）
 ├── skills/                    可被 Codex / Claude Code / ZCode 发现的 Skill 包
 │   ├── aiworflow/             入口与 Flow 引擎语义（不是第五角色）
 │   ├── aiworflow-planner/     规划、状态、协调、合并
@@ -146,6 +146,7 @@ timeout 180 codex exec   --ephemeral --skip-git-repo-check   -C /home/feifz/work
 
 | 版本 | 变更 | 对使用者的影响 |
 |---|---|---|
+| **v1.8.22** | **附录收编批 136–137（纯文档，零脚本/零规则变更）**：① 附录 135→**137**——136 Andrew Ng《AI Engineering Skills Map: Using coding agents》X 帖（2026-09-04 发帖，L1 全文直读）：五技能/三阶段九成印证既有设计（Planning→Execution→Verification≈G0–G10、Reviewing≈Reviewer+跨宿主交叉复核+ui-verification、环境定制≈context/+pre-commit+CI、「模型进步就修剪技能」直接印证 v1.8.1 Add/Thin、跨会话状态≈ledger/checkpoint、复盘≈G10、autonomy 怀疑论≈熔断），evals+LLM-as-a-judge 与部署后监控两个强化信号指向已登记缺口（docs/13 F5、automations 心跳层）不重复立项；② 137 阿里《AI Native 研发范式实践手册》68 页 PDF（Web 应用为 JS 查看器壳，从壳 HTML 挖出版本化 PDF 正本直链下载 27,286,928 B；纯图片型——pypdf/pymupdf 提取 0 字符——经 110DPI 渲染 + 视觉转写 11 个关键页取得 L1，取证管线沉淀 docs/39 §一）：核心主张（模型即引擎 Harness 即底盘、上下文治理四层次 编译/分发/注入/回收、Net Anchor 编排不写码、Prompt→Skill→Hook→Permission 四层护栏、Ledger 不可篡改、Sandbox 三理由、可观测三能力、度量运营口径）与 a19/a20/a31/a32/a36 及 docs/36 批大面积重叠，判定全景参照；唯一真新概念 Agent 身份三元组（身份/策略/凭证）+ Delegation Chain 身份传递收缩为企业数字员工平台侧问题，归 docs/13 团队化议题补充视角不立项；③ 计数同步：README 核验表 row 115–116、docs/README 批次表与验证命令、HTML 统计卡/附录标题/页脚/版本演进行 | 两源价值判定与取证管线可溯（纯图片 PDF 渲染转写管线可复用）；附录批次内容与全部口径（README/HTML/docs/核验表）重新一致；无脚本/断言变化，selftest 维持 113 |
 | **v1.8.21** | **跨宿主交叉复核成文（纯规则，零脚本变更）**：docs/04 新增「跨宿主交叉复核」权威节 + role-boundaries 契约摘要 + Reviewer SKILL 接线（含受约契约引用同步）——双宿主（Codex/Claude Code）同时可用时，CODE_REVIEW / RELEASE_REVIEW 等审核类工作**优先由非实现宿主会话执行**（Implementer 宿主 ≠ Reviewer 宿主），降低同源上下文偏差与「自己写、自己过」风险；单宿主环境退化为独立只读会话不阻塞（调度偏好非硬门禁，引擎不校验，ledger owner/model 字段事后审计）；Reviewer 会话发现自身即实现宿主时在 non_blocking_notes 注明并由 Planner 决定改派。来源：flow-next adversarial cross-model reviews（附录 029，docs/21 §a29）+ 2026-09-25 四问题对账——v1.8.18–v1.8.20 三版候选提交事实上均经另一宿主逐行复核后推 main，本条固化既有实践而非新增能力；对账其余三项经核不重复立项（evals 已登记 docs/13 + docs/29 F5；Spec 质量反馈已有机制 docs/07 §Spec 质量反馈；token 测量已落地最小归因 docs/29 F3） | 双宿主交叉复核从「事实实践」变为「成文规则」，可在 docs/04 与契约中被引用和审计；无脚本/断言/计数变化，selftest 维持 113 |
 | **v1.8.20** | **附录收编批 + 全仓计数一致性收口（纯文档）**：① 附录 131→**135**——132/133 spec-superflow（码哥跳动微信 L1 webReader + GitHub v2.0.1 818⭐ MIT）、134《Git worktree 并行开发实战》（微信 L1）、135 alibaba/open-code-review 开源（GitHub API 40,782⭐ Apache-2.0，a12 工具本体，待评估接入），归属判定与对照统一落 `docs/38`（11+8 条对照、4 个新概念登记路线图不预写代码）；② 修复 HTML 附录 131–135 行粘连（`</tr><tr>` 并行导致 `grep -c` 行口径失真）、统计卡 130/工作流卡 4正+7反、附录标题 124、快速开始 selftest 95 等陈旧计数；③ README 核验表补 **row 111–114**（本批 4 条访问证据：webReader L1 ×2 + GitHub API ×2，CC 独立复核）；④ docs/README 来源总数 131→135、批次表与验证命令同步，docs/38 补 §七（135 归属判定） | 附录批次内容与全部口径（README/HTML/docs/核验表）重新一致；三条新链接的有用性判定与访问证据逐条可溯 |
 | **v1.8.19** | **并发写保护关闭 TOCTOU 竞态**：v1.8.14 的指纹检查在"读→比对→写"间存在微秒级窗口——真并发时两宿主同时通过检查后写同一 .tmp 文件，后写者覆盖前写者（5/5 稳定复现，一方写入静默丢失且双方都报成功）。修复：指纹检查+PID 唯一临时文件+原子替换全部在 `fcntl.flock` 排他锁内完成；锁文件保留不删（避免 unlink 竞态破坏互斥）。10 轮回归：6 次锁内顺序化双写成功 + 4 次一方明确拒绝（可重试）+ **0 次静默丢写** | 真同时操作同一 run 从"可能静默丢数据"变为"要么成功要么明确报错"；双宿主并发安全性从理论变为实测闭环 |
@@ -268,7 +269,7 @@ python3 scripts/install_hooks.py --check
 | 能力 | 状态 | 证据 |
 |---|---|---|
 | 参考工程 clone ×3 | 已完成 | `references/skyvern`（5496 文件，commit `35cb497c99dc940472023e682692613e1014e51f`）、`references/ric-dev-workflow-skills`（95 文件，commit `84954fbda3d1d8c47ef2a5ee9fb43e18ab4a3c4a`）、`references/jakubkrehel-skills`（11 个 Skill 目录，commit `267330e`，2026-09-16 入库，见 `docs/12-reference-scan.md` §E） |
-| 规则与设计文档 | 已完成 | `docs/`（38 篇 + README；本仓库内相对链接全部可解析，由 `scripts/validate_package.py` 校验） |
+| 规则与设计文档 | 已完成 | `docs/`（39 篇 + README；本仓库内相对链接全部可解析，由 `scripts/validate_package.py` 校验） |
 | Skill 包（5 入口 + `_shared`） | 已完成 | `skills/`，frontmatter 与链接由 `scripts/validate_package.py` 校验 |
 | 工作流定义（4 正例 + 7 反例） | 已完成 | `workflows/`，由 `scripts/validate_workflow.py` 校验；7 个反例各对应一条 author-time 硬护栏 |
 | 校验器 / 安装器 / 自检 | 已完成 | `scripts/`，`python3 scripts/validate_package.py` 与 `bash scripts/selftest.sh` 113/113 PASS |
@@ -311,19 +312,19 @@ AIWorflow 是一套**纯文件驱动的 AI 研发控制层**。它不提供浏�
   → G10 close（lessons/change-summary 写回供下一环复用）
 ```
 
-### 核心数字（2026-09-25，v1.8.21）
+### 核心数字（2026-09-29，v1.8.22）
 
 | 指标 | 数值 |
 |---|---|
-| 规则文档 | 38 篇 + docs/README |
+| 规则文档 | 39 篇 + docs/README |
 | 共享契约 | 9 份（角色/门禁/证据/状态/变更/Git/交接/规则生命周期/产物；护栏注册表在 `docs/09` 与脚本 `GUARDRAIL_IDS`，非独立契约文件） |
 | Skill 入口 | 5 个（入口+四角色）+ 1 个 `_shared` 共享底座 |
 | 工作流定义 | 4 正例 + 8 反例（每个反例对一条 hard guardrail 开火；v1.8.13 新增 `inert-conditional` 对 `inert_conditional` 开火） |
 | Prompt 模板 | 7 个（intake/spec/implement/review/test/candidate-dag + 1 示例） |
 | 确定性脚本 | 17 个代码脚本 + pre-commit hook（校验×7：workflow/package/run/transition/consistency/content-quality/site-consistency；引擎×8：compile_dag/run_flow/check_all/task_resume/review_preflight/list_runs/install×2；selftest + _yaml_min；Python 3 + bash + 已有 PyYAML） |
 | selftest | 113 项（同根+站点在线全跑 113/113；环境性差异项——§4 安装锁定 / §10.7 本副本闸门 / §12 站点一致性——按设计显式 SKIP 并计入总数口径，任何环境裸跑 exit 0 且 count_sync 对齐 113），分组覆盖包结构→反例→transition→DAG语义→引擎完整性→refreeze→交付缺陷回归→创建守门→日检→安装→编译→执行→版本锁定→闸门→站点一致性→长周期恢复链→并发写保护→引擎 CLI 契约→只读聚合→计数联动 |
-| 总代码行（脚本） | 6,888 行 Python + Shell（scripts/*.py + *.sh，wc -l 实测 2026-09-25，v1.8.21） |
-| 总文档行 | 6,515 行 Markdown（docs/*.md + 根 README，wc -l 实测 2026-09-25，v1.8.21；含 docs/37 基线报告、docs/10 跨工程章节、docs/38 收编批对照、docs/04 跨宿主交叉复核规则与 docs/15 沙箱最小权限示例） |
+| 总代码行（脚本） | 6,888 行 Python + Shell（scripts/*.py + *.sh，wc -l 实测 2026-09-29，v1.8.22，本批零脚本变更） |
+| 总文档行 | 6,598 行 Markdown（docs/*.md + 根 README，wc -l 实测 2026-09-29，v1.8.22；含 docs/37 基线报告、docs/10 跨工程章节、docs/38 收编批对照、docs/39 技能图谱 + 阿里手册批对照、docs/04 跨宿主交叉复核规则与 docs/15 沙箱最小权限示例） |
 | 外部依赖 | 0 新增（Python 3 + bash + 当前环境已有 PyYAML；不引入数据库/消息队列/npm 依赖） |
 | 宿主加载 | Codex 与 Claude Code 双宿主已实测加载（2026-09-20 只读探针：Codex exec 会话与 Claude Code `-p` 嵌套会话各自发现/注册并实读 skill；2026-09-23 v1.8.13 升级后 `--check` 复核指纹一致，并实测 Claude Code 嵌套会话 `claude -p` 真实列出全部 5 个 aiworflow* skill、Codex 会话内 5 个 skill 可读；2026-09-25 v1.8.21 升级后双宿主 `--check` 收据指纹一致，并以只读探针实测双宿主会话各自经本宿主 skills 目录符号链接逐字读出 aiworflow-reviewer SKILL.md 新增的「会话宿主与交叉复核（v1.8.21）」节并正确回答其语义——Codex `codex exec -s read-only` 与 Claude Code 嵌套 `claude -p` 各一次） |
 
@@ -368,7 +369,7 @@ python3 scripts/install_skills.py --target ~/.codex/skills --upgrade --apply  # 
 | **轮次日志** | ✅ ledger 自动持久化 | DB记录 | 无 | 无 | 无 | DB记录 | 无 | 无 |
 | **AI自动路由** | 入口description | ❌ 手动 | ❌ 手动 | ❌ 无 | ✅ 自动选工作流 | 用户拖拽 | ✅ 意图分析 | 用户手动选择 |
 | **外部依赖** | **已有 PyYAML；本版本 0 新增** | PG+Redis+200+包 | 0 | 0 | Node.js/Bun | Python+React+DB | Node.js>=20 | Node.js |
-| **文章溯源** | ✅ 135 来源全量收录与复盘（001–086 docs/33、087–124 docs/34、125–130 docs/35、131 docs/36、132–135 docs/38） | 无 | 无 | 无 | 无 | 无 | 无 | 无 |
+| **文章溯源** | ✅ 137 来源全量收录与复盘（001–086 docs/33、087–124 docs/34、125–130 docs/35、131 docs/36、132–135 docs/38、136–137 docs/39） | 无 | 无 | 无 | 无 | 无 | 无 | 无 |
 
 ### 我们的优势（七工程中独有或更深）
 
@@ -382,7 +383,7 @@ python3 scripts/install_skills.py --target ~/.codex/skills --upgrade --apply  # 
 
 5. **环系统显式建模 + 轮次日志（ledger）**：七工程中唯一把环骨架和环间接口显式建为规范，且每轮自动持久化轮次日志到 `state.yaml`。
 
-6. **135 条外部来源全量收录与溯源**：a01–a36 于 2026-09-14 全量核验（README「访问核验」表，a37 于 09-20 增补），后续批次（docs/23/24/26/28/32）逐批扫描落档、编号统一登记在 HTML 附录；每份契约、每个 SKILL.md、每个 Prompt 模板标注了吸收来源，吸收点记录在 `docs/21`、`docs/22`、README 附录与各批扫描文档。2026-09-20 完成全量复盘：001–086 每条有归属判定（`docs/33`），无「收录未消化」悬空项；同日全网检索批 087–124（38 条，L3 快照级为主并强制「生态样本/非规则依据」标注）归属判定见 `docs/34` §八，012/025/046/066 获证据更新；2026-09-21 收编 Loop Engineering 批 125–130（`docs/35`：五组件印证 + automations 心跳层缺口登记 `docs/13`）；2026-09-24 收编 AI Native 范式批 131（`docs/36`：九条主张印证 + 两条度量口径候选挂 evals 缺口）；2026-09-25 收编 spec-superflow + Git worktree + open-code-review 批 132–135（`docs/38`：11+8 条对照以印证为主，4 个新概念登记路线图不预写代码；135 为 a12 工具本体开源，待评估接入）。其他六工程不记录外部文章吸收。
+6. **137 条外部来源全量收录与溯源**：a01–a36 于 2026-09-14 全量核验（README「访问核验」表，a37 于 09-20 增补），后续批次（docs/23/24/26/28/32）逐批扫描落档、编号统一登记在 HTML 附录；每份契约、每个 SKILL.md、每个 Prompt 模板标注了吸收来源，吸收点记录在 `docs/21`、`docs/22`、README 附录与各批扫描文档。2026-09-20 完成全量复盘：001–086 每条有归属判定（`docs/33`），无「收录未消化」悬空项；同日全网检索批 087–124（38 条，L3 快照级为主并强制「生态样本/非规则依据」标注）归属判定见 `docs/34` §八，012/025/046/066 获证据更新；2026-09-21 收编 Loop Engineering 批 125–130（`docs/35`：五组件印证 + automations 心跳层缺口登记 `docs/13`）；2026-09-24 收编 AI Native 范式批 131（`docs/36`：九条主张印证 + 两条度量口径候选挂 evals 缺口）；2026-09-25 收编 spec-superflow + Git worktree + open-code-review 批 132–135（`docs/38`：11+8 条对照以印证为主，4 个新概念登记路线图不预写代码；135 为 a12 工具本体开源，待评估接入）；2026-09-29 收编技能图谱 + 阿里手册批 136–137（`docs/39`：136 Ng 帖五技能九成印证 + evals/部署监控两个强化信号指向已登记缺口；137 手册全景参照，Agent 身份 Delegation Chain 归团队化议题）。其他六工程不记录外部文章吸收。
 
 ### 我们的劣势（七工程中别人更强的地方）
 
@@ -402,7 +403,7 @@ python3 scripts/install_skills.py --target ~/.codex/skills --upgrade --apply  # 
 
 ### 一句话定位
 
-> **AIWorflow = Skyvern 的 DAG 思想 + ric 的四角色模型 + V4.0 的流程骨架 + AI-DLC 的多宿主思路 + CCG 的策略路由理念 + Langflow 的块类型目录 + AI Workflow 的 Skill 组织方式 + 135 条外部来源（文章/深度解读 + 开源项目/GitHub 范式；001–086 归属判定见 docs/33、087–124 见 docs/34、125–130 见 docs/35、131 见 docs/36、132–135 见 docs/38）+ 黄迅环系统/GoPS 责任状态机，去掉浏览器面、可视化 UI 和重型基础设施，加上 selftest 确定性自检、版本锁定分发、三层护栏下沉、环间接口规范、ledger 轮次日志——在"最小可验证"前提下做到最完整。**
+> **AIWorflow = Skyvern 的 DAG 思想 + ric 的四角色模型 + V4.0 的流程骨架 + AI-DLC 的多宿主思路 + CCG 的策略路由理念 + Langflow 的块类型目录 + AI Workflow 的 Skill 组织方式 + 137 条外部来源（文章/深度解读 + 开源项目/GitHub 范式；001–086 归属判定见 docs/33、087–124 见 docs/34、125–130 见 docs/35、131 见 docs/36、132–135 见 docs/38、136–137 见 docs/39）+ 黄迅环系统/GoPS 责任状态机，去掉浏览器面、可视化 UI 和重型基础设施，加上 selftest 确定性自检、版本锁定分发、三层护栏下沉、环间接口规范、ledger 轮次日志——在"最小可验证"前提下做到最完整。**
 
 ---
 
@@ -412,7 +413,7 @@ python3 scripts/install_skills.py --target ~/.codex/skills --upgrade --apply  # 
 > 以下 37 条（a01–a37）中 a01–a36 于 2026-09-14 通过 curl 实际抓取核验，a37 于 2026-09-20 增补。核验方式与逐条证据见下方「访问核验」表：HTTP 状态码、`og:title`/`<title>` 匹配、微信正文 `js_content` 提取字数、GitHub 走 API `stargazers_count`。
 > **证据分级（与 `docs/22-wechat-latest-scan.md` §〇 一致）**：L1 全文核验 · L2 同文镜像核验 · L3 仅元数据核验（标题/公众号/日期/摘要）。标注 L3 的条目**不得引用其正文观点**。
 > 文章可能有错——引用时注"原文观点"，与本工作流既有规则冲突时以 `docs/` 契约为准。
-> 2026-09-20 全网检索批（087–124，共 38 条）登记于 HTML 附录与 `docs/34-web-scan-20260920.md`：GitHub 周榜条目 star 为榜单快照值，L3 条目仅作生态样本/观点记录；访问证据见下方核验表 row 66–103。2026-09-21 Loop Engineering 收编批（125–130，淘天原文 L1 + Addy/MF 原文可达补录 + 三条转引 L3）登记于 HTML 附录与 `docs/35`；访问证据见核验表 row 104–109。2026-09-24 AI Native 范式收编批（131，淘天海外原文 L1 webReader）登记于 HTML 附录与 `docs/36`；访问证据见核验表 row 110。2026-09-25 spec-superflow + Git worktree + open-code-review 收编批（132–135）登记于 HTML 附录与 `docs/38`；访问证据见核验表 row 111–114。
+> 2026-09-20 全网检索批（087–124，共 38 条）登记于 HTML 附录与 `docs/34-web-scan-20260920.md`：GitHub 周榜条目 star 为榜单快照值，L3 条目仅作生态样本/观点记录；访问证据见下方核验表 row 66–103。2026-09-21 Loop Engineering 收编批（125–130，淘天原文 L1 + Addy/MF 原文可达补录 + 三条转引 L3）登记于 HTML 附录与 `docs/35`；访问证据见核验表 row 104–109。2026-09-24 AI Native 范式收编批（131，淘天海外原文 L1 webReader）登记于 HTML 附录与 `docs/36`；访问证据见核验表 row 110。2026-09-25 spec-superflow + Git worktree + open-code-review 收编批（132–135）登记于 HTML 附录与 `docs/38`；访问证据见核验表 row 111–114。2026-09-29 技能图谱 + 阿里手册收编批（136–137）登记于 HTML 附录与 `docs/39`；访问证据见核验表 row 115–116。
 
 | # | 日期 | 作者 | 标题 | 核心观点（与本工作流相关） |
 |---|---|---|---|---|
@@ -486,11 +487,11 @@ python3 scripts/install_skills.py --target ~/.codex/skills --upgrade --apply  # 
 - https://mp.weixin.qq.com/s/a07Lu59zXHjNkXDqembyWA
 
 
-## 访问核验（首核 2026-09-08 · row 6–8 于 2026-09-11 复核 · **2026-09-14 全量 64 行复跑** · row 65 于 2026-09-20 增补 · **row 66–103 于 2026-09-20 增补（全网检索批，docs/34） · row 104–109 于 2026-09-21 增补（Loop Engineering 批，docs/35） · row 110 于 2026-09-24 增补（AI Native 范式批，docs/36） · row 111–114 于 2026-09-25 增补（spec-superflow + worktree + open-code-review 批，docs/38）**，Asia/Shanghai）
+## 访问核验（首核 2026-09-08 · row 6–8 于 2026-09-11 复核 · **2026-09-14 全量 64 行复跑** · row 65 于 2026-09-20 增补 · **row 66–103 于 2026-09-20 增补（全网检索批，docs/34） · row 104–109 于 2026-09-21 增补（Loop Engineering 批，docs/35） · row 110 于 2026-09-24 增补（AI Native 范式批，docs/36） · row 111–114 于 2026-09-25 增补（spec-superflow + worktree + open-code-review 批，docs/38） · row 115–116 于 2026-09-29 增补（技能图谱 + 阿里手册批，docs/39）**，Asia/Shanghai）
 
 核验方式：`curl` 跟随重定向记录 HTTP 状态码与响应字节数，并按站点选择 UA——`mp.weixin.qq.com` **必须**用 MicroMessenger/移动端 UA（桌面 UA 只返回 17 KB 空壳页），知乎/百家号用移动 UA，其余用桌面 UA；GitHub 仓库另走 API `stargazers_count` 并以本地 clone 的 commit 作硬证据。本表**只写实际访问到的结果**：能列出 URL 不等于可访问，能返回 HTTP 200 也不等于取到正文（见最后两行的反例）。
 
-结果：**63/65 行可访问且证据可用；2 行诚实标注不可用**（`developers.openai.com` 区域封锁、`51cto.com` JS 反爬）。证据分级见 `docs/22-wechat-latest-scan.md` §〇：L1 全文核验 · L2 同文镜像核验 · L3 仅元数据核验。row 66–103（2026-09-20 全网检索批，`docs/34`）：GitHub 周榜条目 11 行为周榜页 webReader 直抓快照（star 为榜单快照值，未走 API 复核），其余 27 行为检索快照级 **L3**（仅标题/日期/摘要，深路径未单独核验，**不得引用正文观点**）。row 104–109（2026-09-21 Loop Engineering 批，`docs/35`）：row 104 为 webReader L1 全文；row 105/106 为 curl 200 可达性级 L3（正文未读）；row 107 文章页未取到、row 108/109 出口连接失败，均为转引 L3（生态样本/非规则依据）。row 110（2026-09-24 AI Native 范式批，`docs/36`）：webReader L1 全文直读，无转引条目。
+结果：**63/65 行可访问且证据可用；2 行诚实标注不可用**（`developers.openai.com` 区域封锁、`51cto.com` JS 反爬）。证据分级见 `docs/22-wechat-latest-scan.md` §〇：L1 全文核验 · L2 同文镜像核验 · L3 仅元数据核验。row 66–103（2026-09-20 全网检索批，`docs/34`）：GitHub 周榜条目 11 行为周榜页 webReader 直抓快照（star 为榜单快照值，未走 API 复核），其余 27 行为检索快照级 **L3**（仅标题/日期/摘要，深路径未单独核验，**不得引用正文观点**）。row 104–109（2026-09-21 Loop Engineering 批，`docs/35`）：row 104 为 webReader L1 全文；row 105/106 为 curl 200 可达性级 L3（正文未读）；row 107 文章页未取到、row 108/109 出口连接失败，均为转引 L3（生态样本/非规则依据）。row 110（2026-09-24 AI Native 范式批，`docs/36`）：webReader L1 全文直读，无转引条目。row 111–114（2026-09-25 批，`docs/38`）：132/134 微信 L1 webReader + 133/135 GitHub API L1。row 115–116（2026-09-29 技能图谱 + 阿里手册批，`docs/39`）：row 115 为 X 帖 L1 全文直读；row 116 为手册 PDF 正本 L1 视觉转写（JS 壳→版本化直链→纯图片 PDF 渲染转写，取证管线见 `docs/39` §一）。
 
 | # | URL | 核验方式 | 核验结果 | 页面标题 / 权威确认 | 补充证据与采信边界 |
 |---|---|---|---|---|---|
@@ -608,6 +609,8 @@ python3 scripts/install_skills.py --target ~/.codex/skills --upgrade --apply  # 
 | 112 | https://github.com/MageByte-Zero/spec-superflow | GitHub API + README 全文（2026-09-25 复核） | HTTP 200；818 ⭐；MIT | MageByte-Zero/spec-superflow | 附录 133；**L1**；v2.0.1、19 平台、9 skills、零运行时依赖；11 条设计对照 9 已有 + 2 新概念登记路线图（docs/38 §五） |
 | 113 | https://mp.weixin.qq.com/s/ou3NLE6x5elSy5lehMLm9Q | webReader（2026-09-25，CC 独立复核；curl 表现同 row 111） | L1 全文无截断 | Git worktree 并行开发实战：多分支、AI 编程任务隔离、冲突合并与安全清理 | 附录 134；**L1**；对照 docs/38 §六：8 条对照 6 已有 + 2 新概念（效率对照实验 / 事故恢复演练） |
 | 114 | https://github.com/alibaba/open-code-review | GitHub API + README 全文（2026-09-25 复核） | HTTP 200；40,782 ⭐；Apache-2.0 | alibaba/open-code-review | 附录 135；**L1**；a12 工具本体开源：确定性管线 + LLM Agent 混合架构（描述页原文）；待评估接入（docs/38 §七） |
+| 115 | https://x.com/AndrewYNg/status/2095890279865721217 | X 页面全文抓取（2026-09-29） | L1 全文（五技能/三阶段结构完整在手） | AI Engineering Skills Map: Using coding agents | 附录 136；2026-09-04 发帖；对照 `docs/39` §二：五技能/三阶段九成印证既有设计，evals 与部署后监控为已登记缺口的独立强化信号（docs/13 F5 / automations 心跳层）；帖内第三方图谱图仅作结构参考 |
+| 116 | https://ai-native.alistatic.com/app/ainativeinfra/ai-native-handbook-web/index | 壳 HTML curl + PDF 正本下载（g.alistatic.com 版本化直链，27,286,928 B，68 页）+ pymupdf 110DPI 渲染视觉转写（2026-09-29） | L1 视觉转写（11 个关键页：简介/目录/3.1.1/Sandbox/Identity/Guardrail/可观测/度量） | AI Native 研发范式实践手册（Web 应用入口；正文为纯图片 PDF） | 附录 137；正文 PDF pypdf/pymupdf 提取 0 字符（纯图片型），文字证据来自渲染转写而非文本层；对照 `docs/39` §三：与 a19/a20/a31/a32/a36 及 docs/36 批大面积重叠，唯一真新概念 Agent 身份三元组 + Delegation Chain 归团队化议题；检索中的相似命名仓库 aliyun/ai-agent-handbook 为不同文档，不作本源证据 |
 
 ## Harness Engineering 落地规范对照（2026-09-11）
 
@@ -620,7 +623,7 @@ python3 scripts/install_skills.py --target ~/.codex/skills --upgrade --apply  # 
 
 | 文章六支柱 | 控制问题 | 本工作流对应 | 覆盖状态 |
 |---|---|---|---|
-| 看什么（上下文） | 信息输入 | AGENTS.md 索引 + 38 篇 docs + 渐进式披露 | ✅ 已覆盖 |
+| 看什么（上下文） | 信息输入 | AGENTS.md 索引 + 39 篇 docs + 渐进式披露 | ✅ 已覆盖 |
 | 能触达什么（工具） | 能力面 | MCP / Skills / 知识库（WanGo 层 connector + skill） | ✅ 已覆盖 |
 | 按什么顺序（编排） | 执行顺序 | 块 DAG + G0–G10 门禁 + 四角色交接 | ✅ 已覆盖且更深 |
 | 记住什么（记忆） | 状态持久化 | `state.yaml` + `current.md` + `evidence.md` 只追加账本 | ✅ 已覆盖 |
