@@ -289,7 +289,7 @@ python3 scripts/install_hooks.py --check
 | 度量聚合（跨目录只读） | 已完成（v1.9.0） | `scripts/metrics_summary.py` + selftest §16a；实测主副本 + wan-bridge 两副本共 50 run（`docs/37` 增补：一次通过 23/28、tokens 197 行全 null） |
 | 本地检索 + 依赖图 | 已完成（v1.9.0） | `scripts/context_search.py`（BM25 中文 bigram + `--write-index`）与 `scripts/dep_graph.py`（Python ast 精确导入 + BFS 传递爆炸半径，其他语言正则近似显式标注）+ selftest §16b/16c |
 | 无人值守心跳层（模板形态） | 已完成（v1.9.0） | `prompts/wakeup.md` 三段结构 + 入口 SKILL §4b 接线 + 首次真实触发（RUN-20260925-002 WAIT_USER 处置=提醒人，证据见 docs/13 行）；不做守护进程 |
-| 行为评测用例库（最小版） | 已完成（v1.9.0） | `evals/`（README 纪律 + 3 条真实 run 用例全部可溯源）+ judge 独立只读会话协议 + Planner G10 写单 run `metrics.yaml` 子账；AI 初稿采纳率仍不可算（runs 无版本历史，不伪造） |
+| 行为评测用例库（最小版） | 已完成（v1.9.0；用例持续增补） | `evals/`（README 纪律 + 4 条真实 run 用例全部可溯源：v1.9.0 发布 3 条 + 2026-09-29 RUN-20260925-002 G10 增补 004 未触发分支诚实结案）+ judge 独立只读会话协议 + Planner G10 写单 run `metrics.yaml` 子账（首个实写：RUN-20260925-002）；AI 初稿采纳率仍不可算（runs 无版本历史，不伪造） |
 | Flow 引擎可执行实现（真正跑 DAG 的进程） | 已完成 | `scripts/run_flow.py` 已实现确定性 DAG 构图/环检测/frontier/STAR/HANDOFF/CHECK，`--execute-check` 真实执行 check；`RUN-20260908-006` 已用它跑 `check` 块并 PASS，最终 frontier 为空 |
 
 ---

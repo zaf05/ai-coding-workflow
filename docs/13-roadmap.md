@@ -41,7 +41,7 @@
 | **固化（`run_signature`）机制** | `docs/08` 只有规则，没有存固化产物、比对签名、回落 agent 的实现 | 等第一次 run 结束后，把重复出现的 `check` 命令写进工作流定义即可，暂不需要代码 |
 | **Prompt 预算与丢弃优先级** | 模板声明了 `max_context_tokens` / `drop_priority`，但没有测量与执行 | 出现上下文超限的真实案例后再实现，避免为假想问题写代码 |
 | **`validate_run.py` 的语义检查深度** | 当前只查容器结构、状态合法性、证据引用可达、SHA 格式；不判断证据是否"真的支持结论" | 语义判断留给 Reviewer 角色，脚本不越权 |
-| **evals / 场景用例库** | **最小版已落地（v1.9.0，2026-09-29）**：`evals/` 用例库（README 纪律：用例只来自真实 run、每次 G10 最多补一条、采纳率不可算不造数）+ 3 条真实 run 用例（001 断点恢复零副作用 / 002 fan-out 按域回收 / 003 未知 CLI 参数显式 FAIL）+ judge 独立只读会话协议（verdict 三值，结论进 evidence.md 不回写）+ Planner G10 写单 run `metrics.yaml` 子账；度量侧 `metrics_summary.py` 跨目录聚合已实测三副本 50 run（`docs/37` 增补）。**仍不可算**：AI 初稿采纳率（runs gitignored 无版本历史，判定口径已定于 docs/36 §三，缺初稿→定稿版本留痕）；judge 会话尚未对既有用例跑过一轮全量判定 | 每次真实 run 后补一条"可观察决策"用例，不比对精确措辞；每 5 个新 run 用 `metrics_summary.py --baseline` 复测；累积到 5+ 条后跑一次 judge 全量判定并记录 verdict 分布；采纳率等 runs 证据版本化后落地 |
+| **evals / 场景用例库** | **最小版已落地（v1.9.0，2026-09-29）**：`evals/` 用例库（README 纪律：用例只来自真实 run、每次 G10 最多补一条、采纳率不可算不造数）+ 4 条真实 run 用例（001 断点恢复零副作用 / 002 fan-out 按域回收 / 003 未知 CLI 参数显式 FAIL / 004 未触发验收分支零触发实证结案——2026-09-29 RUN-20260925-002 G10 首次增补）+ judge 独立只读会话协议（verdict 三值，结论进 evidence.md 不回写）+ Planner G10 写单 run `metrics.yaml` 子账；度量侧 `metrics_summary.py` 跨目录聚合已实测三副本 50 run（`docs/37` 增补）。**仍不可算**：AI 初稿采纳率（runs gitignored 无版本历史，判定口径已定于 docs/36 §三，缺初稿→定稿版本留痕）；judge 会话尚未对既有用例跑过一轮全量判定 | 每次真实 run 后补一条"可观察决策"用例，不比对精确措辞；每 5 个新 run 用 `metrics_summary.py --baseline` 复测；累积到 5+ 条后跑一次 judge 全量判定并记录 verdict 分布；采纳率等 runs 证据版本化后落地 |
 | **触发/心跳层（automations，2026-09-21 登记，docs/35 §三）** | **模板已落地并完成首次真实触发（v1.9.0，2026-09-29）**：`prompts/wakeup.md`（STATIC 前馈约束：先读状态/不代签 star/单轮单动作≤10 轮熔断/失败必须有名字/写回留痕 + DYNAMIC 反馈传感器与分类判据：WAIT_USER→只提醒人、WAIT_ROLE→调角色一次、BLOCKED→归因上报、连续 N≥2 无变化→心跳停滞上报）+ 入口 SKILL §4b 接线；首次真实触发 RUN-20260925-002（WAIT_USER）处置=提醒人不推进。触发条件①已于 2026-09-29 满足（用户明确要求落地）；②形态定为「宿主原生调度/手动触发 + 一次会话」，**不做守护进程**——守住 instruction-only 与 0 新增依赖边界。仍缺：宿主定时任务周期性触发与心跳停滞上报的真实案例 | 由宿主调度（cron / Claude Code 定时任务 / Codex automations）周期性渲染 `wakeup.md` 触发一次会话；首个「夜间 check_all 后自动处置停滞 run」案例出现时按模板分类判据处置并留 ledger 凭据 |
 | **多天 Session×Run 级联（docs/30 §九诚实边界）** | 仍属协议层。**wan-bridge 副本实测（docs/37 增补，2026-09-29）**：WanGoPlatform worktree 3 run 中最长跨度 761.2 分钟（≈12.7h，跨午夜），wancall 5 run 中位跨度 335 分钟——多天/跨午夜长任务真实发生且可恢复（resume_marks=0，跨会话续接走「多 run 续接」路径而非单 run task_resume）；即多天工作已被真实执行，但 Session×Run 级联（单 run 内 12 Session×6h 协议形态）未被自然触发，不随长跨度 run 存在而宣称级联闭环 | 首个真实 2-3 天单任务出现时按 docs/30 协议做端到端验证（task.yaml/checkpoint/task_resume 全链消费），在此之前 docs/30 声明「组件可用且被测试」不变 |
 | **团队化（权限层 / 组织分发 / L4→L5 / Delegation Chain）** | 单人+双宿主阶段无团队消费方，写了也无法验收（协议红线：不写注定无法验收的代码）。已有就绪设计输入：版本化分发（v1.2.0 收据机制）、WanGo 交付协议工作包状态机对照（docs/10）、Agent 身份三元组 + Delegation Chain 视角补充（docs/39 §三，企业数字员工平台侧问题）、L4→L5 过渡判据（GoPS 对照，README §GoPS 差距 #4） | 触发条件：出现第二名真实用户/团队消费方。届时先做权限层最小版（复用收据机制思路：谁装的、装给谁、能写哪些 run），再谈组织分发与 Delegation Chain；在此之前保持登记不预写 |
@@ -53,7 +53,7 @@
 2. CC 业务层触发取证 + ZCode 宿主验证         → 只在对应宿主会话验证，不伪造（CC 发现层已闭环，见已实现表）
 3. 三次 run 后抽取共性                       → 决定哪些块降级为 script/check
 4. 出现重复劳动时，把 check/script 命令固化进 workflow 定义，并用 run_flow.py 确定性执行          → 引擎已实现，缓存仍以真实重复为准
-5. 累积 5+ 条 evals（v1.9.0 已有 3 条真实 run 用例）→ 跑一次 judge 全量判定后才谈"流程回归测试"
+5. 累积 5+ 条 evals（v1.9.0 发布 3 条 + 2026-09-29 G10 增补 004，现 4 条）→ 跑一次 judge 全量判定后才谈"流程回归测试"
 ```
 
 ## 明确不做

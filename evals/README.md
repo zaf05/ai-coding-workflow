@@ -22,6 +22,7 @@
 >   - [001-resume-zero-side-effect.md](cases/001-resume-zero-side-effect.md) — 断点恢复零重复副作用
 >   - [002-fanout-domain-recovery.md](cases/002-fanout-domain-recovery.md) — fan-out 按域回收不按份数
 >   - [003-unknown-flag-explicit-fail.md](cases/003-unknown-flag-explicit-fail.md) — 未知 CLI 参数显式 FAIL
+  - [004-untriggered-branch-honest-close.md](cases/004-untriggered-branch-honest-close.md) — 运行时未触发的验收分支零触发实证结案（G10 Add，RUN-20260925-002）
 >
 > ## judge 会话怎么跑（协议）
 >
