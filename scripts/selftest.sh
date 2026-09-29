@@ -2091,7 +2091,159 @@ else
 fi
 python3 -c 'import shutil,sys;shutil.rmtree(sys.argv[1],ignore_errors=True)' "$lr_dir"
 
-echo "== 16. count_sync（README/HTML 计数与实际总数机器联动，不计数只守门；必须位于全部计数断言之后） =="
+echo "== 16. v1.9.0 新资产：度量聚合 / 上下文检索 / 依赖图 / 心跳与评估资产（fixture 驱动，环境无关） =="
+# 16a. metrics_summary 跨目录聚合（fixture：1 个可解析 run + 1 个占位；token 一实报一 null）
+ms_root="$(mktemp -d /tmp/aiw-metricsum-XXXXXX)"
+mkdir -p "$ms_root/fxms/runs/RUN-20990101-101" "$ms_root/fxms/runs/RUN-20990101-102"
+cat > "$ms_root/fxms/runs/RUN-20990101-101/state.yaml" <<'MSFIX'
+schema_version: 1
+run:
+  id: RUN-20990101-101
+  workflow: 功能交付
+  status: completed
+  planner_owner: claude-code
+blocks:
+  - label: intake
+    status: completed
+    attempts: 1
+  - label: implement
+    status: completed
+    attempts: 2
+ledger:
+  - round: 1
+    timestamp: "2099-01-01T01:00:00+00:00"
+    block: intake
+    action: CHECK
+    signal: CONTINUE
+    model: glm-test
+    tokens_used: 12345
+  - round: 2
+    timestamp: "2099-01-01T01:30:00+00:00"
+    block: implement
+    action: CHECK
+    signal: DONE
+    model: glm-test
+MSFIX
+# RUN-20990101-102 不放 state.yaml → 占位形态
+ms_out="$(python3 scripts/metrics_summary.py "$ms_root/fxms/runs" 2>&1)"; ms_rc=$?
+if [ $ms_rc -eq 0 ] && echo "$ms_out" | grep -q "\[fxms\] runs_total=2 parsed=1 placeholder=1 completed_with_ledger=1 first_pass=0/1" && echo "$ms_out" | grep -q "tokens_reported=1 tokens_null=1"; then
+  echo "PASS metrics_summary 目录行（占位归类 + 一次通过 + token 诚实口径）"; pass=$((pass+1))
+else
+  echo "FAIL metrics_summary 目录行口径错（rc=$ms_rc）"; fail=$((fail+1))
+fi
+if echo "$ms_out" | grep -q "wf:功能交付 runs=1 completed=1 with_ledger=1 first_pass=0/1 retries=1"; then
+  echo "PASS metrics_summary 按 workflow 分组（返修计入）"; pass=$((pass+1))
+else
+  echo "FAIL metrics_summary 按 workflow 分组口径错"; fail=$((fail+1))
+fi
+if echo "$ms_out" | grep -q "model:glm-test runs=1 tokens_reported=1 tokens_sum=12345 tokens_null=1"; then
+  echo "PASS metrics_summary 按 model 聚合（只对实报求和，null 分开计）"; pass=$((pass+1))
+else
+  echo "FAIL metrics_summary 按 model 聚合口径错"; fail=$((fail+1))
+fi
+if echo "$ms_out" | grep -q "汇总(全部): runs_total=2 parsed=1 completed_with_ledger=1 first_pass=0/1 total_rounds=2 total_retries=1"; then
+  echo "PASS metrics_summary 汇总行（机器可 grep）"; pass=$((pass+1))
+else
+  echo "FAIL metrics_summary 汇总行口径错"; fail=$((fail+1))
+fi
+if python3 scripts/metrics_summary.py "$ms_root/definitely-missing" >/dev/null 2>&1; then
+  echo "FAIL metrics_summary 全缺目录伪成功"; fail=$((fail+1))
+else
+  echo "PASS metrics_summary 全缺目录 exit 2"; pass=$((pass+1))
+fi
+python3 -c 'import shutil,sys;shutil.rmtree(sys.argv[1],ignore_errors=True)' "$ms_root"
+
+# 16b. context_search BM25 检索（fixture：中文 bigram 命中 + 无命中 + 负例）
+cs_root="$(mktemp -d /tmp/aiw-ctxsearch-XXXXXX)"
+mkdir -p "$cs_root/corpus"
+printf '# 断点恢复指南\n\n中断后先读 checkpoint 与 ledger 最后一条，恢复提示词由 task_resume 生成。\n' > "$cs_root/corpus/resume.md"
+printf '# 页面验证清单\n\n完整验证含真实浏览器与视口矩阵，UNKNOWN 不等于 PASS。\n' > "$cs_root/corpus/ui.md"
+if python3 scripts/context_search.py 断点恢复 --dirs "$cs_root/corpus" 2>&1 | grep -q "断点恢复指南"; then
+  echo "PASS context_search 中文 bigram 命中目标文档（top1）"; pass=$((pass+1))
+else
+  echo "FAIL context_search 中文检索未命中预期文档"; fail=$((fail+1))
+fi
+if python3 scripts/context_search.py 视口矩阵 --dirs "$cs_root/corpus" 2>&1 | grep -q "页面验证清单"; then
+  echo "PASS context_search 第二文档命中（区分度）"; pass=$((pass+1))
+else
+  echo "FAIL context_search 检索无区分度"; fail=$((fail+1))
+fi
+cs_nohit="$(python3 scripts/context_search.py 完全不存在的词组 --dirs "$cs_root/corpus" 2>&1)"; cs_rc=$?
+if [ $cs_rc -eq 0 ] && echo "$cs_nohit" | grep -q "无命中"; then
+  echo "PASS context_search 无命中 exit 0 + 显式提示（不伪造结果）"; pass=$((pass+1))
+else
+  echo "FAIL context_search 无命中行为错（rc=$cs_rc）"; fail=$((fail+1))
+fi
+if python3 scripts/context_search.py 词 --dirs "$cs_root/definitely-missing" >/dev/null 2>&1; then
+  echo "FAIL context_search 缺目录伪成功"; fail=$((fail+1))
+else
+  echo "PASS context_search 缺目录 exit 2"; pass=$((pass+1))
+fi
+python3 -c 'import shutil,sys;shutil.rmtree(sys.argv[1],ignore_errors=True)' "$cs_root"
+
+# 16c. dep_graph 依赖图（fixture：app→mid→core 传递爆炸半径）
+dg_root="$(mktemp -d /tmp/aiw-depgraph-XXXXXX)"
+mkdir -p "$dg_root/pkg"
+cat > "$dg_root/pkg/core.py" <<'DGFIX'
+def shared_helper():
+    return 1
+DGFIX
+cat > "$dg_root/pkg/mid.py" <<'DGFIX'
+import core
+
+def mid_fn():
+    return core.shared_helper()
+DGFIX
+cat > "$dg_root/pkg/app.py" <<'DGFIX'
+import mid
+
+def main():
+    return mid.mid_fn()
+DGFIX
+dg_out="$(python3 scripts/dep_graph.py --root "$dg_root/pkg" 2>&1)"; dg_rc=$?
+if [ $dg_rc -eq 0 ] && echo "$dg_out" | grep -q "files=3 python=3 approx=0 parse_error=0"; then
+  echo "PASS dep_graph 概览（Python ast 精确解析）"; pass=$((pass+1))
+else
+  echo "FAIL dep_graph 概览口径错（rc=$dg_rc）"; fail=$((fail+1))
+fi
+dg_blast="$(python3 scripts/dep_graph.py --root "$dg_root/pkg" --file core.py 2>&1)"
+if echo "$dg_blast" | grep -q "波及: mid" && echo "$dg_blast" | grep -q "波及: app" && echo "$dg_blast" | grep -q "direct_and_transitive=2"; then
+  echo "PASS dep_graph 传递爆炸半径（改 core 波及 mid+app）"; pass=$((pass+1))
+else
+  echo "FAIL dep_graph 爆炸半径错（传递闭包不完整）"; fail=$((fail+1))
+fi
+if python3 scripts/dep_graph.py --root "$dg_root/pkg" --json 2>/dev/null | python3 -c 'import json,sys; d=json.load(sys.stdin); assert "pkg" not in d["files"] or True; assert set(d["files"])=={"core","mid","app"}; assert d["files"]["core"]["functions"]==["shared_helper"]' 2>/dev/null; then
+  echo "PASS dep_graph --json 合法且含 defs"; pass=$((pass+1))
+else
+  echo "FAIL dep_graph --json 结构错"; fail=$((fail+1))
+fi
+if python3 scripts/dep_graph.py --root "$dg_root/pkg" --file nothere.py >/dev/null 2>&1; then
+  echo "FAIL dep_graph 未知 --file 伪成功"; fail=$((fail+1))
+else
+  echo "PASS dep_graph 未知 --file exit 2"; pass=$((pass+1))
+fi
+python3 -c 'import shutil,sys;shutil.rmtree(sys.argv[1],ignore_errors=True)' "$dg_root"
+
+# 16d. 心跳与评估资产在位（护栏：脱钩即 FAIL，与 v1.8.1 3h 存在性护栏同族）
+if [ -f prompts/wakeup.md ] && grep -q "STATIC-BEGIN" prompts/wakeup.md && grep -q "DYNAMIC-BEGIN" prompts/wakeup.md && grep -q "不代签" prompts/wakeup.md; then
+  echo "PASS 心跳唤醒模板在位（前馈/反馈/判据三段结构）"; pass=$((pass+1))
+else
+  echo "FAIL 心跳唤醒模板缺失或结构不完整"; fail=$((fail+1))
+fi
+if [ -f skills/_shared/templates/metrics.yaml ] && grep -q "tokens_null" skills/_shared/templates/metrics.yaml && grep -qi "不估算" skills/_shared/templates/metrics.yaml; then
+  echo "PASS 单 run 度量子账模板在位（null 诚实口径写明）"; pass=$((pass+1))
+else
+  echo "FAIL metrics.yaml 模板缺失或无诚实口径"; fail=$((fail+1))
+fi
+evals_n="$(ls evals/cases/*.md 2>/dev/null | wc -l)"
+evals_trace="$(grep -l "来源: RUN-" evals/cases/*.md 2>/dev/null | wc -l)"
+if [ "${evals_n}" -ge 3 ] && [ "${evals_trace}" -eq "${evals_n}" ] && [ -f evals/README.md ]; then
+  echo "PASS evals 用例库 ≥3 条且每条可溯源（真实 run 来源）"; pass=$((pass+1))
+else
+  echo "FAIL evals 用例库不足或不可溯源（n=${evals_n} traced=${evals_trace}）"; fail=$((fail+1))
+fi
+
+echo "== 17. count_sync（README/HTML 计数与实际总数机器联动，不计数只守门；必须位于全部计数断言之后） =="
 total=$((pass+fail+site_offline+env_skip))
 cs_fail=0
 if grep -q "在线全跑 ${total}/${total}" README.md && grep -q "${total}/${total}" aiworflow-full-flow.html; then

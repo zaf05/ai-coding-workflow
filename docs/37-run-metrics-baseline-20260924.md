@@ -64,3 +64,33 @@ RUN-20260923-001..004 2026-09-23 缺陷归因×2+功能交付+bugfix completed�
 - 每完成 5 个新 run 复测一次本表（工具一条命令，无手工成本）。
 - per-block 耗时（真正的「阶段耗时」）：需要 state.yaml 块级记录 started_at/completed_at——出现真实的阶段瓶颈分析需求时再提 schema 变更（当前 `schema_version: 1` 不动）。
 - 采纳率：等 runs 证据版本化（私有归档仓库是用户侧前置）后，在 evals 用例库建库时一并落地（docs/13 evals 行已更新为「首批基线已出」）。
+
+## 六、增补（2026-09-29）：跨副本扩展——wan-bridge 两副本实测 + `metrics_summary.py`
+
+> 背景：用户要求把度量基线扩展到 wan-bridge 下的 WanGoPlatform 与 wancall worktree 副本，并落地五缺口中的度量/检索/依赖图/心跳/evals 最小版（v1.9.0）。本节由新工具 `scripts/metrics_summary.py`（v1.9.0，跨目录只读聚合）产出，口径与 `list_runs.py` 一致（一次通过 = 终态 completed 且有 ledger 且全块 attempts==1；跨度 = ledger 首末轮 timestamp 差）。
+
+### 三目录实测（2026-09-29）
+
+| 副本 | runs_total | parsed | completed_with_ledger | first_pass | total_rounds | total_retries | median_span_min | tokens |
+|---|---|---|---|---|---|---|---|---|
+| 主副本（本包 runs/） | 42 | 41（占位 1） | 22 | 19/22 | 137 | 8 | 162.3 | reported=0 / null=81 |
+| wan-bridge/wancall | 5 | 5 | 4 | 2/4 | 87 | 25 | 335.0 | null |
+| wan-bridge/WanGoPlatform worktree | 3 | 3 | 2 | 2/2 | 34 | 0 | 761.2 | null |
+| **汇总** | **50** | **49** | **28** | **23/28（82.1%）** | **258** | **33** | **165.7** | **reported=0 / null=197** |
+
+要点：
+
+1. **一次通过 93.8% → 82.1% 是分母扩大，不是质量下滑**：09-24 基线 15/16 是主副本单目录读数；本次 23/28 纳入了 wancall 5 个联调类 run（返修 25 次，其中 2 个高返修 run 拉低分母）。主副本单独口径（19/22=86.4%）与 09-24 的可比性更高。诚实结论：**联调/跨副本场景的返修密度显著高于单副本功能交付**（wancall 每 run 平均 5 次返修 vs 主副本 0.36）。
+2. **最长跨度 run**：WanGoPlatform worktree 的「计划文档全量事实审计」（RUN-20260923-003）span=761.2 分钟（≈12.7 小时，跨午夜完成）——这是多天/跨午夜长任务真实发生的直接证据（docs/13 多天级联行、docs/30 §九的实测输入）；该 run resume_marks=0，即跨会话续接走「多 run 续接」路径而非单 run task_resume 级联。
+3. **tokens 全 null 证实宿主不吐 token**：197 行 ledger 全部 tokens_used=null（宿主会话无程序化 token 读取口）。`tokens_reported=0` 不是「没花钱」，是「不可观测」——F3 成本追踪的聚合已就绪，等宿主可吐 token 后自然有数，不估算（docs/29 F3）。
+4. **基线漂移口径**：`metrics_summary.py --baseline first_pass=15/16,median_span_min=159.6`（09-24 基线）对本次汇总会给出一次通过偏低旗标（82.1% vs 93.8%，超 ±20%）——这是工具预期行为：跨副本混样本时先解释分母差异再读旗标，样本小，偏差只作信号不作结论。
+
+### 工具与复测命令
+
+```bash
+python3 scripts/metrics_summary.py runs /home/feifz/workspace/wan-bridge/wancall/.ai_worflow/runs \
+  /home/feifz/workspace/wan-bridge/WanGoPlatform/.worktree/<wp>/.ai_worflow/runs   # 路径以实际 worktree 为准
+python3 scripts/metrics_summary.py runs --baseline first_pass=15/16,median_span_min=159.6
+```
+
+（label 取 runs 目录的父目录名；wan-bridge 两个副本的 run 目录各自独立，不做合并去重——各副本 RUN-ID 日期序号独立分配，跨副本同 ID 不代表同一任务。）

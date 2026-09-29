@@ -70,11 +70,21 @@ loop_control:
 
 ---
 
-## F2 · 代码图谱 AST（P1）
+## F2 · 代码图谱 AST（P1；Python 精确版已落地 v1.9.0）
 
-### 现状
-- Blast Radius 用文本 grep（`grep -rn "keyword"`）
-- 问题：无法精准识别 import 依赖、类型引用、调用链
+### 现状（2026-09-29）
+- `scripts/dep_graph.py` 已实现（Python 精确口径，0 新增依赖）：stdlib `ast` 精确 imports（含相对导入包路径还原，顶层名 + 完整点路径双收）、`imported_by` 反向重建、BFS 传递爆炸半径（`--file` 查询输出 direct/transitive 波及面）、`--json` 机器输出与顶层 defs（functions/classes）
+- 多语言策略（守住 0 新增依赖边界）：`.py` 走 ast 精确；`.ts/.tsx/.js/.mjs/.go` 走正则近似并显式标注 `approx: true`，不进精确依赖链
+- 下方 tree-sitter 可选增强与 `context/dep-graph.json` 固化产物**未做**（真实多语言仓库需求出现再触发；当前按需扫描即用）
+- selftest §16c 四断言（概览口径 / 传递爆炸半径 / JSON defs / 未知 `--file` exit 2）；实测本包 `scripts/`：files=22 全 Python 精确，`_yaml_min` imported_by=9、传递波及 9
+
+### 已落地验收（v1.9.0）
+- [x] Python ast 精确导入解析（含相对导入包路径还原）
+- [x] imported_by 重建 + BFS 传递爆炸半径
+- [x] 非 Python 语言显式 `approx` 标注，不混入精确口径
+- [x] selftest §16c fixture 断言全过
+
+### 方案（登记保留，tree-sitter 触发后参考）
 
 ### 方案
 
@@ -116,13 +126,13 @@ except ImportError:
 
 ---
 
-## F3 · 成本追踪（P1，v1.8.7 已落地最小归因）
+## F3 · 成本追踪（P1，v1.8.7 最小归因 + v1.9.0 聚合落地）
 
-### 现状（2026-09-20）
+### 现状（2026-09-29）
 - `run_flow.py --advance --session-meta` 会把 `model`（必填）与 `tokens_used`（非负整数或 `null`）写入本轮自动 ledger；`--append-ledger --session-meta` 同样支持
 - `--advance` 报告回显 `session_meta`；非法输入非零退出
 - Implementer / Reviewer / Tester 报告模板含 `session.model/session.tokens_used`；宿主查不到 token 时必须写 `null`，禁止估算
-- 尚未做 cumulative_tokens、按角色聚合与 metrics_summary：这属于 Wave 3 E2，等累计 ≥5 个真实 run 后触发，避免空转
+- **聚合已落地（v1.9.0）**：`scripts/metrics_summary.py` 按 model 分组聚合（tokens_reported 与 tokens_null 分开、只对实报求和）+ G10 写单 run `metrics.yaml` 子账（模板查不到写 null 不估算）。实测三副本 50 run：tokens 197 行**全 null**（宿主会话不吐 token）——真实累计仍为 0，诚实口径成立，不伪造分母；按角色精拆（by_role/by_block）等宿主可程序化吐 token 后触发
 
 ### 已落地验收
 - [x] 新生成的自动 ledger 条目含 `model`；传入时含 `tokens_used`
@@ -130,24 +140,26 @@ except ImportError:
 - [x] 非法 `--session-meta` 被拒绝且原因可读
 - [x] 角色报告契约要求 model 必填、tokens 诚实可为 null
 
-### 后续（Wave 3 E2 触发后）
+### 后续（宿主可吐 token 后）
 ```yaml
 run_summary:
   total_tokens: 45000
   by_role: {}
   by_block: {}
 ```
-- 涉及 `metrics.yaml`、`metrics_summary.py` 与 G10 写入；当前明确不做。
+- `metrics.yaml` 与 `metrics_summary.py` 已落地（v1.9.0）；by_role/by_block 精拆仍等宿主可程序化读取 token 后触发。
 
-### 工作量：最小归因 1h；聚合统计 2h（触发后）
+### 工作量：最小归因 1h（v1.8.7 已做）；聚合统计已按最小形态落地（v1.9.0）
 
 ---
 
-## F4 · 向量检索记忆（P2，分阶段）
+## F4 · 向量检索记忆（P2，分阶段；Phase 1 BM25 已落地 v1.9.0）
 
-### 现状
-- `context/` 纯文件，按目录浏览
-- 问题：积累大量知识后，关键词匹配不够
+### 现状（2026-09-29）
+- **Phase 1 已落地**：`scripts/context_search.py` 纯 Python BM25（k1=1.5,b=0.75）——中文按字符 bigram（单字回退）、拉丁小写整词，标题 tokens ×2 加权，可选加载 `context/index.yaml` 的 tags/keywords ×2 加权；`--write-index` 从 corpus 生成索引（唯一写行为）；无命中 exit 0 + 显式提示（不伪造结果），缺目录 exit 2
+- `context/` 纯文件、按目录浏览的既有形态不变；G1 读 context 时可先检索再读全文（skills 接线按需走）
+- Phase 2 embedding 检测回退**未做**（<100 条知识场景 BM25 够用，触发条件不变）
+- selftest §16b 四断言（中文 bigram 命中 / 区分度 / 无命中 exit 0 / 缺目录 exit 2）；实测「断点恢复」→ 命中 `project-aiworkflow.md`、「人工确认」→ 命中 `area-consistency.md`
 
 ### 方案（不引入外部依赖）
 
@@ -174,18 +186,19 @@ run_summary:
 | `skills/aiworflow/SKILL.md` | G1 用 search 而非全读 |
 
 ### 验收
-- [ ] 20 条知识中搜索"权限"能命中相关条目
-- [ ] 无外部依赖即可运行
+- [x] 真实 corpus 中文检索命中相关条目（实测 docs/context 语料：「断点恢复」「人工确认」各自命中目标文档；fixture 断言中文 bigram top1）
+- [x] 无外部依赖即可运行（纯 Python stdlib + 已有 PyYAML fallback）
 
-### 工作量：Phase 1 = 2h
+### 工作量：Phase 1 = 2h（已落地 v1.9.0）
 
 ---
 
-## F5 · 定量评估基准（P1）
+## F5 · 定量评估基准（P1；最小版已落地 v1.9.0）
 
-### 现状
-- selftest 70/70（站点在线口径；v1.8.7 起含 session-meta 与 review preflight，v1.8.8 起含 checkpoint/state/ledger 消费）仍只测结构与可恢复组件，不做质量度量
-- 问题：不知道"成功率高不高""平均耗时多少""回滚几次"
+### 现状（2026-09-29）
+- **最小版已落地（v1.9.0）**：① `skills/_shared/templates/metrics.yaml` 单 run 度量子账模板（run_id/workflow/status/blocks/first_pass/rounds/retries/duration_minutes/tokens_reported/tokens_null，查不到写 null 不估算），Planner G10 写入 `runs/<RUN-ID>/metrics.yaml`；② `scripts/metrics_summary.py` 跨目录聚合（per-dir + 按 workflow/model 分组 + `--baseline` 漂移对比 ±20% 旗标 + `--json`）；③ `evals/` 行为评测用例库（README 纪律 + 3 条真实 run 用例 + judge 独立只读会话协议）；④ 首批基线 `docs/37`（2026-09-24：一次通过 15/16=93.8%）已扩展至三副本 50 run（2026-09-29 增补：一次通过 23/28=82.1%、tokens 197 行全 null）
+- selftest 129 项（含 §16 度量/检索/依赖图/资产断言）；仍不做模型质量判定——质量判定归 judge 会话（evals 协议），脚本只出数
+- **仍不可算**：AI 初稿采纳率（runs 无版本历史）；LLM-as-a-judge 尚未跑过一轮全量判定（用例累积到 5+ 条后触发）
 
 ### 方案
 
@@ -231,11 +244,13 @@ python3 scripts/metrics_summary.py --runs runs/ --output metrics-report.yaml
 | `docs/13-roadmap.md` | 更新评估能力状态 |
 
 ### 验收
-- [ ] 每个 Run 产出 metrics.yaml
-- [ ] metrics_summary.py 输出按类型成功率
-- [ ] ≥10 个 Run 后能生成基线
+- [x] 单 run metrics.yaml 模板 + G10 写入接线（Planner SKILL 第 8 步，v1.9.0；存量 run 不回填）
+- [x] metrics_summary.py 聚合输出（按 workflow/model 分组 + 汇总 key=value，selftest §16a 五断言）
+- [x] 基线已生成并跨副本复测（docs/37：2026-09-24 首批 28 run + 2026-09-29 增补三副本 50 run，`--baseline` 漂移对比可用）
+- [ ] evals judge 会话跑一轮全量判定（用例 ≥5 条后触发）
+- [ ] AI 初稿采纳率（需 runs 版本化留痕，口径已定 docs/36 §三）
 
-### 工作量：2h
+### 工作量：2h（最小版已落地 v1.9.0；judge 全量判定与采纳率口径等待触发条件）
 
 ---
 

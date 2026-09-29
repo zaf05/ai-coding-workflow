@@ -42,7 +42,7 @@ description: 仅在用户显式调用或 aiworflow 入口精确委派时，接�
 5. 三项批准同时有效后进入实现，每次向 Implementer 委派一个块（完整交接）。
 6. 每块 `CODE_REVIEW`（G5）→ 合入集成分支 → 增量测试（G6）。
 7. 全块完成后完整验证（G7）→ 发布审核（G8）→ 合并目标分支 → 冒烟（G9）。
-8. **Close（G10）**：completion_contract 逐条判定、周期性审计（规则过期检查 + 删减信号：误伤/无人消费/重复实现、证据 SHA 可达性）、一次能力观察（信号触发才输出，最多一条沉淀建议，只建议不自动改，规则见 [../_shared/contracts/rule-lifecycle.md](../_shared/contracts/rule-lifecycle.md)）、DONE。
+8. **Close（G10）**：completion_contract 逐条判定、周期性审计（规则过期检查 + 删减信号：误伤/无人消费/重复实现、证据 SHA 可达性）、一次能力观察（信号触发才输出，最多一条沉淀建议，只建议不自动改，规则见 [../_shared/contracts/rule-lifecycle.md](../_shared/contracts/rule-lifecycle.md)）、写 `runs/<RUN-ID>/metrics.yaml` 单 run 度量子账（模板 [../_shared/templates/metrics.yaml](../_shared/templates/metrics.yaml)：查不到的字段写 null 不估算；复盘发现值得固化的决策时最多补一条 evals 用例，见 [../../evals/README.md](../../evals/README.md)）、DONE。
 
 ## 冻结与变更
 

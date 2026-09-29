@@ -1,0 +1,15 @@
+# 单 run 度量子账 · Planner 在 G10 close 时写入（v1.9.0，docs/29 F5）
+# 口径与 scripts/list_runs.py / scripts/metrics_summary.py 一致；查不到的字段写 null，不估算。
+run_id: RUN-00000000-000
+workflow: ""            # 工作流中文名（task_type 代理）
+status: completed       # 终态：completed / terminated / blocked
+blocks_done: 0
+blocks_total: 0
+first_pass: true        # 终态 completed 且全块 attempts==1（零返修）
+rounds: 0               # ledger 条数
+retries: 0              # sum(attempts-1)
+duration_minutes: null  # ledger 首末 timestamp 差；不足 2 轮写 null
+tokens_reported: 0      # ledger 中 tokens_used 为非负整数的行数
+tokens_null: 0          # ledger 中 tokens_used 为 null 的行数（宿主查不到）
+summary_note: ""        # 一句话：这次 run 值得度量记住的事（人工/Planner 填）
+generated_at: "1970-01-01T00:00:00+00:00"
