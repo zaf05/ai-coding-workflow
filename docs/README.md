@@ -45,6 +45,7 @@
 | `38-spec-superflow-scan-20260925.md` | 2026-09-25 spec-superflow + worktree + open-code-review 对照收编：132/133 spec-superflow 11 条设计对照（9 已有 + 2 新概念 delta specs / verification fingerprint）；134 Git worktree 实战 8 条对照（6 已有 + 2 新概念：效率对照实验 / 事故恢复演练）；135 alibaba/open-code-review 开源（a12 工具本体，40,782⭐ Apache-2.0，待评估接入） | 追问 spec-superflow/worktree/open-code-review 三条链接的价值或 132–135 收录去向时 |
 | `39-ai-skillmap-and-ainative-handbook-20260929.md` | 2026-09-29 Ng 技能图谱帖 + 阿里《AI Native 研发范式实践手册》对照收编：136 五技能/三阶段九成印证既有设计（evals 与部署监控为已登记缺口的独立强化信号）；137 手册核心主张与 a19/a20/a31/a32/a36 及 docs/36 批大面积重叠，唯一真新概念 Agent 身份三元组 + Delegation Chain 归团队化议题；两源取证管线（X 全文直读 / JS 壳→PDF 正本直链→纯图片页渲染视觉转写） | 追问两条新链接的价值、纯图片 PDF 取证方法或 136–137 收录去向时 |
 | `40-wechat-ai-coding-practices-20261009.md` | 2026-10-09 微信落地实践大扫描批：用户提供 19 URL 三层去重后 16 篇全 L1 收录（正文 webReader/curl MicroMessenger UA 双路 + 40 余图 data-src 多模态转写，失败如实记录）；四簇对照判定（端到端托管交付/Harness 与工程体系/知识与状态文件化/控制面与运行时）印证为主零真缺口立项——小米四实体、去哪儿状态落盘三原则、菜鸟 todo.json 状态机、光剑AI「状态机优于专家圆桌」、小红书「transcript≠运行状态」等正面同构；洪定坤 900 次实验为 Harness 价值外部量化；真新概念 3 项记录不立项（Super Mock=执行环境层、ACI=宿主层、知识衰减=Thin 强化） | 追问 16 篇微信落地实践文章的价值、多模态图片取证管线或 138–153 收录去向时 |
+| `41-sgil-mas-scan-20261009.md` | 2026-10-09 SGIL/MaS 提案收编与转述批判定：用户转述近一月趋势汇总（无 URL）先去重（阿里云栖手册=137 已在库、Skills 化/worktree/自我验证=既有覆盖、OpenClaw=心跳层缺口在案）；唯一真新来源 Sumner Evans《How I Want to Use AI》（2026-09-25，个人博客）webReader L1 全文直读（curl 出口超时 000 如实记录）——MaS+SGIL 与本体系 5 条同构、2 条边界不采纳（全量再生/审 Markdown 不审代码——作者本人 hedge）、2 条强化信号；无 URL 项 9 条按 docs/34 纪律未收录只登记清单；零真缺口立项零规则变更 | 追问 SGIL/MaS 提案的价值、转述批各项处置去向或 154 收录去向时 |
 
 ## 阅读顺序
 
@@ -61,7 +62,7 @@
 
 ## 来源总数
 
-截至 2026-10-09，全系统共收录 **153 个唯一外部来源**（唯一编号以 HTML 附录 001–153 为准；README 附录 a01–a37 是 001–086 中 37 条的子集视图，各批扫描文档另保留批次编号 a/b/E）：
+截至 2026-10-09，全系统共收录 **154 个唯一外部来源**（唯一编号以 HTML 附录 001–154 为准；README 附录 a01–a37 是 001–086 中 37 条的子集视图，各批扫描文档另保留批次编号 a/b/E）：
 
 | 批次 | 数量 | 编号 | 扫描/核验文档 |
 |---|---|---|---|
@@ -79,7 +80,8 @@
 | docs/38 spec-superflow + worktree + open-code-review 批（2026-09-25） | 4 | 132–135 | docs/38（132/134 微信 L1 webReader + 133/135 GitHub API L1，核验表 row 111–114） |
 | docs/39 技能图谱 + 阿里手册批（2026-09-29） | 2 | 136–137 | docs/39（136 X 帖 L1 全文直读 + 137 手册 PDF 正本 L1 视觉转写，核验表 row 115–116） |
 | docs/40 微信落地实践大扫描批（2026-10-09） | 16 | 138–153 | docs/40（全部 L1：webReader/curl MicroMessenger UA 双路全文 + 正文图 data-src 多模态转写，核验表 row 117–132） |
-| **合计** | **153** | 001–153 | 001–086 归属复盘见 `33-appendix-full-review-20260920.md`；087–124 见 `34-web-scan-20260920.md` §八；125–130 见 `35-wechat-loop-engineering-20260921.md` §五；131 见 `36-wechat-ai-native-paradigm-20260924.md` §四；132–135 见 `38-spec-superflow-scan-20260925.md`；136–137 见 `39-ai-skillmap-and-ainative-handbook-20260929.md`；138–153 见 `40-wechat-ai-coding-practices-20261009.md` |
+| docs/41 SGIL/MaS 收编批（2026-10-09） | 1 | 154 | docs/41（154 Sumner Evans 个人博客 L1 webReader 全文直读，curl 出口超时 000 如实记录，核验表 row 133） |
+| **合计** | **154** | 001–154 | 001–086 归属复盘见 `33-appendix-full-review-20260920.md`；087–124 见 `34-web-scan-20260920.md` §八；125–130 见 `35-wechat-loop-engineering-20260921.md` §五；131 见 `36-wechat-ai-native-paradigm-20260924.md` §四；132–135 见 `38-spec-superflow-scan-20260925.md`；136–137 见 `39-ai-skillmap-and-ainative-handbook-20260929.md`；138–153 见 `40-wechat-ai-coding-practices-20261009.md`；154 见 `41-sgil-mas-scan-20261009.md` |
 
-验证命令：`grep -oE '<tr><td>[0-9]{3}</td>' aiworflow-full-flow.html | wc -l` → 153（与 HTML 附录计数一致；逐条归属判定 docs/33 + docs/34 + docs/35 + docs/36 + docs/38 + docs/39 + docs/40）
+验证命令：`grep -oE '<tr><td>[0-9]{3}</td>' aiworflow-full-flow.html | wc -l` → 154（与 HTML 附录计数一致；逐条归属判定 docs/33 + docs/34 + docs/35 + docs/36 + docs/38 + docs/39 + docs/40 + docs/41）
 
