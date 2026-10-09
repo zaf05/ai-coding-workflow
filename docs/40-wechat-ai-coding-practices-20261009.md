@@ -7,7 +7,7 @@
 
 | # | URL 尾段 | 公众号 / 作者 | 标题 | 取证 |
 |---|---|---|---|---|
-| 138 | mh8XQH5oDk5gq4EZq6oMlQ | InfoQ（得物 AICon 演讲） | AI Coding 之后，如何让 Agent 进入企业研发全链路？得物推荐的 Harness 实践 | webReader 全文 + curl MicroMessenger UA 补图；6 图多模态（Truman 观点卡/PDCA 全 AI 化/7 阶段护栏表等 4 张实质成功，1 张格式 400 放弃） |
+| 138 | mh8XQH5oDk5gq4EZq6oMlQ | InfoQ（得物 AICon 演讲） | AI Coding 之后，如何让 Agent 进入企业研发全链路？得物推荐的 Harness 实践 | webReader 全文 + curl MicroMessenger UA 补图；6 图多模态（Truman 观点卡/PDCA 全 AI 化/7 阶段护栏表等 4 张转写成功，1 张格式 400 放弃，1 张限流 429 重试未果） |
 | 139 | TudS13UPV5J6Ap0vLJSiIA | AI前线（菜鸟·郭凤钊演讲实录） | AI Coding 贡献率超 90%，需求交付却只快了 10%：菜鸟如何用 Agent 托管端到端交付？ | webReader 全文 + curl 补图；13 图多模态（贡献率数据页/6 Job·28 Task 全景/Plugins 上下文组件等） |
 | 140 | O8hsiVwY9k0ekKC02gixKA | 菜鸟技术星球（已晨） | AICon \| 从 Vibe Coding 到托管交付 Agent：菜鸟研发效能的 AI 实践 | webReader 全文（与 139/141 同演讲独立成文，对照分析合并） |
 | 141 | OmdRDue84PQ-dqCDVFwyOg | 进击的雷神（转述郭凤钊 AICon 演讲） | AI 写了 90% 的代码，可需求交付只快了 10%：菜鸟的需求托管交付实践复盘 | curl MicroMessenger UA 全文 + data-src 补图；10 实质图清单 + 3 张多模态（托管全景/Plugins/todo.json+Executor） |
