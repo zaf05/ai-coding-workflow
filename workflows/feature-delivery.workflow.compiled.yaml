@@ -107,7 +107,10 @@ blocks:
   inputs:
   - implement.output
   commands:
-  - cmd: git diff --check origin/develop...HEAD
+  - cmd: if git rev-parse --git-dir >/dev/null 2>&1; then base=$(git merge-base origin/develop
+      HEAD 2>/dev/null || git merge-base origin/main HEAD 2>/dev/null); if [ -n "$base"
+      ]; then git diff --check ${base}...HEAD; else echo WARN AIW_CHECK_NO_BASE 无远程基分支跳过空白检查;
+      fi; else echo WARN AIW_CHECK_NOT_GIT 非git仓库跳过空白检查; fi
     workdir: ''
     expect: 0
   evidence:

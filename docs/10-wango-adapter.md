@@ -114,7 +114,7 @@ python3 /path/to/.ai_worflow/scripts/run_flow.py \
 
 | 摩擦点 | 影响 | 处置 |
 |---|---|---|
-| feature-delivery 的 check 写死 `origin/develop...HEAD` | 目标工程主干叫 `main` 时 check 失败 | 用自定义 DAG（candidate-dag.md 生成，改 check 命令），或给该工程建适配分支约定 |
+| ~~feature-delivery 的 check 写死 `origin/develop...HEAD`~~ 已通用化（2026-10-09）：check 命令回落 `origin/develop` → `origin/main`，merge-base 后跑 `git diff --check`；非 git 仓库或无远程基分支时显式 WARN 跳过（`AIW_CHECK_NOT_GIT` / `AIW_CHECK_NO_BASE`，退出码 0 但输出留痕） | 主干叫 `main` 的工程（如 wancall）不再 check 失败；非 git 目标（如纯脚本目录）check 只剩 WARN、无实质检查 | 非工程目录需要实质检查（语法门等）时仍建议自定义 DAG（candidate-dag.md 生成，改 check 命令） |
 | `repository.root` 为空时回落到 `ROOT.parent`（即 WanGoPlatform） | 忘填会把 check 打到错误仓库 | **务必填绝对路径**；后续引擎版本可加空值 WARN |
 | 本 docs/10 的适配规则（数据库/交付协议/Git 基线）仅适用于 WanGoPlatform | 其他工程不能照搬 | 目标工程以**自己的 AGENTS.md/README** 为最高上下文，本工作流只加严不放宽 |
 
