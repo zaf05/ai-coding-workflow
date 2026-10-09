@@ -47,7 +47,7 @@ Evidence 层 runs/<RUN-ID>/             —— state.yaml / current.md / test-pl
 ```text
 .ai_worflow/
 ├── README.md                  本文件：权威入口
-├── docs/                      规则与设计（41 篇 + README）
+├── docs/                      规则与设计（42 篇 + README，编号 00–41 连续）
 ├── skills/                    可被 Codex / Claude Code / ZCode 发现的 Skill 包
 │   ├── aiworflow/             入口与 Flow 引擎语义（不是第五角色）
 │   ├── aiworflow-planner/     规划、状态、协调、合并
@@ -148,7 +148,7 @@ timeout 180 codex exec   --ephemeral --skip-git-repo-check   -C /home/feifz/work
 
 | 版本 | 变更 | 对使用者的影响 |
 |---|---|---|
-| **v1.9.2** | **SGIL/MaS 提案收编 + 转述批判定（纯文档，零脚本/零规则变更）**：用户转述近一月趋势汇总（无 URL）按纪律逐项处置——可检索定位的 SGIL/MaS 原文（Sumner Evans《How I Want to Use AI》2026-09-25，个人博客）webReader L1 直读后收录附录 154；对照判定 5 同构（规格文件=唯一事实源/事实源碎片化诊断/独立对抗 Inspect/generation errors 歧义不猜/聊天=REPL）+ 2 边界不采纳当前形态（Generate 不带实现上下文的全量再生、审 Markdown 不审代码——作者本人 hedge "(maybe?)"）+ 2 强化信号记录不立项（生成期假设显式 warnings/存量逆向 spec 化）；转述批去重：阿里云栖手册=附录 137 已在库、OpenClaw=心跳层缺口在案+附录 050、Skills 化/worktree/AGENTS.md/自我验证=既有条目覆盖；无 URL 项 9 条按 docs/34 纪律未收录只登记清单 | 个人作者独立提案与本体系大面积同构，进一步佐证文件化事实源+独立验证路线；docs 40→41、附录 153→**154**；selftest 维持 129 |
+| **v1.9.2** | **SGIL/MaS 提案收编 + 转述批判定（纯文档，零脚本/零规则变更）**：用户转述近一月趋势汇总（无 URL）按纪律逐项处置——可检索定位的 SGIL/MaS 原文（Sumner Evans《How I Want to Use AI》2026-09-25，个人博客）webReader L1 直读后收录附录 154；对照判定 5 同构（规格文件=唯一事实源/事实源碎片化诊断/独立对抗 Inspect/generation errors 歧义不猜/聊天=REPL）+ 2 边界不采纳当前形态（Generate 不带实现上下文的全量再生、审 Markdown 不审代码——作者本人 hedge "(maybe?)"）+ 2 强化信号记录不立项（生成期假设显式 warnings/存量逆向 spec 化）；转述批去重：阿里云栖手册=附录 137 已在库、OpenClaw=心跳层缺口在案+附录 050、Skills 化/worktree/AGENTS.md/自我验证=既有条目覆盖；无 URL 项 9 条按 docs/34 纪律未收录只登记清单 | 个人作者独立提案与本体系大面积同构，进一步佐证文件化事实源+独立验证路线；规则文档 41→**42** 篇（实测修正历史「最高编号当篇数」的固定偏差，编号 00–41 连续 42 文件 + README）、附录 153→**154**；selftest 维持 129 |
 | **v1.9.1** | **附录收编批 138–153（纯文档，零脚本/零规则变更）**：微信落地实践大扫描批（`docs/40`）——用户提供 19 个微信 URL 经三层去重（列表内 dSheY×2 合并、UE-RZH 已在库 row 34、CTY5 经 og:title 判定为附录 075 美团原文的微信转载版，仅证据更新不新增编号）后 16 篇全部 L1 收录：正文 webReader / curl MicroMessenger UA 双路取证 + 40 余张实质配图 data-src 提取后多模态模型真实转写（格式类 400 与服务端黑图失败逐条如实记录）；四簇对照判定（端到端托管交付 / Harness 与工程体系 / 知识与状态文件化 / 控制面与运行时）**印证为主、零真缺口立项**：小米 Job/Task/Approval/Event 四实体 ≈ state.yaml run/blocks/approvals/ledger、去哪儿状态落盘三原则 ≈ state/checkpoint/task_resume + star 不可代签、菜鸟 todo.json 状态机 ≈ run_flow frontier 引擎（引擎侧更强）、光剑AI「状态机可调试可重放优于专家圆桌」为 run_flow 确定性解释器路线的外部独立验证（四角色硬边界/显式退出条件/30min 熔断同族）、小红书「transcript≠运行状态」「程序化护航取代 Prompt 祈祷」直接印证、字节洪定坤 900 次实验（Harness 加持可交付性 40-60→约 80）为三层模型价值外部量化佐证；真新概念仅 3 项记录不立项（Super Mock 依赖模拟=执行环境层、ACI 工具设计=宿主层、知识自动衰减=rule-lifecycle Thin 强化信号）；计数同步：README 核验表 row 117–132、docs/README 批次表与验证命令、HTML 统计卡/一句话/参考文章行/附录标题/版本表 | 16 篇一线大厂落地实践与既有设计大面积互证——本工作流核心主张（确定性状态机引擎、文件化状态、证据链、程序化护栏）首次获得得物/菜鸟/去哪儿/大淘宝/小红书/腾讯云/小米/字节/蚂蚁数科多家独立来源正面同构验证；附录 137→**153**、大厂覆盖 13→19 家；无脚本/断言变化，selftest 维持 129 |
 | **v1.9.0** | **五缺口可执行项落地（docs/29 F2/F3/F4/F5 + docs/13 automations 心跳层 / evals）**：① 新增 `scripts/metrics_summary.py`——跨目录 run 度量聚合（label=父目录，per-dir + 按 workflow/model 分组，token 诚实口径 tokens_reported/tokens_null 分开、只对实报求和，`--baseline` 漂移对比 ±20% 旗标，`--json`），实测三副本 50 run（docs/37 增补：主副本 42 run 一次通过 19/22、wancall 5 run 返修密度 25、WanGoPlatform 3 run 含 761 分钟最长跨度；汇总一次通过 23/28=82.1%，较 09-24 基线 15/16=93.8% 的分母扩大读数差异诚实登记——wancall 联调类高返修 run 拉低）；② 新增 `scripts/dep_graph.py`——Python stdlib ast 精确 imports（含相对导入包路径还原）+ imported_by 重建 + BFS 传递爆炸半径；.ts/.tsx/.js/.mjs/.go 正则近似显式标 `approx:true` 不进精确口径；③ 新增 `scripts/context_search.py`——纯 Python BM25（k1=1.5,b=0.75）中文 bigram + 拉丁整词，标题×2 加权，可选 `context/index.yaml` tags/keywords 加权，`--write-index` 生成索引；④ `prompts/wakeup.md` 心跳唤醒模板：STATIC 前馈约束（先读状态/不代签 star/单轮单动作≤10 轮熔断/失败必须有名字/写回留痕）+ DYNAMIC 反馈传感器与分类判据（completed→noop；WAIT_USER→只提醒人；WAIT_ROLE→调角色一次；BLOCKED→归因上报；连续 N≥2 无变化→心跳停滞上报），宿主原生调度触发、一次会话即心跳层全部，不做守护进程；首次真实触发：RUN-20260925-002（WAIT_USER）处置=提醒人不推进；⑤ `evals/` 用例库最小版——README 纪律（用例只来自真实 run、每次 G10 最多补一条、采纳率不可算不造数）+ 3 条用例（001 断点恢复零副作用 RUN-20260923-001 / 002 fan-out 按域回收 RUN-20260921-001 / 003 未知 CLI 参数显式 FAIL RUN-20260923-002）+ judge 独立只读会话协议（verdict APPROVE/REQUEST_CHANGES/BLOCKED，结论进 evidence.md 不回写）；⑥ Planner G10 写 `runs/<RUN-ID>/metrics.yaml` 单 run 度量子账（模板 `skills/_shared/templates/metrics.yaml`：查不到写 null 不估算）；⑦ docs/13 F5/automations/多天级联三行状态更新、docs/29 F2/F3/F4/F5 标注已实施、docs/37 跨副本增补；⑧ 团队化（权限层/组织分发/L4→L5/Delegation Chain）维持就绪设计（docs/13 补 Delegation Chain 视角引用 docs/39 §三），不预写无法验收的平台代码；selftest 113→**129**（§16 十六项：metrics_summary×5 / context_search×4 / dep_graph×4 / 资产在位×3），count_sync 移至 §17 | 五个登记缺口中四个（evals 最小版/心跳层/F2/F3/F4/F5）从"登记不做"变为"最小可执行且实测跑过"；团队化明确验收前置（第二用户），不假装完成；度量、检索、依赖图三个日常工具零新依赖可直接用；跨副本度量口径首次有真实数字可比 | **附录收编批 136–137（纯文档，零脚本/零规则变更）**：① 附录 135→**137**——136 Andrew Ng《AI Engineering Skills Map: Using coding agents》X 帖（2026-09-04 发帖，L1 全文直读）：五技能/三阶段九成印证既有设计（Planning→Execution→Verification≈G0–G10、Reviewing≈Reviewer+跨宿主交叉复核+ui-verification、环境定制≈context/+pre-commit+CI、「模型进步就修剪技能」直接印证 v1.8.1 Add/Thin、跨会话状态≈ledger/checkpoint、复盘≈G10、autonomy 怀疑论≈熔断），evals+LLM-as-a-judge 与部署后监控两个强化信号指向已登记缺口（docs/13 F5、automations 心跳层）不重复立项；② 137 阿里《AI Native 研发范式实践手册》68 页 PDF（Web 应用为 JS 查看器壳，从壳 HTML 挖出版本化 PDF 正本直链下载 27,286,928 B；纯图片型——pypdf/pymupdf 提取 0 字符——经 110DPI 渲染 + 视觉转写 11 个关键页取得 L1，取证管线沉淀 docs/39 §一）：核心主张（模型即引擎 Harness 即底盘、上下文治理四层次 编译/分发/注入/回收、Net Anchor 编排不写码、Prompt→Skill→Hook→Permission 四层护栏、Ledger 不可篡改、Sandbox 三理由、可观测三能力、度量运营口径）与 a19/a20/a31/a32/a36 及 docs/36 批大面积重叠，判定全景参照；唯一真新概念 Agent 身份三元组（身份/策略/凭证）+ Delegation Chain 身份传递收缩为企业数字员工平台侧问题，归 docs/13 团队化议题补充视角不立项；③ 计数同步：README 核验表 row 115–116、docs/README 批次表与验证命令、HTML 统计卡/附录标题/页脚/版本演进行 | 两源价值判定与取证管线可溯（纯图片 PDF 渲染转写管线可复用）；附录批次内容与全部口径（README/HTML/docs/核验表）重新一致；无脚本/断言变化，selftest 维持 113 |
 | **v1.8.21** | **跨宿主交叉复核成文（纯规则，零脚本变更）**：docs/04 新增「跨宿主交叉复核」权威节 + role-boundaries 契约摘要 + Reviewer SKILL 接线（含受约契约引用同步）——双宿主（Codex/Claude Code）同时可用时，CODE_REVIEW / RELEASE_REVIEW 等审核类工作**优先由非实现宿主会话执行**（Implementer 宿主 ≠ Reviewer 宿主），降低同源上下文偏差与「自己写、自己过」风险；单宿主环境退化为独立只读会话不阻塞（调度偏好非硬门禁，引擎不校验，ledger owner/model 字段事后审计）；Reviewer 会话发现自身即实现宿主时在 non_blocking_notes 注明并由 Planner 决定改派。来源：flow-next adversarial cross-model reviews（附录 029，docs/21 §a29）+ 2026-09-25 四问题对账——v1.8.18–v1.8.20 三版候选提交事实上均经另一宿主逐行复核后推 main，本条固化既有实践而非新增能力；对账其余三项经核不重复立项（evals 已登记 docs/13 + docs/29 F5；Spec 质量反馈已有机制 docs/07 §Spec 质量反馈；token 测量已落地最小归因 docs/29 F3） | 双宿主交叉复核从「事实实践」变为「成文规则」，可在 docs/04 与契约中被引用和审计；无脚本/断言/计数变化，selftest 维持 113 |
@@ -273,7 +273,7 @@ python3 scripts/install_hooks.py --check
 | 能力 | 状态 | 证据 |
 |---|---|---|
 | 参考工程 clone ×3 | 已完成 | `references/skyvern`（5496 文件，commit `35cb497c99dc940472023e682692613e1014e51f`）、`references/ric-dev-workflow-skills`（95 文件，commit `84954fbda3d1d8c47ef2a5ee9fb43e18ab4a3c4a`）、`references/jakubkrehel-skills`（11 个 Skill 目录，commit `267330e`，2026-09-16 入库，见 `docs/12-reference-scan.md` §E） |
-| 规则与设计文档 | 已完成 | `docs/`（41 篇 + README；本仓库内相对链接全部可解析，由 `scripts/validate_package.py` 校验） |
+| 规则与设计文档 | 已完成 | `docs/`（42 篇 + README，编号 00–41 连续；本仓库内相对链接全部可解析，由 `scripts/validate_package.py` 校验） |
 | Skill 包（5 入口 + `_shared`） | 已完成 | `skills/`，frontmatter 与链接由 `scripts/validate_package.py` 校验 |
 | 工作流定义（4 正例 + 7 反例） | 已完成 | `workflows/`，由 `scripts/validate_workflow.py` 校验；7 个反例各对应一条 author-time 硬护栏 |
 | 校验器 / 安装器 / 自检 | 已完成 | `scripts/`，`python3 scripts/validate_package.py` 与 `bash scripts/selftest.sh` 129/129 PASS |
@@ -324,7 +324,7 @@ AIWorflow 是一套**纯文件驱动的 AI 研发控制层**。它不提供浏�
 
 | 指标 | 数值 |
 |---|---|
-| 规则文档 | 41 篇 + docs/README |
+| 规则文档 | 42 篇 + docs/README（编号 00–41 连续） |
 | 共享契约 | 9 份（角色/门禁/证据/状态/变更/Git/交接/规则生命周期/产物；护栏注册表在 `docs/09` 与脚本 `GUARDRAIL_IDS`，非独立契约文件） |
 | Skill 入口 | 5 个（入口+四角色）+ 1 个 `_shared` 共享底座 |
 | 工作流定义 | 4 正例 + 8 反例（每个反例对一条 hard guardrail 开火；v1.8.13 新增 `inert-conditional` 对 `inert_conditional` 开火） |
@@ -366,7 +366,7 @@ python3 scripts/install_skills.py --target ~/.codex/skills --upgrade --apply  # 
 | 维度 | 我们 AIWorflow v1.9.2 | Skyvern | ric-dev | V4.0 | AWS AI-DLC | Langflow | CCG | AI Workflow |
 |---|---|---|---|---|---|---|---|---|
 | **定位** | AI 研发控制层（纯文件） | 浏览器自动化 | 四角色Skill包 | 流程图 | AI开发生命周期 | 可视化Agent编排 | 多模型协作引擎 | Skill内容市场 |
-| **规模** | 41 docs+9 contracts+20 scripts | 5496文件 | 95文件 | 1 HTML | TypeScript+CLI | Python+React+DB | Go/Node.js+CLI | HTML(Skills集合) |
+| **规模** | 42 docs+9 contracts+20 scripts | 5496文件 | 95文件 | 1 HTML | TypeScript+CLI | Python+React+DB | Go/Node.js+CLI | HTML(Skills集合) |
 | **DAG 执行** | ✅ run_flow.py | ✅ 完整引擎 | ❌ 无 | ❌ 无 | ✅ aidlc CLI | ✅ Python后端 | ✅ ccg CLI | ❌ 无 |
 | **护栏系统** | ✅ 三层全自动 | ✅ author+review | ⚠️ 语义定义 | ❌ 无 | ✅ approval gate | ⚠️ 平台层 | ❌ 未明确 | ❌ 无 |
 | **版本管理** | ✅ VERSION+SHA256 | ❌ 无 | ❌ 无 | ❌ 无 | ✅ GitHub Release | ✅ PyPI | ✅ npm | ❌ 无 |
@@ -648,7 +648,7 @@ python3 scripts/install_skills.py --target ~/.codex/skills --upgrade --apply  # 
 
 | 文章六支柱 | 控制问题 | 本工作流对应 | 覆盖状态 |
 |---|---|---|---|
-| 看什么（上下文） | 信息输入 | AGENTS.md 索引 + 41 篇 docs + 渐进式披露 | ✅ 已覆盖 |
+| 看什么（上下文） | 信息输入 | AGENTS.md 索引 + 42 篇 docs + 渐进式披露 | ✅ 已覆盖 |
 | 能触达什么（工具） | 能力面 | MCP / Skills / 知识库（WanGo 层 connector + skill） | ✅ 已覆盖 |
 | 按什么顺序（编排） | 执行顺序 | 块 DAG + G0–G10 门禁 + 四角色交接 | ✅ 已覆盖且更深 |
 | 记住什么（记忆） | 状态持久化 | `state.yaml` + `current.md` + `evidence.md` 只追加账本 | ✅ 已覆盖 |
