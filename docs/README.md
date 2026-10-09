@@ -44,6 +44,7 @@
 | `37-run-metrics-baseline-20260924.md` | 首批运行度量基线（list_runs.py 对 28 个历史 run 实测）：一次通过 15/16（93.8%）、总返修 5、总轮次 72、中位跨度 159.6 分钟；口径随工具固化（一次通过 = completed 且有 ledger 且零返修）；AI 初稿采纳率明确不可算（runs gitignored 无版本历史，不伪造）；诚实边界：跨度含人工门等待、ledger 有 v1.7.2 前代际断层、样本小不同质 | 追问「任务拆了几个 run、返修多不多、一次通过率多少」或度量口径定义时 |
 | `38-spec-superflow-scan-20260925.md` | 2026-09-25 spec-superflow + worktree + open-code-review 对照收编：132/133 spec-superflow 11 条设计对照（9 已有 + 2 新概念 delta specs / verification fingerprint）；134 Git worktree 实战 8 条对照（6 已有 + 2 新概念：效率对照实验 / 事故恢复演练）；135 alibaba/open-code-review 开源（a12 工具本体，40,782⭐ Apache-2.0，待评估接入） | 追问 spec-superflow/worktree/open-code-review 三条链接的价值或 132–135 收录去向时 |
 | `39-ai-skillmap-and-ainative-handbook-20260929.md` | 2026-09-29 Ng 技能图谱帖 + 阿里《AI Native 研发范式实践手册》对照收编：136 五技能/三阶段九成印证既有设计（evals 与部署监控为已登记缺口的独立强化信号）；137 手册核心主张与 a19/a20/a31/a32/a36 及 docs/36 批大面积重叠，唯一真新概念 Agent 身份三元组 + Delegation Chain 归团队化议题；两源取证管线（X 全文直读 / JS 壳→PDF 正本直链→纯图片页渲染视觉转写） | 追问两条新链接的价值、纯图片 PDF 取证方法或 136–137 收录去向时 |
+| `40-wechat-ai-coding-practices-20261009.md` | 2026-10-09 微信落地实践大扫描批：用户提供 19 URL 三层去重后 16 篇全 L1 收录（正文 webReader/curl MicroMessenger UA 双路 + 40 余图 data-src 多模态转写，失败如实记录）；四簇对照判定（端到端托管交付/Harness 与工程体系/知识与状态文件化/控制面与运行时）印证为主零真缺口立项——小米四实体、去哪儿状态落盘三原则、菜鸟 todo.json 状态机、光剑AI「状态机优于专家圆桌」、小红书「transcript≠运行状态」等正面同构；洪定坤 900 次实验为 Harness 价值外部量化；真新概念 3 项记录不立项（Super Mock=执行环境层、ACI=宿主层、知识衰减=Thin 强化） | 追问 16 篇微信落地实践文章的价值、多模态图片取证管线或 138–153 收录去向时 |
 
 ## 阅读顺序
 
@@ -60,7 +61,7 @@
 
 ## 来源总数
 
-截至 2026-09-29，全系统共收录 **137 个唯一外部来源**（唯一编号以 HTML 附录 001–137 为准；README 附录 a01–a37 是 001–086 中 37 条的子集视图，各批扫描文档另保留批次编号 a/b/E）：
+截至 2026-10-09，全系统共收录 **153 个唯一外部来源**（唯一编号以 HTML 附录 001–153 为准；README 附录 a01–a37 是 001–086 中 37 条的子集视图，各批扫描文档另保留批次编号 a/b/E）：
 
 | 批次 | 数量 | 编号 | 扫描/核验文档 |
 |---|---|---|---|
@@ -77,7 +78,8 @@
 | docs/36 AI Native 范式批（2026-09-24） | 1 | 131 | docs/36（131 淘天海外 L1 webReader，核验表 row 110） |
 | docs/38 spec-superflow + worktree + open-code-review 批（2026-09-25） | 4 | 132–135 | docs/38（132/134 微信 L1 webReader + 133/135 GitHub API L1，核验表 row 111–114） |
 | docs/39 技能图谱 + 阿里手册批（2026-09-29） | 2 | 136–137 | docs/39（136 X 帖 L1 全文直读 + 137 手册 PDF 正本 L1 视觉转写，核验表 row 115–116） |
-| **合计** | **137** | 001–137 | 001–086 归属复盘见 `33-appendix-full-review-20260920.md`；087–124 见 `34-web-scan-20260920.md` §八；125–130 见 `35-wechat-loop-engineering-20260921.md` §五；131 见 `36-wechat-ai-native-paradigm-20260924.md` §四；132–135 见 `38-spec-superflow-scan-20260925.md`；136–137 见 `39-ai-skillmap-and-ainative-handbook-20260929.md` |
+| docs/40 微信落地实践大扫描批（2026-10-09） | 16 | 138–153 | docs/40（全部 L1：webReader/curl MicroMessenger UA 双路全文 + 正文图 data-src 多模态转写，核验表 row 117–132） |
+| **合计** | **153** | 001–153 | 001–086 归属复盘见 `33-appendix-full-review-20260920.md`；087–124 见 `34-web-scan-20260920.md` §八；125–130 见 `35-wechat-loop-engineering-20260921.md` §五；131 见 `36-wechat-ai-native-paradigm-20260924.md` §四；132–135 见 `38-spec-superflow-scan-20260925.md`；136–137 见 `39-ai-skillmap-and-ainative-handbook-20260929.md`；138–153 见 `40-wechat-ai-coding-practices-20261009.md` |
 
-验证命令：`grep -oE '<tr><td>[0-9]{3}</td>' aiworflow-full-flow.html | wc -l` → 137（与 HTML 附录计数一致；逐条归属判定 docs/33 + docs/34 + docs/35 + docs/36 + docs/38 + docs/39）
+验证命令：`grep -oE '<tr><td>[0-9]{3}</td>' aiworflow-full-flow.html | wc -l` → 153（与 HTML 附录计数一致；逐条归属判定 docs/33 + docs/34 + docs/35 + docs/36 + docs/38 + docs/39 + docs/40）
 
